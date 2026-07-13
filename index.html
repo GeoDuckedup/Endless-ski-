@@ -203,8 +203,7 @@ function genChunk(){
   const ez=clamp(d0/S.summit,0,1); // adaptive summit: the mellow zone fits the player
   S.corC=clamp(S.corC+(R()*2-1)*(28+42*ez),EDGE+half+10,LW-EDGE-half-10);
   corDbg.push({d:d0,c:S.corC,h:half}); if(corDbg.length>40)corDbg.shift();
-  if(R()<C.gateChance){
-    const spawnFlag=(gd,sd)=>{ // the flag sits BETWEEN center and the target lane:
+  const spawnFlag=(gd,sd)=>{ // the flag sits BETWEEN center and the target lane:
       // the command forces you across it. Cut depth grows with depth, eases at the
       // summit, breathes with the wave. Riding the center line satisfies nothing.
       const push=Math.min(1,gd/1400);
@@ -218,18 +217,20 @@ function genChunk(){
       // (conservative vs the 30 px/m full-lock ceiling, honest about human hands).
       if(S.lastFlagX!==null){
         const dd=gd-S.lastFlagD;
-        if(dd<4.5)return; // stacked on the last flag's heels: no flag beats an unfair flag
+        if(dd<4.5)return false; // stacked on the last flag's heels: no flag beats an unfair flag
         const budget=Math.max(0,dd-8)*11;
         const delta=need-S.lastFlagX;
         if(Math.abs(delta)>budget)need=S.lastFlagX+Math.sign(delta)*budget;
         need=clamp(need,EDGE+95,LW-EDGE-95);
-        if(Math.abs(need-S.lastFlagX)>budget+0.5)return; // wall + budget irreconcilable here
+        if(Math.abs(need-S.lastFlagX)>budget+0.5)return false; // wall + budget irreconcilable here
       }
       x=need-sd*(PR+8);
-      if((x-S.corC)*sd<18)return; // can't be made both fair and meaningful here
+      if((x-S.corC)*sd<18)return false; // can't be made both fair and meaningful here
       S.lastSide=sd;S.lastFlagD=gd;S.lastFlagX=need;
       gates.push({k:1,d:gd,x,side:sd,done:0});
-    };
+      return true;
+  };
+  if(R()<C.gateChance){
     const alt=()=>-(S.lastSide||1);
     const r=M.alt?0:R(); // SWITCHBACK: pure alternation
     if(r<0.60)spawnFlag(d0+R()*C.chunk*0.8,alt()); // the default rhythm
@@ -257,6 +258,13 @@ function genChunk(){
         S.lastSide=R()<0.5?-1:1;
       }
     } // else: breather chunk, no flag
+  }
+  // DROUGHT GUARD: the economy starves without flags — never more than ~40m empty.
+  // At large gaps the reachability budget is huge, so a fallback is virtually
+  // always feasible; try the alternating side first, then flip.
+  if(d0+C.chunk-S.lastFlagD>40){
+    const gd=d0+C.chunk*(0.3+R()*0.5);
+    if(!spawnFlag(gd,-(S.lastSide||1)))spawnFlag(gd+0.01,(S.lastSide||1));
   }
   const cnt=Math.min(C.obsMax*M.obs,(1.4+d0*0.007)*M.obs)*(0.35+0.65*ez)*(0.85+0.3*wv)*0.4;
   let n=Math.floor(cnt)+(R()<(cnt%1)?1:0);
