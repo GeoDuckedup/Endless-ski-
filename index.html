@@ -11,7 +11,8 @@
     -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-  #stage{position:relative;height:100%;max-height:100%;aspect-ratio:720/1280;max-width:100%;--u:1px}
+  #stage{position:relative;width:min(100%,calc(100vh*0.5625));width:min(100%,calc(100dvh*0.5625));
+    aspect-ratio:720/1280;--u:1px}
   #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;
     filter:saturate(1.1)}
   .hud{position:absolute;pointer-events:none;color:#fff;text-shadow:0 calc(2*var(--u)) calc(6*var(--u)) rgba(0,0,0,.55)}
@@ -48,6 +49,8 @@
     background:rgba(255,255,255,.14);border-radius:calc(5*var(--u))}
   #rStrip i{position:absolute;top:calc(-5*var(--u));width:calc(5*var(--u));height:calc(19*var(--u));border-radius:calc(2*var(--u))}
   #tYou{background:#ff6a5e}#tBest{background:#ffd76a}
+  #rNew{margin-top:calc(14*var(--u));font-size:calc(30*var(--u));font-weight:900;letter-spacing:.2em;
+    color:#ffd76a;text-shadow:0 0 calc(16*var(--u)) rgba(255,215,106,.7);animation:pulse 1s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -55,13 +58,13 @@
   <canvas id="cv"></canvas>
   <div class="hud" id="hDepth">0<small> m</small></div>
   <div class="hud" id="hCombo"></div>
-  <div class="btnrow">
+  <div class="btnrow" id="btnRow">
     <button class="ib" id="bTune">⚙︎</button>
     <button class="ib" id="bDebug">⌗</button>
     <button class="ib" id="bSound">♪</button>
   </div>
   <div id="tunePanel">
-    <label><span class="nm">Return to center</span><input type="range" id="sReturn" min="0" max="260" step="5" value="120"><span class="vl" id="vReturn">120</span></label>
+    <label><span class="nm">Return to center</span><input type="range" id="sReturn" min="0" max="260" step="5" value="170"><span class="vl" id="vReturn">170</span></label>
     <label><span class="nm">Turn rate</span><input type="range" id="sTurn" min="120" max="320" step="5" value="205"><span class="vl" id="vTurn">205</span></label>
     <label><span class="nm">Flag fuel</span><input type="range" id="sFuel" min="3" max="14" step="0.5" value="7"><span class="vl" id="vFuel">7</span></label>
     <label><span class="nm">Bleed</span><input type="range" id="sBleed" min="0.1" max="0.9" step="0.05" value="0.4"><span class="vl" id="vBleed">0.40</span></label>
@@ -78,6 +81,7 @@
     <div class="tag" id="rTag"></div>
     <div class="big" id="rDist">0 m</div>
     <div class="best" id="rBest"></div>
+    <div id="rNew" style="display:none">NEW BEST</div>
     <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
     <div class="go">TAP TO RETRY</div>
   </div>
@@ -88,14 +92,14 @@
 const LW=720, LH=1280, PXM=16, PIN_Y=0.36*LH, EDGE=40, PR=12, MAX_DT=0.05;
 const D2R=Math.PI/180;
 const C={
-  thetaMax:62*D2R, turnRate:205*D2R, returnRate:120*D2R,
+  thetaMax:62*D2R, turnRate:205*D2R, returnRate:170*D2R,
   touchDZ:12, touchFull:200, steerLerp:20,
-  glide:10.8, speedMax:40, bleed:0.40, flagFuel:7, fuelPerCombo:0.35, fuelRate:15,
+  glide:10.8, speedMax:40, bleed:0.40, flagFuel:7, fuelPerCombo:0.35, comboFuelCap:12, poolCap:26, fuelRate:15,
   crashCut:0.45, faultCut:0.82,
   stun:0.45, iframe:0.55, forgive:0.62, hitstop:0.12,
   chunk:22, ahead:108,
   corStart:300, corMin:148, corShrink:0.05,
-  gateChance:0.8,
+  gateChance:0.68,
   obsMax:7,
   yetiGrace:30, yetiStart:42, yetiBase:10, yetiRamp:0.013, yetiXL:1.6, SAFE:30,
   lungeMin:6, lungeMax:10, teleT:0.6, lungeT:0.4, lungeBoost:16,
@@ -170,12 +174,12 @@ function addMarker(t,d,x){markers.push({t,d:Math.round(d*10)/10,x:Math.round(x)}
   try{store.setItem('ep_markers',JSON.stringify(markers));}catch(e){}}
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
-let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],floaters=[],snow=[],rings=[],corDbg=[];
+let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[];
 let debugOn=false;
 function fresh(){
   R=mulberry32(C.SEED);
   gates.length=0;obs.length=0;npcs.length=0;edgeT.length=0;balls.length=0;
-  parts.length=0;spray.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;
+  parts.length=0;spray.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;
   M=baseM();
   let summit=250;
   try{const r=JSON.parse(store.getItem('ep_recent')||'[]')||[];
@@ -183,7 +187,7 @@ function fresh(){
       summit=clamp(350-(avg-150)/650*200,150,350);}}catch(e){}
   S={mode:'intro',summit,slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
-    camZ:220,camLead:0,bank:0,bankV:0,lastSide:1,
+    camZ:220,camLead:0,bank:0,bankV:0,lastSide:1,lastFlagD:-99,lastFlagX:null,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
@@ -200,30 +204,61 @@ function genChunk(){
   S.corC=clamp(S.corC+(R()*2-1)*(28+42*ez),EDGE+half+10,LW-EDGE-half-10);
   corDbg.push({d:d0,c:S.corC,h:half}); if(corDbg.length>40)corDbg.shift();
   if(R()<C.gateChance){
-    const spawnFlag=(gd,sd)=>{ // cut size grows with depth, eases at the summit, breathes with the wave
+    const spawnFlag=(gd,sd)=>{ // the flag sits BETWEEN center and the target lane:
+      // the command forces you across it. Cut depth grows with depth, eases at the
+      // summit, breathes with the wave. Riding the center line satisfies nothing.
       const push=Math.min(1,gd/1400);
-      const offFrac=Math.min(0.95,(0.16+R()*0.62)*(1+0.45*push)*(0.55+0.45*ez)*(0.88+0.24*wv));
-      const x=clamp(S.corC-sd*half*offFrac,EDGE+30,LW-EDGE-30);
-      S.lastSide=sd;
+      const cutFrac=Math.min(0.55,(0.06+R()*0.26)*(1+0.35*push)*(0.25+0.75*ez)*(0.88+0.24*wv));
+      const cut=clamp(half*cutFrac,18,half-34); // 18px floor: trivial for a thumb, never free for a statue
+      let x=clamp(S.corC+sd*cut,EDGE+30,LW-EDGE-30);
+      // WALL SAFETY: the commanded pass line never comes within 95px of the treeline.
+      let need=clamp(x+sd*(PR+8),EDGE+95,LW-EDGE-95);
+      // REACHABILITY: every cut must be carveable from the previous flag's natural line.
+      // Lateral travel ≈ 11 px per meter of descent after an 8m reaction allowance
+      // (conservative vs the 30 px/m full-lock ceiling, honest about human hands).
+      if(S.lastFlagX!==null){
+        const dd=gd-S.lastFlagD;
+        if(dd<4.5)return; // stacked on the last flag's heels: no flag beats an unfair flag
+        const budget=Math.max(0,dd-8)*11;
+        const delta=need-S.lastFlagX;
+        if(Math.abs(delta)>budget)need=S.lastFlagX+Math.sign(delta)*budget;
+        need=clamp(need,EDGE+95,LW-EDGE-95);
+        if(Math.abs(need-S.lastFlagX)>budget+0.5)return; // wall + budget irreconcilable here
+      }
+      x=need-sd*(PR+8);
+      if((x-S.corC)*sd<18)return; // can't be made both fair and meaningful here
+      S.lastSide=sd;S.lastFlagD=gd;S.lastFlagX=need;
       gates.push({k:1,d:gd,x,side:sd,done:0});
     };
     const alt=()=>-(S.lastSide||1);
     const r=M.alt?0:R(); // SWITCHBACK: pure alternation
-    if(r<0.62)spawnFlag(d0+R()*C.chunk*0.8,alt()); // the default rhythm
-    else if(r<0.77){const sd=alt(); // same-side double: hold the line
+    if(r<0.60)spawnFlag(d0+R()*C.chunk*0.8,alt()); // the default rhythm
+    else if(r<0.73){const sd=alt(); // same-side double: hold the line
       spawnFlag(d0+R()*C.chunk*0.3,sd);spawnFlag(d0+C.chunk*(0.55+R()*0.35),sd);}
-    else if(r<0.82){const sd=alt(); // rare triple
+    else if(r<0.77){const sd=alt(); // rare triple
       spawnFlag(d0+C.chunk*0.1,sd);spawnFlag(d0+C.chunk*0.45,sd);spawnFlag(d0+C.chunk*0.8,sd);}
-    else if(r<0.94){ // gate formation: blue left + red right, thread between for the jackpot
+    else if(r<0.88){ // gate formation: blue left + red right, thread between for the jackpot
       const gd=d0+R()*C.chunk*0.7;
       const gap=Math.max(120,180-Math.min(1,gd/1400)*50);
-      const gx=clamp(S.corC+(R()*2-1)*half*0.3,EDGE+gap/2+30,LW-EDGE-gap/2-30);
-      gates.push({k:1,d:gd,x:gx-gap/2,side:1,done:0});
-      gates.push({k:1,d:gd+0.5,x:gx+gap/2,side:-1,done:0});
-      S.lastSide=R()<0.5?-1:1;
+      let gx=clamp(S.corC+(R()*2-1)*half*0.3,EDGE+gap/2+30,LW-EDGE-gap/2-30);
+      let ok=true;
+      if(S.lastFlagX!==null){ // the thread-point must be reachable too
+        const dd=gd-S.lastFlagD;
+        if(dd<4.5)ok=false;
+        else{const budget=Math.max(0,dd-8)*11;
+          gx=clamp(gx,S.lastFlagX-budget,S.lastFlagX+budget);
+          gx=clamp(gx,EDGE+gap/2+30,LW-EDGE-gap/2-30);
+          if(Math.abs(gx-S.lastFlagX)>budget+1)ok=false;}
+      }
+      if(ok){
+        gates.push({k:1,d:gd,x:gx-gap/2,side:1,done:0});
+        gates.push({k:1,d:gd+0.5,x:gx+gap/2,side:-1,done:0});
+        S.lastFlagD=gd+0.5;S.lastFlagX=gx;
+        S.lastSide=R()<0.5?-1:1;
+      }
     } // else: breather chunk, no flag
   }
-  const cnt=Math.min(C.obsMax*M.obs,(1.4+d0*0.007)*M.obs)*(0.35+0.65*ez)*(0.85+0.3*wv)*0.8;
+  const cnt=Math.min(C.obsMax*M.obs,(1.4+d0*0.007)*M.obs)*(0.35+0.65*ez)*(0.85+0.3*wv)*0.4;
   let n=Math.floor(cnt)+(R()<(cnt%1)?1:0);
   for(let i=0;i<n;i++){
     for(let tr=0;tr<6;tr++){
@@ -259,6 +294,12 @@ function genTo(){while(S.gen<S.depth+C.ahead)genChunk();
 function floater(txt,x,d,col,size,screen){floaters.push({txt,x,y:screen?d:0,d:screen?0:d,col,size:size||26,t:1,screen:!!screen});}
 function burstAt(x,d,col,n,spd){for(let i=0;i<n;i++){const a=Math.random()*6.283,v=(0.3+Math.random())*(spd||90);
   parts.push({x,d,vx:Math.cos(a)*v,vy:Math.sin(a)*v/PXM,t:0.5+Math.random()*0.4,col,r:1.5+Math.random()*2.5});}}
+function bloodSmear(x,d,dirX,dirD,scale,col){
+  const drops=[];const n=3+Math.floor(Math.random()*3);
+  for(let i=0;i<n;i++)drops.push({ox:(Math.random()*2-1)*16*scale,od:(Math.random()*2-1)*0.9*scale,r:(1.4+Math.random()*2.4)*scale});
+  smears.push({x,d,dx:dirX,dd:dirD,len:(20+Math.random()*18)*scale,w:(6+Math.random()*4)*scale,drops,col:col||'150,18,24'});
+  if(smears.length>70)smears.shift();
+}
 function ringAt(x,d,col,big){rings.push({x,d,t:0.45,col,big:big||0});}
 /* ============================ ECONOMY EVENTS ============================ */
 function heatRGB(){return S.combo>=15?'255,157,58':S.combo>=9?'255,215,106':S.combo>=4?'127,230,255':'255,255,255';}
@@ -267,8 +308,8 @@ function addFury(base){ // mistakes smell like blood; streaks compound
   S.yeti.fury=Math.min(1,S.yeti.fury+base*(1+C.furyStreakW*(S.streak-1)));
 }
 function cleanFlag(g,px){
-  const fuel=C.flagFuel*M.fuel*(1+S.combo*C.fuelPerCombo);
-  S.fuel+=fuel; S.combo++; S.comboPulse=1;
+  const fuel=C.flagFuel*M.fuel*(1+Math.min(S.combo,C.comboFuelCap)*C.fuelPerCombo);
+  S.fuel=Math.min(S.fuel+fuel,C.poolCap); S.combo++; S.comboPulse=1;
   if(S.combo===5||S.combo===10||S.combo===15||S.combo===20){ // milestone crescendo
     S.comboPulse=1.6;
     const bf=520+S.combo*9;
@@ -281,8 +322,9 @@ function cleanFlag(g,px){
 function wrongSide(g){ // ignored the mountain's command: chain breaks, nothing else
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
-  ringAt(g.x,g.d,'rgba(160,170,185,.8)',0);
-  tone(240,150,0.12,'sine',0.12);
+  ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
+  burstAt(g.x,g.d,'#9aa5b5',8,60);
+  tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
 }
 function faultFlag(g){
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70); // chain gutters out
@@ -297,19 +339,30 @@ function crash(){
   S.stun=C.stun; S.iframe=C.iframe+C.stun; S.hitstop=C.hitstop;
   S.shake=16; S.flash=0.5; S.lastCrash=S.time;
   burstAt(S.x,S.depth,'#ffffff',26,110);
+  bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
   addFury(C.furyCrash); // replaces the flat +5m lurch: rage instead of teleport
   addMarker('ko',S.depth,S.x);
   // mercy: the first gate after a knockdown is centered on your line and generous
-  const ng=gates.find(g=>!g.done&&g.d>S.depth+6&&g.d<S.depth+55);
+  const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95); // beyond the visible edge: no on-screen teleport
   if(ng){const away=S.x<LW/2?1:-1; // command the side away from the nearer wall
-    ng.side=away;ng.x=clamp(S.x-away*60,EDGE+40,LW-EDGE-40);}
+    ng.side=away;ng.x=clamp(S.x-away*60,EDGE+115,LW-EDGE-115);}
   sfx.crash(); vib(60);
+}
+function shove(n){ // low-speed bump: a jostle, never a run-ender
+  const dir=S.x>=n.x?1:-1;
+  S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
+  S.speed*=0.85; S.iframe=0.5;
+  n.down=0.8; n.x=clamp(n.x-dir*20,EDGE+10,LW-EDGE-10);
+  burstAt((S.x+n.x)/2,S.depth,'#e8eef4',10,80);
+  S.shake=Math.max(S.shake,5);
+  tone(180,110,0.12,'square',0.16); vib(20);
 }
 function barge(n){
   S.speed*=0.5; S.iframe=0.4; S.hitstop=0.05;
   S.shake=Math.max(S.shake,9); S.flash=Math.max(S.flash,0.2);
   n.down=1.2;
   burstAt(n.x,n.d,'#ffffff',18,120);
+  bloodSmear(n.x,n.d,Math.sin(S.theta),Math.cos(S.theta),1.5); // plowed through at speed
   tone(220,90,0.18,'square',0.22); vib(30);
 }
 function passBreak(){ // the hunt fails: it breaks off, spent
@@ -344,11 +397,15 @@ function finalizeDeath(){
   S.mode='dead';
   addMarker('death',S.depth,S.x);
   const dist=Math.floor(S.depth);
+  const isNew=dist>best&&best>0;
   if(dist>best){best=dist;store.setItem('ep_best',String(best));}
+  $('rNew').style.display=isNew?'block':'none';
+  if(isNew){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
   if(S.cause==='edge'){title='Off the trail';tag='Skied into the trees';}
   else if(S.time-S.lastCrash<2){title='Caught';tag='Knocked down — then caught';}
-  else if(S.combo===0){title='Caught';tag='Ran out of speed';}
+  else if(S.combo===0&&S.speed<C.glide+3){title='Caught';tag='Ran out of speed';}
+  else if(S.combo===0){title='Caught';tag='Lost the rhythm';}
   else{title='Caught';tag='Caught by the yeti';}
   el.rTitle.textContent=title;el.rTag.textContent=tag;
   el.rDist.textContent=dist+' m';el.rBest.textContent='BEST '+Math.floor(best)+' m';
@@ -358,6 +415,7 @@ function finalizeDeath(){
   const span=Math.max(best,dist,1);
   $('tYou').style.left=(dist/span*96)+'%';
   $('tBest').style.left=(best/span*96)+'%';
+  $('btnRow').style.display='flex';
   el.results.classList.remove('hide');
 }
 /* ============================ PHASE SWITCH ============================ */
@@ -427,11 +485,11 @@ function update(dt){
   if(S.x<=EDGE||S.x>=LW-EDGE){S.x=clamp(S.x,EDGE,LW-EDGE);die('edge');return;}
   // spray
   const sn=Math.abs(Math.sin(S.theta));
-  if(S.speed>13&&sn>0.25){for(let i=0;i<sn*3;i++)spray.push({x:S.x-Math.sin(S.theta)*10,y:PIN_Y+12,
-    vx:-Math.sin(S.theta)*(90+S.speed*2.5+Math.random()*60),vy:20+Math.random()*50,t:0.35+Math.random()*0.25,r:1.5+Math.random()*2});}
+  if(S.speed>13&&sn>0.25){for(let i=0;i<sn*5;i++)spray.push({x:S.x-Math.sin(S.theta)*10,y:PIN_Y+12,
+    vx:-Math.sin(S.theta)*(90+S.speed*2.5+Math.random()*90),vy:14+Math.random()*66,t:0.35+Math.random()*0.3,r:1.2+Math.random()*2.6});}
   for(let i=spray.length-1;i>=0;i--){const p=spray[i];p.t-=dt;p.x+=p.vx*dt;p.y+=(p.vy+S.speed*PXM*0.5)*dt;if(p.t<=0)spray.splice(i,1);}
   // trail
-  S.trail.push({x:S.x,d:S.depth,w:2+(S.speed/C.speedMax)*9,hr:heatRGB()});if(S.trail.length>48)S.trail.shift();
+  S.trail.push({x:S.x,d:S.depth,th:S.theta,w:2+(S.speed/C.speedMax)*9,hr:heatRGB()});if(S.trail.length>90)S.trail.shift();
   genTo();
   // gates (swept)
   const dstep=S.depth-S.prevD||1e-9;
@@ -467,15 +525,17 @@ function update(dt){
       n.vx+=(tvx-n.vx)*Math.min(1,5*dt);n.x+=n.vx*dt;n.d+=n.spd*dt;
       // npc hits obstacle
       for(const o of obs){if(Math.abs(o.d-n.d)<1.4&&Math.abs(o.x-n.x)<o.r*C.forgive+10){
-        n.down=1+Math.random()*0.2;burstAt(n.x,n.d,'#ffb066',12,80);break;}}
+        n.down=1+Math.random()*0.2;burstAt(n.x,n.d,'#ffb066',12,80);
+        bloodSmear(n.x,n.d,Math.sign(n.vx)||0,1,0.6);break;}}
       // npc hits player
       if(S.iframe<=0&&Math.abs(n.d-S.depth)<1.5&&Math.abs(n.x-S.x)<PR+11){
-        if(S.speed>=0.6*C.speedMax)barge(n);else{crash();n.down=1;}}
+        if(S.speed>=0.6*C.speedMax)barge(n);else shove(n);}
     }
     n.trail.push({x:n.x,d:n.d});if(n.trail.length>34)n.trail.shift();
     // eaten
     if(Y.on&&n.d<=Y.d+1.5){
       npcs.splice(i,1);burstAt(n.x,n.d,'#e03434',28,110);addMarker('eat',n.d,n.x);
+      bloodSmear(n.x,n.d,0,1,1.7,'110,10,14'); // the feast leaves a drag stain
       Y.eat=C.feast;sfx.eat();continue;
     }
     if(n.d<S.depth-50)npcs.splice(i,1);
@@ -489,7 +549,8 @@ function update(dt){
     if(b.x<EDGE+b.r){b.x=EDGE+b.r;b.vx=Math.abs(b.vx);}
     if(b.x>LW-EDGE-b.r){b.x=LW-EDGE-b.r;b.vx=-Math.abs(b.vx);}
     if(S.iframe<=0&&Math.abs(b.d-S.depth)<(b.r+PR)/PXM+0.6&&Math.abs(b.x-S.x)<b.r*0.8+PR){crash();balls.splice(i,1);continue;}
-    for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);}
+    for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);
+      bloodSmear(n.x,n.d,Math.sign(b.vx)||0,1,0.9);}
     if(b.d>S.depth+62)balls.splice(i,1);
   }
   // yeti brain
@@ -509,13 +570,15 @@ function update(dt){
     if(Y.fury>0.6){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
     // hunting passes: it attacks on its own schedule, however far behind it fell
     if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>18){
-      Y.pass=1;sfx.roar();vib(30); // you hear it coming before you see it
+      Y.pass=1;vib(30); // you hear it coming before you see it: a rising drone unlike any roar
+      tone(55,150,1.3,'sawtooth',0.3);tone(110,300,1.3,'triangle',0.16);
     }
     let adv=0;
     const deepK=Math.min(1,S.depth/2500);
     if(Y.stag>0){Y.stag-=dt;adv=0;if(Y.pass===1||Y.pass===2)passBreak();} // a dodged strike ends the hunt
     else if(Y.eat>0){Y.eat-=dt;}
     else if(Y.pass===1){ // approach: closes fast regardless of gap
+      Y.foot-=dt;if(Y.foot<=0){Y.foot=0.5;tone(72,50,0.09,'square',0.15);} // closing footfalls
       adv=S.speed+Math.max(6,S.buffer/2.5);
       if(S.buffer<=12){Y.pass=2;Y.passT=3+3*deepK+2*Y.fury;Y.passLunges=1+(deepK>0.4?1:0);}
     }
@@ -651,16 +714,41 @@ function render(){
     for(const c of corDbg){const u=c.d-S.depth;if(u<UTOP||u>UBOT)continue;
       const a=projD(c.c-c.h,u),b=projD(c.c+c.h,u),a2=projD(c.c-c.h,Math.min(u+C.chunk,UBOT)),b2=projD(c.c+c.h,Math.min(u+C.chunk,UBOT));
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b2.x,b2.y);ctx.lineTo(a2.x,a2.y);ctx.closePath();ctx.stroke();}}
-  // markers
+  // markers — with dried bloodstains: the mountain remembers what happened here
+  const dkAll=clamp((S.depth-1200)/600,0,1);
   for(const m of markers){const u=m.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const p=projD(m.x,u),r=7*p.s;
+    if(m.t!=='death'||true){
+      const hs=hsh(m.d*3.7+m.x),big=m.t==='eat'?1.5:m.t==='death'?1.1:0.8;
+      const sa=(m.t==='eat'?0.26:m.t==='death'?0.2:0.14)+0.08*dkAll;
+      ctx.fillStyle='rgba('+(120+40*dkAll)+',35,28,'+sa.toFixed(2)+')';
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(hs*6.28);
+      ctx.beginPath();ctx.ellipse(0,0,(9+hs*7)*big*p.s,(5+hs*3)*big*p.s,0,0,6.283);ctx.fill();
+      ctx.restore();
+    }
     ctx.strokeStyle=m.t==='eat'?'rgba(150,20,20,0.55)':m.t==='death'?'rgba(90,95,105,0.6)':'rgba(120,126,136,0.35)';
     ctx.lineWidth=3*p.s;
     ctx.beginPath();ctx.moveTo(p.x-r,p.y-r);ctx.lineTo(p.x+r,p.y+r);ctx.moveTo(p.x+r,p.y-r);ctx.lineTo(p.x-r,p.y+r);ctx.stroke();}
+  // fresh blood: this run's consequences, streaked along the impact direction
+  for(const sm of smears){const u=sm.d-S.depth;if(u<UTOP||u>UBOT)continue;
+    const hl=sm.len/2;
+    const pa=projD(sm.x-sm.dx*hl,u-sm.dd*hl/PXM),pb=projD(sm.x+sm.dx*hl,u+sm.dd*hl/PXM);
+    ctx.strokeStyle='rgba('+sm.col+','+(0.5+0.15*dkAll)+')';ctx.lineCap='round';
+    ctx.lineWidth=sm.w*pb.s;
+    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+    ctx.fillStyle='rgba('+sm.col+','+(0.45+0.15*dkAll)+')';
+    for(const dr of sm.drops){const pd=projD(sm.x+dr.ox,u+dr.od/PXM);
+      ctx.beginPath();ctx.arc(pd.x,pd.y,dr.r*pd.s,0,6.283);ctx.fill();}
+  }
   // obstacles
   for(const o of obs){const u=o.d-S.depth;if(u<UTOP||u>UBOT)continue;
+    const dk=clamp((S.depth-1200)/600,0,1); // hazard rim-light as the world darkens
     const p=projD(o.x,u);ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s,p.s);
-    if(o.tree)drawTree(o,pal,nightK);else drawRock(o,pal);ctx.restore();}
+    if(o.tree)drawTree(o,pal,nightK);else drawRock(o,pal);
+    if(dk>0.03){ctx.strokeStyle='rgba(175,205,255,'+(0.5*dk)+')';ctx.lineWidth=1.6;
+      if(o.tree){const ss=o.r;ctx.beginPath();ctx.moveTo(0,-ss*1.3);ctx.lineTo(-ss*0.85,ss*0.3);ctx.lineTo(ss*0.85,ss*0.3);ctx.closePath();ctx.stroke();}
+      else{ctx.beginPath();ctx.arc(0,0,o.r*0.85,0,6.283);ctx.stroke();}}
+    ctx.restore();}
   // boulders (+ incoming shadow telegraph at the top edge)
   for(const b of balls){const u=b.d-S.depth;
     if(u<UTOP&&u>UTOP-9){
@@ -689,15 +777,26 @@ function render(){
         const p=projD(q.x,u);if(!started){ctx.moveTo(p.x,p.y);started=true;}else ctx.lineTo(p.x,p.y);}
       ctx.stroke();}
     const u=n.d-S.depth;if(u<UTOP||u>UBOT)continue;
-    const p=projD(n.x,u);ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s,p.s);drawNPC(n);ctx.restore();
+    const p=projD(n.x,u);ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s*1.28,p.s*1.28);drawNPC(n);ctx.restore();
   }
-  // player trail
+  // dual ski tracks: the signature mark. Stance widens in a carve; the outside
+  // edge cuts deeper; history lingers long and faint down the visible slope.
   if(S.trail.length>1){ctx.lineCap='round';
-    for(let i=1;i<S.trail.length;i++){const a=S.trail[i-1],b=S.trail[i];
+    const tn=S.trail.length;
+    for(let i=1;i<tn;i++){const a=S.trail[i-1],b=S.trail[i];
       const ua=a.d-S.depth,ub=b.d-S.depth;if(ua<UTOP||ub<UTOP)continue;
-      const pa=projD(a.x,ua),pb=projD(b.x,ub);
-      ctx.strokeStyle='rgba('+(b.hr||'255,255,255')+','+(0.06+0.34*i/S.trail.length)+')';
-      ctx.lineWidth=b.w*pb.s;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();}}
+      const alpha=0.05+0.38*Math.pow(i/tn,1.5);
+      const sinB=Math.sin(b.th||0);
+      ctx.strokeStyle='rgba('+(b.hr||'255,255,255')+','+alpha.toFixed(3)+')';
+      for(const sk of[-1,1]){
+        const offA=(9+10*Math.abs(Math.sin(a.th||0)))/2,offB=(9+10*Math.abs(sinB))/2;
+        const pa=projD(a.x+Math.cos(a.th||0)*offA*sk, ua-Math.sin(a.th||0)*offA*sk/PXM);
+        const pb=projD(b.x+Math.cos(b.th||0)*offB*sk, ub-sinB*offB*sk/PXM);
+        const outside=(sk===-(Math.sign(sinB)||1))?Math.abs(sinB):0;
+        ctx.lineWidth=Math.max(1,b.w*(0.55+0.3*outside)*pb.s);
+        ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+      }
+    }}
   // world particles / rings / spray
   for(const q of parts){const u=q.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const p=projD(q.x,u);ctx.globalAlpha=clamp(q.t*2,0,1);
@@ -708,6 +807,16 @@ function render(){
     ctx.strokeStyle=r.col;ctx.globalAlpha=1-k;ctx.lineWidth=3*p.s;
     ctx.beginPath();ctx.arc(p.x,p.y,(8+k*(46+r.big))*p.s,0,6.283);ctx.stroke();}
   ctx.globalAlpha=1;
+  // powder fan off the outside edge of a hard carve
+  {const sn2=Math.abs(Math.sin(S.theta));
+   if(S.mode==='play'&&S.speed>15&&sn2>0.35){
+     const out=-(Math.sign(S.theta)||1),k=sn2*Math.min(1,S.speed/30);
+     ctx.globalAlpha=0.16*k;ctx.fillStyle='#ffffff';
+     ctx.beginPath();
+     ctx.moveTo(S.x,PIN_Y+10);
+     ctx.lineTo(S.x+out*(18+36*k),PIN_Y+24+16*k);
+     ctx.lineTo(S.x+out*(6+15*k),PIN_Y+36+14*k);
+     ctx.closePath();ctx.fill();ctx.globalAlpha=1;}}
   for(const p of spray){ctx.globalAlpha=clamp(p.t*2.4,0,1);ctx.fillStyle='#fff';
     ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();}
   ctx.globalAlpha=1;
@@ -863,6 +972,8 @@ function drawNPC(n){
 function drawPlayer(){
   const y=PIN_Y;
   ctx.save();ctx.translate(S.x,y);
+  const ab=Math.min(1,Math.abs(S.bank)/C.thetaMax);
+  ctx.scale(1.28*(1+ab*0.08),1.28*(1-ab*0.11));
   if(S.stun>0){ctx.rotate(S.time*14);ctx.strokeStyle='#ff4a3a';ctx.lineWidth=6;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(-11,-11);ctx.lineTo(11,11);ctx.moveTo(11,-11);ctx.lineTo(-11,11);ctx.stroke();
     ctx.restore();return;}
@@ -974,6 +1085,7 @@ function kb(){
 }
 /* overlays */
 function beginRun(){fresh();if(lastDeathReal)S.speed=17; // retry = rolling push-off
+  $('btnRow').style.display='none';
   S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');ac();}
 el.intro.addEventListener('pointerdown',e=>{e.preventDefault();beginRun();});
 el.results.addEventListener('pointerdown',e=>{e.preventDefault();beginRun();});
@@ -1026,7 +1138,7 @@ requestAnimationFrame(frame);
 /* ============================ TEST HOOK ============================ */
 window.__EP={
   begin:beginRun,update,render,S:()=>S,C,M:()=>M,fresh,
-  arrays:()=>({gates,obs,npcs,balls,markers}),
+  arrays:()=>({gates,obs,npcs,balls,markers,smears}),
   _setRecent:a=>{try{store.setItem('ep_recent',JSON.stringify(a));}catch(e){}},
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
