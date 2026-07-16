@@ -64,6 +64,7 @@
   .lbRow b{letter-spacing:.2em}
   .lbRow i{margin-left:auto;font-style:normal;opacity:.85}
   .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
+  #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
 </style>
 </head>
 <body>
@@ -101,6 +102,7 @@
         <button id="lbGo">SUBMIT</button>
       </div>
       <div id="lbList"></div>
+      <div id="lbStatus"></div>
     </div>
     <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
     <div class="go">TAP TO RETRY</div>
@@ -210,8 +212,9 @@ const LB=(()=>{
     lastRefresh=Date.now();
     try{
       const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_SIZE);
-      if(r.ok){cache.top=norm(await r.json());save();renderBoard();}
-    }catch(e){}
+      if(r.ok){cache.top=norm(await r.json());save();renderBoard();lbStatus('');}
+      else lbStatus('board unreachable ('+r.status+') — check database rules');
+    }catch(e){lbStatus('board offline');}
   }
   async function drain(){ // pending queue survives offline deaths and drains later
     if(!on()||busy)return;busy=true;
@@ -220,10 +223,10 @@ const LB=(()=>{
         const e=cache.pending[0];
         const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json',
           {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
-        if(!r.ok)break;
+        if(!r.ok){lbStatus('submit blocked ('+r.status+') — will retry; check database rules');break;}
         cache.pending.shift();save();
       }
-    }catch(e){}
+    }catch(e){lbStatus('submit queued — offline, will retry');}
     busy=false;
     if(!cache.pending.length)refresh(true);
   }
@@ -240,6 +243,7 @@ const LB=(()=>{
   return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,
     _setUrl:u=>{FIREBASE_DB_URL=u;}};
 })();
+function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList');if(!list)return;
   const top=LB.cache().top,ls=LB.lastSub();
@@ -1193,7 +1197,7 @@ $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
 $('lbGo').addEventListener('click',function(){
   const sc=parseInt(this.dataset.score||'0',10);
   if(LB.submit($('lbInit').value,sc)){
-    $('lbEntry').style.display='none';renderBoard();
+    $('lbEntry').style.display='none';lbStatus('sending…');renderBoard();
   }else{ // blacklist bounce
     $('lbInit').value='';$('lbInit').placeholder='NOPE';
   }
