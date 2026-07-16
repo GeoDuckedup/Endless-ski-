@@ -51,6 +51,19 @@
   #tYou{background:#ff6a5e}#tBest{background:#ffd76a}
   #rNew{margin-top:calc(14*var(--u));font-size:calc(30*var(--u));font-weight:900;letter-spacing:.2em;
     color:#ffd76a;text-shadow:0 0 calc(16*var(--u)) rgba(255,215,106,.7);animation:pulse 1s ease-in-out infinite}
+  #lbWrap{margin-top:calc(20*var(--u));width:72%;pointer-events:auto}
+  #lbEntry{display:flex;gap:calc(10*var(--u));justify-content:center;margin-bottom:calc(14*var(--u))}
+  #lbInit{width:calc(120*var(--u));text-align:center;font-size:calc(34*var(--u));font-weight:900;
+    letter-spacing:.35em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.35);border-radius:calc(10*var(--u));padding:calc(6*var(--u)) 0;outline:none}
+  #lbGo{font-size:calc(20*var(--u));font-weight:800;letter-spacing:.12em;color:#0a1420;
+    background:#8fd8ff;border:none;border-radius:calc(10*var(--u));padding:0 calc(18*var(--u))}
+  .lbRow{display:flex;align-items:center;gap:calc(12*var(--u));font-size:calc(22*var(--u));
+    padding:calc(3*var(--u)) 0;font-variant-numeric:tabular-nums}
+  .lbRow span{width:calc(30*var(--u));opacity:.55;text-align:right}
+  .lbRow b{letter-spacing:.2em}
+  .lbRow i{margin-left:auto;font-style:normal;opacity:.85}
+  .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
 </style>
 </head>
 <body>
@@ -82,6 +95,13 @@
     <div class="big" id="rDist">0 m</div>
     <div class="best" id="rBest"></div>
     <div id="rNew" style="display:none">NEW BEST</div>
+    <div id="lbWrap" style="display:none">
+      <div id="lbEntry" style="display:none">
+        <input id="lbInit" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AAA">
+        <button id="lbGo">SUBMIT</button>
+      </div>
+      <div id="lbList"></div>
+    </div>
     <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
     <div class="go">TAP TO RETRY</div>
   </div>
@@ -165,6 +185,70 @@ const PHASES=[
   {n:'SWITCHBACK',w:1,f:m=>{m.alt=true;m.fuel=1.3;}},
   {n:'HUNGRY',w:1,f:m=>{m.yeti=1.22;m.fuel=1.5;}}
 ];
+/* ==================== ONLINE LEADERBOARD (Firebase RTDB REST) ====================
+   Ported from JumpOvertheMoon's HighScoreService. Set FIREBASE_DB_URL to enable —
+   leave empty and the feature hides itself entirely. No SDK: plain REST + fetch. */
+let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
+const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_REFRESH=30000;
+const LB_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
+const LB=(()=>{
+  let cache={initials:'AAA',top:[],pending:[]};
+  try{const c=JSON.parse(store.getItem('ep_lb')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
+  let lastRefresh=0,busy=false,lastSub=null;
+  const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
+  const save=()=>{try{store.setItem('ep_lb',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
+  const sanit=v=>{const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return (c||'AAA').slice(0,3).padEnd(3,'A');};
+  const norm=p=>{
+    const raw=p&&typeof p==='object'?Object.values(p):[];
+    return raw.filter(e=>e&&typeof e==='object')
+      .map(e=>({initials:sanit(e.initials),score:Math.max(0,Math.min(999999,Math.floor(+e.score||0))),timestamp:Math.floor(+e.timestamp||0)}))
+      .sort((a,b)=>b.score-a.score||a.timestamp-b.timestamp).slice(0,LB_SIZE);
+  };
+  async function refresh(force){
+    if(!on())return;
+    if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
+    lastRefresh=Date.now();
+    try{
+      const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_SIZE);
+      if(r.ok){cache.top=norm(await r.json());save();renderBoard();}
+    }catch(e){}
+  }
+  async function drain(){ // pending queue survives offline deaths and drains later
+    if(!on()||busy)return;busy=true;
+    try{
+      while(cache.pending.length){
+        const e=cache.pending[0];
+        const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json',
+          {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
+        if(!r.ok)break;
+        cache.pending.shift();save();
+      }
+    }catch(e){}
+    busy=false;
+    if(!cache.pending.length)refresh(true);
+  }
+  const qualifies=score=>on()&&(cache.top.length<LB_SIZE||score>cache.top[cache.top.length-1].score);
+  function submit(initials,score){
+    initials=sanit(initials);
+    if(LB_BAD.test(initials))return false; // server enforces too; this avoids a doomed write
+    cache.initials=initials;
+    const entry={initials,score:Math.max(0,Math.min(999999,Math.floor(score))),timestamp:Date.now()};
+    lastSub=entry;
+    cache.pending.push(entry);cache.pending=cache.pending.slice(-20);
+    save();drain();return true;
+  }
+  return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,
+    _setUrl:u=>{FIREBASE_DB_URL=u;}};
+})();
+function renderBoard(){
+  const list=$('lbList');if(!list)return;
+  const top=LB.cache().top,ls=LB.lastSub();
+  if(!top.length){list.innerHTML='';return;}
+  list.innerHTML=top.map((e,i)=>{
+    const mine=ls&&e.initials===ls.initials&&e.score===ls.score;
+    return '<div class="lbRow'+(mine?' mine':'')+'"><span>'+(i+1)+'</span><b>'+e.initials+'</b><i>'+e.score+' m</i></div>';
+  }).join('');
+}
 /* ============================ PERSISTENCE ============================ */
 let markers=[];try{markers=JSON.parse(store.getItem('ep_markers')||'[]')||[];}catch(e){markers=[];}
 let best=parseFloat(store.getItem('ep_best')||'0')||0;
@@ -405,8 +489,16 @@ function finalizeDeath(){
   S.mode='dead';
   addMarker('death',S.depth,S.x);
   const dist=Math.floor(S.depth);
-  const isNew=dist>best&&best>0;
+  const oldBest=best,isNew=dist>best&&best>0,wasBest=dist>oldBest;
   if(dist>best){best=dist;store.setItem('ep_best',String(best));}
+  if(LB.on()){
+    $('lbWrap').style.display='block';
+    const q=dist>0&&(wasBest||LB.qualifies(dist));
+    $('lbEntry').style.display=q?'flex':'none';
+    if(q){$('lbInit').value=LB.cache().initials;$('lbGo').textContent='SUBMIT';
+      $('lbGo').dataset.score=dist;}
+    renderBoard();LB.refresh(true);LB.drain();
+  }else $('lbWrap').style.display='none';
   $('rNew').style.display=isNew?'block':'none';
   if(isNew){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
@@ -1097,6 +1189,17 @@ function beginRun(){fresh();if(lastDeathReal)S.speed=17; // retry = rolling push
   S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');ac();}
 el.intro.addEventListener('pointerdown',e=>{e.preventDefault();beginRun();});
 el.results.addEventListener('pointerdown',e=>{e.preventDefault();beginRun();});
+$('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
+$('lbGo').addEventListener('click',function(){
+  const sc=parseInt(this.dataset.score||'0',10);
+  if(LB.submit($('lbInit').value,sc)){
+    $('lbEntry').style.display='none';renderBoard();
+  }else{ // blacklist bounce
+    $('lbInit').value='';$('lbInit').placeholder='NOPE';
+  }
+});
+$('lbInit').addEventListener('input',function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
+LB.refresh();LB.drain(); // warm the board and flush any offline submits from last session
 /* buttons */
 $('bTune').addEventListener('click',()=>el.tune.classList.toggle('show'));
 $('bDebug').addEventListener('click',()=>{debugOn=!debugOn;});
@@ -1148,6 +1251,7 @@ window.__EP={
   begin:beginRun,update,render,S:()=>S,C,M:()=>M,fresh,
   arrays:()=>({gates,obs,npcs,balls,markers,smears}),
   _setRecent:a=>{try{store.setItem('ep_recent',JSON.stringify(a));}catch(e){}},
+  lb:LB,
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
 </script>
