@@ -723,8 +723,9 @@ function update(dt){
   const rateK=clamp(Math.abs(S.turnVel)/(210*D2R),0,1);
   const pressureT=clamp(speedK*(0.22*edgeK+0.62*rateK+0.48*S.edgeSnap)*(0.82+0.42*S.powK),0,1.35);
   S.turnPressure+= (pressureT-S.turnPressure)*Math.min(1,(pressureT>S.turnPressure?15:7)*dt);
-  const bob=Math.sin(S.time*(5.2+S.speed*0.08))*0.65*S.powK*(0.35+0.65*speedK);
-  const bodyTarget=4.2*S.sink-1.25*speedK*S.powK+1.15*S.turnPressure+bob;
+  const bob=Math.sin(S.time*(5.2+S.speed*0.08))*0.55*S.powK*(0.35+0.65*speedK);
+  const powderSettle=1.6*S.powK*(1-speedK*0.55)+0.9*Math.abs(Math.sin(S.theta))*S.powK;
+  const bodyTarget=6.4*S.sink+powderSettle-0.45*speedK*S.powK+0.55*S.turnPressure+bob;
   S.bodyY+=(bodyTarget-S.bodyY)*Math.min(1,7*dt);
 
   // carve hiss + powder whoosh + speed rumble: one pressure signal drives all material feedback
@@ -1056,26 +1057,31 @@ function drawPlayerTracks(){
   drawOne(build(-1));drawOne(build(1));
 }
 function snowRGB(pal,bright){
-  const k=bright?1:0.82;
-  return[(205+48*pal.tint[0])*k,(211+44*pal.tint[1])*k,(222+32*pal.tint[2])*k];
+  const base=bright?[244,248,252]:[228,236,244];
+  const tintMix=bright?0.08:0.14;
+  return[
+    lerp(base[0],210+26*pal.tint[0],tintMix),
+    lerp(base[1],216+24*pal.tint[1],tintMix),
+    lerp(base[2],228+20*pal.tint[2],tintMix)
+  ];
 }
 function drawSprayLayer(front,pal){
-  const base=snowRGB(pal,true),shadow=snowRGB(pal,false);
+  const base=snowRGB(pal,true),soft=snowRGB(pal,false);
   for(const p of spray){if(!!p.front!==!!front)continue;
     const life=clamp(p.t/Math.max(0.001,p.maxT||p.t),0,1);
     const fade=Math.min(1,(1-life)*5)*Math.min(1,life*3.5);
     if(p.type==='mist'){
-      ctx.globalAlpha=fade*(front?0.16:0.20);
-      ctx.fillStyle=`rgb(${shadow[0]|0},${shadow[1]|0},${shadow[2]|0})`;
-      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.25,p.r*0.82,p.vx*0.002,0,6.283);ctx.fill();
+      ctx.globalAlpha=fade*(front?0.12:0.16);
+      ctx.fillStyle=`rgb(${soft[0]|0},${soft[1]|0},${soft[2]|0})`;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.45,p.r*0.92,p.vx*0.002,0,6.283);ctx.fill();
     }else if(p.type==='chunk'){
-      ctx.globalAlpha=fade*0.78;ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+      ctx.globalAlpha=fade*0.68;ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
       ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot||0);
       const r=p.r,sk=0.76+0.18*Math.sin(p.seed);
-      ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(-r*0.35,-r*sk);ctx.lineTo(r*0.62,-r*0.55);ctx.lineTo(r,r*0.18);ctx.lineTo(r*0.15,r*0.75);ctx.closePath();ctx.fill();ctx.restore();
+      ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(-r*0.40,-r*sk);ctx.lineTo(r*0.55,-r*0.48);ctx.lineTo(r,r*0.10);ctx.lineTo(r*0.20,r*0.68);ctx.closePath();ctx.fill();ctx.restore();
     }else{
-      ctx.globalAlpha=fade*(front?0.34:0.46);ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
-      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.22,p.r*0.82,p.vx*0.0018,0,6.283);ctx.fill();
+      ctx.globalAlpha=fade*(front?0.22:0.34);ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.30,p.r*0.88,p.vx*0.0018,0,6.283);ctx.fill();
     }
   }
   ctx.globalAlpha=1;
@@ -1084,36 +1090,41 @@ function drawCarvePlume(pal,front){
   if(S.mode!=='play'||S.speed<10)return;
   const p=clamp(S.turnPressure,0,1.25),pow=S.powK;
   if(p<0.045&&pow<0.18)return;
-  const y=PIN_Y+(S.bodyY||0),c=snowRGB(pal,!front);
-  // Running flat through deep snow produces a symmetric bow wave rather than a false one-sided carve.
+  const y=PIN_Y+(S.bodyY||0),base=snowRGB(pal,true),soft=snowRGB(pal,false);
+  // Running flat through deep snow produces a low, body-hugging bow wave rather than an artificial fan.
   if(p<0.14){
-    const k=clamp(pow*(S.speed/C.speedMax),0,1);
+    const k=clamp(pow*(0.45+0.55*S.speed/C.speedMax),0,1);
     if(k<0.08)return;
-    ctx.save();ctx.translate(S.x,y);
-    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${((front?0.035:0.075)*k).toFixed(3)})`;
+    ctx.save();ctx.translate(S.x,y+2);
     for(const sk of[-1,1]){
-      ctx.beginPath();ctx.moveTo(sk*5,10);
-      ctx.bezierCurveTo(sk*(10+8*k),7,sk*(20+13*k),13,sk*(25+17*k),24+7*k);
-      ctx.bezierCurveTo(sk*(15+8*k),22,sk*8,19,sk*4,16);ctx.closePath();ctx.fill();
+      ctx.fillStyle=`rgba(${base[0]|0},${base[1]|0},${base[2]|0},${((front?0.06:0.09)*k).toFixed(3)})`;
+      ctx.beginPath();ctx.ellipse(sk*(8+5*k),12+2*k,10+8*k,4.2+2.4*k,sk*0.22,0,6.283);ctx.fill();
+      if(front){
+        ctx.fillStyle=`rgba(255,255,255,${(0.035*k).toFixed(3)})`;
+        ctx.beginPath();ctx.ellipse(sk*5,9+2*k,7+4*k,3+1.8*k,0,0,6.283);ctx.fill();
+      }
     }
     ctx.restore();return;
   }
   const out=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
-  const mass=clamp(0.10+p*0.76+pow*0.24,0,1);
-  ctx.save();ctx.translate(S.x,y);ctx.scale(out,1);
+  const mass=clamp(0.10+p*0.72+pow*0.30,0,1);
+  ctx.save();ctx.translate(S.x+out*2,y+2);
   if(!front){
-    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(0.075+0.125*mass).toFixed(3)})`;
-    ctx.beginPath();ctx.moveTo(5,10);
-    ctx.bezierCurveTo(22,3,52+48*mass,7,82+68*mass,37+28*mass);
-    ctx.bezierCurveTo(53+39*mass,33+25*mass,22,29,4,18);ctx.closePath();ctx.fill();
-    ctx.fillStyle=`rgba(250,252,255,${(0.11+0.18*mass).toFixed(3)})`;
-    ctx.beginPath();ctx.moveTo(4,11);
-    ctx.bezierCurveTo(18,7,39+24*mass,12,54+38*mass,31+17*mass);
-    ctx.bezierCurveTo(31+22*mass,28+12*mass,13,23,3,17);ctx.closePath();ctx.fill();
+    for(let i=0;i<4;i++){
+      const t=i/3;
+      const px=out*(10+14*t+28*mass*t*t), py=12+8*t+10*mass*t;
+      const rx=8+8*mass*(1-0.15*t), ry=3.8+3.2*mass*(1-0.2*t);
+      ctx.fillStyle=`rgba(${soft[0]|0},${soft[1]|0},${soft[2]|0},${(0.05+0.05*(1-t)+0.05*mass).toFixed(3)})`;
+      ctx.beginPath();ctx.ellipse(px,py,rx,ry,out*(0.30+0.12*t),0,6.283);ctx.fill();
+    }
+    ctx.fillStyle=`rgba(${base[0]|0},${base[1]|0},${base[2]|0},${(0.06+0.08*mass).toFixed(3)})`;
+    ctx.beginPath();ctx.ellipse(out*(16+10*mass),13,12+9*mass,5.0+3.0*mass,out*0.38,0,6.283);ctx.fill();
+    ctx.beginPath();ctx.ellipse(out*(28+18*mass),19+4*mass,13+14*mass,6.5+4.5*mass,out*0.44,0,6.283);ctx.fill();
   }else{
-    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(0.04+0.085*mass).toFixed(3)})`;
-    ctx.beginPath();ctx.moveTo(2,9);ctx.bezierCurveTo(10,10,21+13*mass,15,33+19*mass,27);
-    ctx.bezierCurveTo(19+9*mass,26,8,23,1,18);ctx.closePath();ctx.fill();
+    const bury=clamp(0.18+0.7*S.sink+0.25*pow,0,1);
+    ctx.fillStyle=`rgba(${base[0]|0},${base[1]|0},${base[2]|0},${(0.05+0.08*mass+0.06*bury).toFixed(3)})`;
+    ctx.beginPath();ctx.ellipse(out*(7+5*mass),11+4*bury,10+7*mass,4.5+3.0*bury,out*0.24,0,6.283);ctx.fill();
+    ctx.beginPath();ctx.ellipse(0,13+5*bury,11+4*pow,4.2+2.4*bury,0,0,6.283);ctx.fill();
   }
   ctx.restore();
 }
@@ -1461,7 +1472,7 @@ function drawNPC(n){
   ctx.restore();
 }
 function drawPlayer(){
-  const y=PIN_Y+(S.bodyY||0);
+  const y=PIN_Y+(S.bodyY||0),pal=palette(S.depth),snowC=snowRGB(pal,true);
   ctx.save();ctx.translate(S.x,y);
   const ab=Math.min(1,Math.abs(S.bank)/C.thetaMax);
   ctx.scale(1.28*(1+ab*0.08),1.28*(1-ab*0.11));
@@ -1480,22 +1491,29 @@ function drawPlayer(){
     const sink=S.sink,edgeI=clamp(S.turnPressure,0,1.2),tdir=Math.sign(S.theta)||0;
     ctx.lineCap='round';
     for(const sk of[-1,1]){
-      const skSink=sink<0.04?0:Math.min(0.98,sink*(sk===tdir&&tdir!==0?1.25:tdir!==0?0.8:1));
-      const entry=-15+27*skSink; // where the ski meets the surface; tips stay clear
+      const skSink=sink<0.04?0:Math.min(0.98,sink*(sk===tdir&&tdir!==0?1.35:tdir!==0?0.88:1.08));
+      const entry=-15+28*skSink; // where the ski meets the surface; tips stay clear
       // buried portion: a faint ghost through the snow
-      if(skSink>0){ctx.strokeStyle='rgba(28,40,54,0.22)';ctx.lineWidth=4.5;
+      if(skSink>0){ctx.strokeStyle='rgba(28,40,54,0.18)';ctx.lineWidth=4.5;
         ctx.beginPath();ctx.moveTo(sk*6,-15);ctx.lineTo(sk*6,entry);ctx.stroke();}
       // exposed portion: solid
       ctx.strokeStyle='#1c2836';ctx.lineWidth=4.5;
       ctx.beginPath();ctx.moveTo(sk*6,entry);ctx.lineTo(sk*6,15);ctx.stroke();
     }
     // live trench walls hugging the skis, flowing into the stamped ruts behind
-    ctx.strokeStyle='rgba(20,30,50,'+(0.18+0.3*edgeI).toFixed(2)+')';ctx.lineWidth=1.3;
+    ctx.strokeStyle='rgba(20,30,50,'+(0.14+0.22*edgeI).toFixed(2)+')';ctx.lineWidth=1.2;
     ctx.beginPath();ctx.moveTo(-9.4,-14);ctx.lineTo(-9.4,11);ctx.moveTo(9.4,-14);ctx.lineTo(9.4,11);ctx.stroke();
   }
   ctx.fillStyle='#e33b3b';ctx.beginPath();ctx.arc(0,0,8.5,0,6.283);ctx.fill();
   ctx.fillStyle='#f3dcc0';ctx.beginPath();ctx.arc(0,-9,4,0,6.283);ctx.fill();
   ctx.fillStyle='#2a72c8';ctx.beginPath();ctx.arc(0,-11,4,Math.PI,0);ctx.fill();
+  if(S.powK>0.10||S.sink>0.08){
+    const bury=clamp(0.15+0.85*S.sink+0.25*S.powK,0,1);
+    ctx.fillStyle=`rgba(${snowC[0]|0},${snowC[1]|0},${snowC[2]|0},${(0.10+0.18*bury).toFixed(3)})`;
+    ctx.beginPath();ctx.ellipse(0,10+6*bury,14+10*bury,4.8+3.4*bury,0,0,6.283);ctx.fill();
+    ctx.fillStyle=`rgba(255,255,255,${(0.03+0.07*bury).toFixed(3)})`;
+    ctx.beginPath();ctx.ellipse(0,7+4*bury,8+6*bury,2.8+1.8*bury,0,0,6.283);ctx.fill();
+  }
   ctx.restore();ctx.globalAlpha=1;
 }
 function drawYetiBody(x,y,sc,sy,eat,red,nightK){
