@@ -22,6 +22,7 @@
     border:1px solid rgba(255,255,255,.22);background:rgba(10,14,22,.68);color:#cfe3f5;
     font-size:max(20px,calc(22*var(--u)));display:flex;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
   .ib:active{background:rgba(90,140,200,.4)}
+  #bDebug{display:none}
   #tunePanel{position:absolute;z-index:8;left:calc(env(safe-area-inset-left) + 12px);right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 72px);
     max-height:62%;overflow:auto;background:rgba(8,12,20,.94);border:1px solid rgba(255,255,255,.18);border-radius:16px;
     padding:14px 16px;display:none;touch-action:auto;pointer-events:auto;color:#dfeaf5}
@@ -364,7 +365,8 @@ function fresh(){
   M=baseM();
   S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
-    camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,lastFlagD:-99,lastFlagX:null,
+    camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
+    prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
@@ -493,6 +495,15 @@ function bloodSmear(x,d,dirX,dirD,scale,col){
   if(smears.length>70)smears.shift();
 }
 function ringAt(x,d,col,big){const cap=PerfBudget.profile().rings;if(rings.length>=cap)rings.shift();rings.push({x,d,t:0.45,col,big:big||0});}
+function pushSpray(p){
+  const cap=PerfBudget.profile().spray;
+  if(spray.length>=cap)return false;
+  p.maxT=p.maxT||p.t||0.4;
+  p.type=p.type||'dense';
+  p.front=!!p.front;
+  p.seed=p.seed===undefined?Math.random()*1000:p.seed;
+  spray.push(p);return true;
+}
 const Effects=Object.freeze({floater,burstAt,bloodSmear,ringAt});
 /* ============================ ECONOMY EVENTS ============================ */
 function heatRGB(){return S.combo>=15?'255,157,58':S.combo>=9?'255,215,106':S.combo>=4?'127,230,255':'255,255,255';}
@@ -672,13 +683,6 @@ function update(dt){
   {const spkS=S.speed/C.speedMax,flatS=1-Math.abs(Math.sin(S.theta));
    const sinkT=clamp((0.4+0.7*S.powK)*(1-0.6*spkS)*(0.4+0.6*flatS)*1.6,0,0.95);
    S.sink+=(sinkT-S.sink)*Math.min(1,3.5*dt);}
-  // carve hiss + powder whoosh + speed rumble
-  if(AC&&sndOn){ensureHiss();if(hiss){const hk=Math.abs(Math.sin(S.theta))*(S.speed/C.speedMax);
-    hiss.g.gain.value=Math.min(0.11,hk*0.14);hiss.bp.frequency.value=1400+S.speed*40;
-    const spk=S.speed/C.speedMax;
-    hiss.g2.gain.value=Math.min(0.12,spk*spk*0.07+S.powK*0.06);}}
-  else if(hiss){hiss.g.gain.value=0;hiss.g2.gain.value=0;}
-
   // speed economy
   S.speed+=(C.glide-S.speed)*C.bleed*M.bleed*dt;
   const pour=Math.min(S.fuel,C.fuelRate*dt);S.fuel-=pour;S.speed=Math.min(C.speedMax,S.speed+pour);
@@ -698,7 +702,7 @@ function update(dt){
   // steering
   const target=S.active?S.steer:0;
   S.steerSm+=(target-S.steerSm)*Math.min(1,C.steerLerp*dt);
-  const tMax=C.thetaMax;
+  const tMax=C.thetaMax,theta0=S.theta;
   if(S.stun>0){S.theta+=(0-S.theta)*Math.min(1,10*dt);}
   else if(S.active){
     const want=S.steerSm*tMax,rate=C.turnRate*M.turn*dt;
@@ -707,55 +711,105 @@ function update(dt){
     const rate=C.returnRate*dt;
     S.theta+=clamp(0-S.theta,-rate,rate);
   }
+  S.prevTheta=theta0;
+  S.turnVel=(S.theta-theta0)/Math.max(dt,1e-4);
+  S.edgeSnap=Math.max(0,S.edgeSnap-dt*4.5);
+  const sdir=Math.sign(S.steer);
+  const snapped=S.active&&sdir&&sdir!==S.lastDir&&Math.abs(S.steer)>0.5&&S.speed>15;
+  if(snapped)S.edgeSnap=1;
+  if(sdir)S.lastDir=sdir;
+  const speedK=clamp((S.speed-8)/(C.speedMax-8),0,1);
+  const edgeK=Math.abs(Math.sin(S.theta));
+  const rateK=clamp(Math.abs(S.turnVel)/(210*D2R),0,1);
+  const pressureT=clamp(speedK*(0.22*edgeK+0.62*rateK+0.48*S.edgeSnap)*(0.82+0.42*S.powK),0,1.35);
+  S.turnPressure+= (pressureT-S.turnPressure)*Math.min(1,(pressureT>S.turnPressure?15:7)*dt);
+  const bob=Math.sin(S.time*(5.2+S.speed*0.08))*0.65*S.powK*(0.35+0.65*speedK);
+  const bodyTarget=4.2*S.sink-1.25*speedK*S.powK+1.15*S.turnPressure+bob;
+  S.bodyY+=(bodyTarget-S.bodyY)*Math.min(1,7*dt);
+
+  // carve hiss + powder whoosh + speed rumble: one pressure signal drives all material feedback
+  if(AC&&sndOn){ensureHiss();if(hiss){
+    const hk=clamp(S.turnPressure,0,1.2);
+    hiss.g.gain.value=Math.min(0.12,hk*0.105);hiss.bp.frequency.value=1250+S.speed*42+rateK*450;
+    const spk=S.speed/C.speedMax;
+    hiss.g2.gain.value=Math.min(0.13,spk*spk*0.065+S.powK*0.065+hk*0.025);}}
+  else if(hiss){hiss.g.gain.value=0;hiss.g2.gain.value=0;}
+
   // motion
   S.prevD=S.depth;S.prevX=S.x;
   S.depth+=S.speed*Math.cos(S.theta)*dt;
   S.x+=S.speed*Math.sin(S.theta)*dt*PXM;
   if(S.x<=EDGE||S.x>=LW-EDGE){S.x=clamp(S.x,EDGE,LW-EDGE);die('edge');return;}
-  // spray
-  const sn=Math.abs(Math.sin(S.theta));
-  const powMul=1+0.9*S.powK;
-  if(S.speed>13&&sn>0.25){const sprayN=Math.max(1,Math.round(sn*9*powMul*Q.fx));for(let i=0;i<sprayN&&spray.length<Q.spray;i++)spray.push({x:S.x-Math.sin(S.theta)*10,y:PIN_Y+12,
-    vx:-Math.sin(S.theta)*(90+S.speed*2.8+Math.random()*110),vy:-10+Math.random()*80,
-    t:0.4+Math.random()*0.35,r:1.4+Math.random()*2.8,
-    chunk:Math.random()<0.12+0.15*S.powK,rot:Math.random()*6.28,vr:(Math.random()-0.5)*14});}
-  if(S.speed>18&&spray.length<Q.spray){const sk2=Math.random()<0.5?-1:1; // tip mist at the true rotated tip
-    spray.push({x:S.x+Math.sin(S.theta)*20+Math.cos(S.theta)*sk2*9,
-      y:PIN_Y+Math.cos(S.theta)*20-Math.sin(S.theta)*sk2*9,
-      vx:(Math.random()-0.5)*50,vy:20+Math.random()*40,t:0.25+Math.random()*0.15,r:1+Math.random()*1.6});}
-  if(S.speed>30&&sn>0.55){for(let i=0,n=Math.max(1,Math.round(2*Q.fx));i<n&&spray.length<Q.spray;i++)spray.push({x:S.x,y:PIN_Y+14, // rooster tail
-    vx:(Math.random()-0.5)*60-Math.sin(S.theta)*80,vy:60+Math.random()*130,
-    t:0.5+Math.random()*0.2,r:2+Math.random()*2.2});}
-  // edge-bite: a chunky white kick the instant the carve snaps direction
-  const sdir=Math.sign(S.steer);
-  if(S.active&&sdir&&sdir!==S.lastDir&&Math.abs(S.steer)>0.5&&S.speed>15){
-    for(let i=0,n=Math.max(4,Math.round(12*Q.fx));i<n&&spray.length<Q.spray;i++)spray.push({x:S.x-sdir*8,y:PIN_Y+10,
-      vx:-sdir*(120+Math.random()*190),vy:-30+Math.random()*90,
-      t:0.45+Math.random()*0.3,r:2.4+Math.random()*2.6,
-      chunk:Math.random()<0.5,rot:Math.random()*6.28,vr:(Math.random()-0.5)*16});
+
+  // layered powder displacement: dense contact snow, suspended mist, and heavy chunks
+  const pressure=S.turnPressure;
+  const out=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
+  const powMass=0.45+0.85*S.powK;
+  if(S.speed>11&&pressure>0.08){
+    const denseN=Math.max(1,Math.round((1+pressure*4.2)*powMass*Q.fx));
+    for(let i=0;i<denseN;i++)pushSpray({type:'dense',front:false,
+      x:S.x+out*(7+Math.random()*7),y:PIN_Y+(S.bodyY||0)+9+Math.random()*7,
+      vx:out*(72+S.speed*2.4+Math.random()*95),vy:-28+Math.random()*78,
+      gravity:250,t:0.27+Math.random()*0.26,r:1.8+Math.random()*3.0});
+    const mistN=Math.max(0,Math.round((pressure*5.2+S.powK*2.8)*Q.fx));
+    for(let i=0;i<mistN;i++)pushSpray({type:'mist',front:Math.random()<0.24,
+      x:S.x+out*(4+Math.random()*13),y:PIN_Y+(S.bodyY||0)+8+Math.random()*10,
+      vx:out*(32+Math.random()*88),vy:-45+Math.random()*58,
+      gravity:82,t:0.52+Math.random()*0.45,r:3.5+Math.random()*6.5});
+    const chunkChance=clamp(0.05+0.18*S.powK+0.22*pressure,0,0.48);
+    const chunkN=Math.round((pressure*2.4+S.powK)*Q.fx);
+    for(let i=0;i<chunkN;i++)if(Math.random()<chunkChance)pushSpray({type:'chunk',front:false,
+      x:S.x+out*(7+Math.random()*9),y:PIN_Y+(S.bodyY||0)+11,
+      vx:out*(95+Math.random()*145),vy:-50+Math.random()*92,
+      gravity:310,t:0.42+Math.random()*0.34,r:2.1+Math.random()*3.4,rot:Math.random()*6.28,vr:(Math.random()-0.5)*16});
+  }
+  // skis plane through deep powder even while running nearly flat
+  if(S.speed>16&&S.powK>0.22){
+    const n=Math.max(1,Math.round((S.powK*2.4+speedK)*Q.fx));
+    for(let i=0;i<n;i++){const sd=i%2?-1:1;pushSpray({type:'mist',front:Math.random()<0.32,
+      x:S.x+sd*(5+Math.random()*6),y:PIN_Y+(S.bodyY||0)+12,
+      vx:sd*(18+Math.random()*40)-Math.sin(S.theta)*35,vy:-20+Math.random()*35,
+      gravity:70,t:0.42+Math.random()*0.34,r:2.8+Math.random()*5});}
+  }
+  // edge-bite: a high-pressure burst when the carve snaps direction
+  if(snapped){
+    const n=Math.max(5,Math.round(11*Q.fx));
+    for(let i=0;i<n;i++)pushSpray({type:i%4===0?'chunk':'dense',front:i%7===0,
+      x:S.x-sdir*8,y:PIN_Y+(S.bodyY||0)+10,
+      vx:-sdir*(125+Math.random()*195),vy:-45+Math.random()*105,
+      gravity:i%4===0?320:250,t:0.42+Math.random()*0.32,r:2.1+Math.random()*3.1,
+      rot:Math.random()*6.28,vr:(Math.random()-0.5)*17});
     S.shake=Math.max(S.shake,2);tone(950,320,0.07,'triangle',0.08);
   }
-  if(sdir)S.lastDir=sdir;
-  for(let i=spray.length-1;i>=0;i--){const p=spray[i];p.t-=dt;p.vy+=230*dt;
-    p.x+=p.vx*dt;p.y+=(p.vy+S.speed*PXM*0.5)*dt;
+  for(let i=spray.length-1;i>=0;i--){const p=spray[i];p.t-=dt;
+    const drag=p.type==='mist'?Math.exp(-1.8*dt):Math.exp(-0.35*dt);
+    p.vx*=drag;p.vy+=(p.gravity||220)*dt;
+    p.x+=p.vx*dt;p.y+=(p.vy+S.speed*PXM*(p.type==='mist'?0.40:0.50))*dt;
     if(p.rot!==undefined)p.rot+=p.vr*dt;
     if(p.t<=0){
-      if(p.chunk){ // clumps land with weight: a mark and a micro-puff
-        DEF.stamp('lip',p.x,S.depth+(p.y-PIN_Y)/PXM,2.4,0.28);
-        for(let k=0;k<2&&spray.length<Q.spray;k++)spray.push({x:p.x,y:p.y,vx:(Math.random()-0.5)*70,vy:-20+Math.random()*20,
-          t:0.12+Math.random()*0.08,r:0.8+Math.random()*1});
-      }else if(Math.random()<0.3)DEF.stamp('lip',p.x,S.depth+(p.y-PIN_Y)/PXM,1.8,0.2);
+      if(p.type==='chunk'){
+        DEF.stamp('lip',p.x,S.depth+(p.y-PIN_Y)/PXM,2.2+p.r*0.45,0.18+Math.min(0.18,p.r*0.025));
+        for(let k=0;k<2;k++)pushSpray({type:'dense',front:false,x:p.x,y:p.y,
+          vx:(Math.random()-0.5)*65,vy:-18+Math.random()*24,gravity:250,
+          t:0.10+Math.random()*0.09,r:0.7+Math.random()*1.1});
+      }else if(p.type==='dense'&&Math.random()<0.16){
+        DEF.stamp('lip',p.x,S.depth+(p.y-PIN_Y)/PXM,1.5,0.10);
+      }
       spray.splice(i,1);}}
-  // trail
+
+  // fresh visual trail close to the skier; the persistent deformation carries older history
   pushTrailSample(S.x,S.depth,S.theta,2+(S.speed/C.speedMax)*9);
-  { // the skis gouge the medium: depth follows edge pressure
-    const edgeK=Math.abs(Math.sin(S.theta))*Math.min(1,S.speed/C.speedMax*1.4);
-    const off=(9+10*Math.abs(Math.sin(S.theta)))/2;
-    const pw=1+0.6*S.powK; // deep powder gouges deeper
-    for(const sk of[-1,1])
-      DEF.gouge(S.x+Math.cos(S.theta)*off*sk,S.depth-Math.sin(S.theta)*off*sk/PXM,3.2+edgeK*3,(0.10+0.30*edgeK)*pw);
-    if(edgeK>0.2){const out=-(Math.sign(S.theta)||1);
-      DEF.stamp('lip',S.x+out*(10+8*edgeK),S.depth,(4+edgeK*5)*pw,0.10+0.22*edgeK);}
+  { // continuous directional ski cuts: trench + compression + displaced outside berm
+    const off0=(9+10*Math.abs(Math.sin(theta0)))/2,off1=(9+10*Math.abs(Math.sin(S.theta)))/2;
+    const pw=1+0.65*S.powK;
+    const cutR=(2.7+3.2*clamp(pressure,0,1.2))*pw;
+    const cutA=(0.045+0.20*clamp(pressure,0,1.2))*pw;
+    const outside=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
+    for(const sk of[-1,1]){
+      const x0=S.prevX+Math.cos(theta0)*off0*sk,d0=S.prevD-Math.sin(theta0)*off0*sk/PXM;
+      const x1=S.x+Math.cos(S.theta)*off1*sk,d1=S.depth-Math.sin(S.theta)*off1*sk/PXM;
+      DEF.gougeSegment(x0,d0,x1,d1,cutR*(sk===outside?1.10:0.88),cutA*(sk===outside?1.0:0.72),outside);
+    }
   }
   genTo();
   // gates (swept)
@@ -974,32 +1028,94 @@ function drawPlayerTracks(){
   const build=sk=>{
     const pts=[];
     for(const q of S.trail){
-      const u=q.d-S.depth;if(u<UTOP||u>UBOT)continue;
+      const u=q.d-S.depth;if(u<Math.max(UTOP,-12.5)||u>1.5)continue;
       const th=q.th||0,sn=Math.sin(th),off=(9+10*Math.abs(sn))/2;
       const p=projD(q.x+Math.cos(th)*off*sk,u-sn*off*sk/PXM);
       const outside=(sk===-(Math.sign(sn)||1))?Math.abs(sn):0;
-      pts.push({x:p.x,y:p.y,w:Math.max(0.75,q.w*(0.34+0.14*outside)*p.s),core:Math.max(0.35,q.w*(0.12+0.05*outside)*p.s)});
+      const fresh=clamp(1+u/12.5,0,1);
+      pts.push({x:p.x,y:p.y,fresh,w:Math.max(0.65,q.w*(0.27+0.10*outside)*p.s),core:Math.max(0.32,q.w*(0.10+0.035*outside)*p.s)});
     }
-    return pts.slice(Math.max(0,pts.length-110));
+    return pts;
   };
   const drawOne=pts=>{
     if(pts.length<2)return;
     const bands=4;
     for(let b=0;b<bands;b++){
       const a=Math.floor((pts.length-1)*b/bands),z=Math.min(pts.length,Math.ceil((pts.length-1)*(b+1)/bands)+2);
-      const seg=pts.slice(a,z); if(seg.length<2)continue;
-      const t=(b+1)/bands;
+      const seg=pts.slice(a,z);if(seg.length<2)continue;
+      const fresh=seg.reduce((s,p)=>s+p.fresh,0)/seg.length;
       const avgW=seg.reduce((s,p)=>s+p.w,0)/seg.length;
       const avgC=seg.reduce((s,p)=>s+p.core,0)/seg.length;
       ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.strokeStyle=`rgba(255,255,255,${(0.015+0.070*t).toFixed(3)})`;
-      ctx.lineWidth=avgW*0.82;smoothStroke(seg);
-      ctx.strokeStyle=`rgba(180,220,255,${(0.006+0.020*t).toFixed(3)})`;
-      ctx.lineWidth=avgC*0.55;smoothStroke(seg);
+      ctx.strokeStyle=`rgba(255,255,255,${(0.012+0.045*fresh).toFixed(3)})`;
+      ctx.lineWidth=avgW;smoothStroke(seg);
+      ctx.strokeStyle=`rgba(32,55,82,${(0.006+0.028*fresh).toFixed(3)})`;
+      ctx.lineWidth=avgC;smoothStroke(seg);
     }
   };
-  drawOne(build(-1));
-  drawOne(build(1));
+  drawOne(build(-1));drawOne(build(1));
+}
+function snowRGB(pal,bright){
+  const k=bright?1:0.82;
+  return[(205+48*pal.tint[0])*k,(211+44*pal.tint[1])*k,(222+32*pal.tint[2])*k];
+}
+function drawSprayLayer(front,pal){
+  const base=snowRGB(pal,true),shadow=snowRGB(pal,false);
+  for(const p of spray){if(!!p.front!==!!front)continue;
+    const life=clamp(p.t/Math.max(0.001,p.maxT||p.t),0,1);
+    const fade=Math.min(1,(1-life)*5)*Math.min(1,life*3.5);
+    if(p.type==='mist'){
+      ctx.globalAlpha=fade*(front?0.16:0.20);
+      ctx.fillStyle=`rgb(${shadow[0]|0},${shadow[1]|0},${shadow[2]|0})`;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.25,p.r*0.82,p.vx*0.002,0,6.283);ctx.fill();
+    }else if(p.type==='chunk'){
+      ctx.globalAlpha=fade*0.78;ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot||0);
+      const r=p.r,sk=0.76+0.18*Math.sin(p.seed);
+      ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(-r*0.35,-r*sk);ctx.lineTo(r*0.62,-r*0.55);ctx.lineTo(r,r*0.18);ctx.lineTo(r*0.15,r*0.75);ctx.closePath();ctx.fill();ctx.restore();
+    }else{
+      ctx.globalAlpha=fade*(front?0.34:0.46);ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.22,p.r*0.82,p.vx*0.0018,0,6.283);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+}
+function drawCarvePlume(pal,front){
+  if(S.mode!=='play'||S.speed<10)return;
+  const p=clamp(S.turnPressure,0,1.25),pow=S.powK;
+  if(p<0.045&&pow<0.18)return;
+  const y=PIN_Y+(S.bodyY||0),c=snowRGB(pal,!front);
+  // Running flat through deep snow produces a symmetric bow wave rather than a false one-sided carve.
+  if(p<0.14){
+    const k=clamp(pow*(S.speed/C.speedMax),0,1);
+    if(k<0.08)return;
+    ctx.save();ctx.translate(S.x,y);
+    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${((front?0.035:0.075)*k).toFixed(3)})`;
+    for(const sk of[-1,1]){
+      ctx.beginPath();ctx.moveTo(sk*5,10);
+      ctx.bezierCurveTo(sk*(10+8*k),7,sk*(20+13*k),13,sk*(25+17*k),24+7*k);
+      ctx.bezierCurveTo(sk*(15+8*k),22,sk*8,19,sk*4,16);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();return;
+  }
+  const out=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
+  const mass=clamp(0.10+p*0.76+pow*0.24,0,1);
+  ctx.save();ctx.translate(S.x,y);ctx.scale(out,1);
+  if(!front){
+    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(0.075+0.125*mass).toFixed(3)})`;
+    ctx.beginPath();ctx.moveTo(5,10);
+    ctx.bezierCurveTo(22,3,52+48*mass,7,82+68*mass,37+28*mass);
+    ctx.bezierCurveTo(53+39*mass,33+25*mass,22,29,4,18);ctx.closePath();ctx.fill();
+    ctx.fillStyle=`rgba(250,252,255,${(0.11+0.18*mass).toFixed(3)})`;
+    ctx.beginPath();ctx.moveTo(4,11);
+    ctx.bezierCurveTo(18,7,39+24*mass,12,54+38*mass,31+17*mass);
+    ctx.bezierCurveTo(31+22*mass,28+12*mass,13,23,3,17);ctx.closePath();ctx.fill();
+  }else{
+    ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(0.04+0.085*mass).toFixed(3)})`;
+    ctx.beginPath();ctx.moveTo(2,9);ctx.bezierCurveTo(10,10,21+13*mass,15,33+19*mass,27);
+    ctx.bezierCurveTo(19+9*mass,26,8,23,1,18);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
 }
 
 function render(){
@@ -1066,7 +1182,7 @@ function render(){
     if(groundK<0.15)continue;
     ctx.fillStyle='rgba(255,255,255,'+(0.045*groundK).toFixed(3)+')';
     ctx.beginPath();ctx.moveTo(ba.x,ba.y);ctx.lineTo(bb.x,bb.y);ctx.lineTo(bc.x,bc.y);ctx.lineTo(bd.x,bd.y);ctx.closePath();ctx.fill();}
-  // deep-powder patches: brighter, sparkling ground you can read from a distance
+  // deep-powder patches: soft pillowy fields, not bright collectible-like ovals
   {const cs=90,ci0=Math.floor(S.depth/cs);
    for(let ci=ci0-1;ci<=ci0+2;ci++){
      if(hshG(ci*7.13)<0.42)continue;
@@ -1074,18 +1190,28 @@ function render(){
      if(u<UTOP||u>UBOT)continue;
      const cx=EDGE+60+hshG(ci*3.7)*(LW-2*EDGE-120);
      const rx=120+hshG(ci*5.3)*140,rd=28+hshG(ci*2.9)*26;
-     const p=projD(cx,u);
-     const rg=ctx.createRadialGradient(p.x,p.y,2,p.x,p.y,rx*p.s);
-     rg.addColorStop(0,'rgba(255,255,255,0.12)');rg.addColorStop(1,'rgba(255,255,255,0)');
-     ctx.fillStyle=rg;
-     ctx.save();ctx.translate(p.x,p.y);ctx.scale(1,(rd*PXM)/rx);ctx.translate(-p.x,-p.y);
-     ctx.beginPath();ctx.arc(p.x,p.y,rx*p.s,0,6.283);ctx.fill();ctx.restore();
-     for(let k=0;k<Q.glints;k++){ // glints
-       const gx=cx+(hshG(ci*13+k*3)-0.5)*rx*1.4,gd=cd+(hshG(ci*17+k*5)-0.5)*rd*1.4;
+     const p=projD(cx,u),ys=(rd*PXM)/rx;
+     ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s,p.s*ys);
+     const rg=ctx.createRadialGradient(0,0,rx*0.08,0,0,rx);
+     rg.addColorStop(0,'rgba(225,235,246,0.025)');
+     rg.addColorStop(0.62,'rgba(145,170,198,0.045)');
+     rg.addColorStop(1,'rgba(86,112,146,0)');
+     ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,0,rx,0,6.283);ctx.fill();
+     ctx.lineCap='round';
+     for(let k=0;k<3;k++){
+       const yy=(-0.38+k*0.38)*rx,phase=hshG(ci*19+k*4)*20;
+       ctx.strokeStyle=k===1?'rgba(255,255,255,0.045)':'rgba(72,104,142,0.038)';
+       ctx.lineWidth=1.2/p.s;
+       ctx.beginPath();ctx.moveTo(-rx*0.72,yy);
+       ctx.bezierCurveTo(-rx*0.30,yy-10-phase*0.2,rx*0.24,yy+8+phase*0.15,rx*0.72,yy-2);ctx.stroke();
+     }
+     ctx.restore();
+     const glints=Math.max(0,Q.glints-2);
+     for(let k=0;k<glints;k++){
+       const gx=cx+(hshG(ci*13+k*3)-0.5)*rx*1.15,gd=cd+(hshG(ci*17+k*5)-0.5)*rd*1.05;
        const gu=gd-S.depth;if(gu<UTOP||gu>UBOT)continue;
-       const gp=projD(gx,gu);
-       ctx.fillStyle='rgba(255,255,255,'+(0.3+0.3*Math.sin(S.time*4+k+ci)).toFixed(2)+')';
-       ctx.beginPath();ctx.arc(gp.x,gp.y,1.5*gp.s,0,6.283);ctx.fill();}
+       const gp=projD(gx,gu);ctx.fillStyle='rgba(255,255,255,0.16)';
+       ctx.beginPath();ctx.arc(gp.x,gp.y,1.0*gp.s,0,6.283);ctx.fill();}
    }}
   // speed streaks (world-anchored: true parallax)
   if(S.speed>26){ctx.strokeStyle='rgba(255,255,255,0.35)';
@@ -1177,39 +1303,9 @@ function render(){
     ctx.strokeStyle=r.col;ctx.globalAlpha=1-k;ctx.lineWidth=3*p.s;
     ctx.beginPath();ctx.arc(p.x,p.y,(8+k*(46+r.big))*p.s,0,6.283);ctx.stroke();}
   ctx.globalAlpha=1;
-  // powder fan off the outside edge of a hard carve
-  // displacement bow wave: mounds at the ski tips, riding the skier's own rotation
-  {const spk=S.speed/C.speedMax,flatK=1-Math.abs(Math.sin(S.theta));
-   if(S.mode==='play'&&S.speed>6){
-     const bw=(0.16+0.22*S.powK)*spk*(0.35+0.65*flatK);
-     ctx.save();ctx.translate(S.x,PIN_Y);ctx.rotate(-S.bank);ctx.scale(1.28,1.28);
-     ctx.fillStyle='#ffffff';ctx.globalAlpha=bw;
-     for(const sk of[-1,1]){
-       ctx.beginPath();ctx.ellipse(sk*7,17,4+5*spk*flatK,2.5+2.5*spk,0,0,6.283);ctx.fill();}
-     ctx.globalAlpha=bw*0.6;ctx.lineWidth=2;ctx.strokeStyle='#ffffff';
-     for(const sk of[-1,1]){
-       ctx.beginPath();ctx.moveTo(sk*7,13);ctx.lineTo(sk*(12+14*spk),-22-10*spk);ctx.stroke();}
-     ctx.restore();ctx.globalAlpha=1;
-   }}
-  {const sn2=Math.abs(Math.sin(S.theta));
-   if(S.mode==='play'&&S.speed>15&&sn2>0.3){
-     const out=-(Math.sign(S.theta)||1),k=sn2*Math.min(1,S.speed/28);
-     ctx.fillStyle='#ffffff';
-     ctx.globalAlpha=0.18*k; // wide soft wash
-     ctx.beginPath();ctx.moveTo(S.x,PIN_Y+8);
-     ctx.lineTo(S.x+out*(26+52*k),PIN_Y+22+20*k);
-     ctx.lineTo(S.x+out*(8+18*k),PIN_Y+40+16*k);
-     ctx.closePath();ctx.fill();
-     ctx.globalAlpha=0.34*k; // bright dense core
-     ctx.beginPath();ctx.moveTo(S.x,PIN_Y+10);
-     ctx.lineTo(S.x+out*(14+26*k),PIN_Y+22+12*k);
-     ctx.lineTo(S.x+out*(5+10*k),PIN_Y+32+10*k);
-     ctx.closePath();ctx.fill();ctx.globalAlpha=1;}}
-  for(const p of spray){ctx.globalAlpha=clamp(p.t*2.4,0,1);ctx.fillStyle='#fff';
-    if(p.chunk){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot||0);
-      ctx.fillRect(-p.r,-p.r*0.7,p.r*2,p.r*1.4);ctx.restore();}
-    else{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();}}
-  ctx.globalAlpha=1;
+  // back layer: broad plume and airborne material behind the skier
+  drawCarvePlume(pal,false);
+  drawSprayLayer(false,pal);
   // floaters
   ctx.textAlign='center';
   for(const f of floaters){
@@ -1230,6 +1326,9 @@ function render(){
     ctx.fillRect(-30,-30,LW+60,LH+60);}
   // player
   drawPlayer();
+  // a restrained foreground veil lets powder wrap the lower body without obscuring steering
+  drawCarvePlume(pal,true);
+  drawSprayLayer(true,pal);
   // yeti + frost + vignette
   if(S.yeti.on)drawYetiLayer(nightK);
   // kill-cam
@@ -1243,7 +1342,7 @@ function render(){
   // debug overlay
   if(debugOn){ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(10,LH-190,260,175);
     ctx.fillStyle='#7fffb0';ctx.font='16px monospace';ctx.textAlign='left';
-    const L=['spd '+S.speed.toFixed(1)+'/'+C.speedMax,'combo '+S.combo,'\u03b8 '+(S.theta/D2R).toFixed(0)+'\u00b0',
+    const L=['spd '+S.speed.toFixed(1)+'/'+C.speedMax,'combo '+S.combo,'\u03b8 '+(S.theta/D2R).toFixed(0)+'\u00b0 p '+S.turnPressure.toFixed(2),
       'buffer '+(S.yeti.on?S.buffer.toFixed(1):'\u2014'),'npcs '+npcs.length,'depth '+S.depth.toFixed(0),'fps '+fps.toFixed(0)+' '+PerfBudget.profile().name+' '+PerfBudget.avg.toFixed(1)+'ms'];
     L.forEach((s,i)=>ctx.fillText(s,20,LH-165+i*24));ctx.textAlign='center';}
   hud();
@@ -1362,7 +1461,7 @@ function drawNPC(n){
   ctx.restore();
 }
 function drawPlayer(){
-  const y=PIN_Y;
+  const y=PIN_Y+(S.bodyY||0);
   ctx.save();ctx.translate(S.x,y);
   const ab=Math.min(1,Math.abs(S.bank)/C.thetaMax);
   ctx.scale(1.28*(1+ab*0.08),1.28*(1-ab*0.11));
@@ -1378,7 +1477,7 @@ function drawPlayer(){
   if(S.iframe>0&&Math.sin(S.time*40)>0)ctx.globalAlpha=0.45;
   ctx.rotate(-S.bank);
   { // IMMERSION as absence: buried ski simply isn't visible. Works in every palette.
-    const sink=S.sink,edgeI=Math.abs(Math.sin(S.theta)),tdir=Math.sign(S.theta)||0;
+    const sink=S.sink,edgeI=clamp(S.turnPressure,0,1.2),tdir=Math.sign(S.theta)||0;
     ctx.lineCap='round';
     for(const sk of[-1,1]){
       const skSink=sink<0.04?0:Math.min(0.98,sink*(sk===tdir&&tdir!==0?1.25:tdir!==0?0.8:1));
@@ -1447,7 +1546,8 @@ function drawYetiBody(x,y,sc,sy,eat,red,nightK){
   ctx.restore();
 }
 /* ==================== DEFORMABLE SNOW (the pottery layer) ====================
-   A persistent world-space canvas the skis gouge into. Stamps accumulate; the
+   A persistent world-space canvas the skis cut into. Player contacts draw continuous
+   directional trenches and berms; compact actors still stamp footprints. The
    window scrolls with the world; blizzards heal the marks. Composited through
    the 3D projection as 24 linear strips (mode-7 style). Half resolution. */
 const DEF=(()=>{
@@ -1511,11 +1611,28 @@ const DEF=(()=>{
       try{ctx.drawImage(frontCv(),0,sy,W,sh,LW/2-(LW/2)*sMid,ya,LW*sMid,yb-ya);}catch(e){}
     }
   }
-  function gouge(x,d,r,a){ // embossed trench: lit rim toward the sun, shadowed floor
+  function strokeSegment(rgb,x0,d0,x1,d1,w,a){
+    if(!on||a<=0)return;
+    const ax=x0*DR,ay=(d0-anchor)*PXM*DR,bx=x1*DR,by=(d1-anchor)*PXM*DR;
+    if((ay<-w&&by<-w)||(ay>H+w&&by>H+w))return;
+    try{dctx.strokeStyle='rgba('+rgb+','+Math.min(1,a).toFixed(3)+')';
+      dctx.lineWidth=Math.max(0.7,w*DR);dctx.lineCap='round';dctx.lineJoin='round';
+      dctx.beginPath();dctx.moveTo(ax,ay);dctx.lineTo(bx,by);dctx.stroke();}catch(e){}
+  }
+  function gougeSegment(x0,d0,x1,d1,r,a,outside){
+    if(!on)return;
+    const out=outside||1;
+    // soft compressed bed, then a narrow cut, then material displaced to the outside edge
+    strokeSegment('60,78,102',x0,d0,x1,d1,r*2.15,a*0.13);
+    strokeSegment('42,60,84',x0,d0,x1,d1,r*0.86,a*0.72);
+    strokeSegment('255,255,255',x0+out*r*0.82,d0-0.04,x1+out*r*0.82,d1-0.04,r*0.82,a*0.54);
+    strokeSegment('245,250,255',x0-out*r*0.30,d0-0.02,x1-out*r*0.30,d1-0.02,r*0.36,a*0.12);
+  }
+  function gouge(x,d,r,a){ // compact actors still use a local embossed footprint
     stamp('lip',x-2.2,d-0.14,r,a*0.55);
     stamp('dark',x+0.8,d+0.05,r,a);
   }
-  return{init,reset,tick,stamp,gouge,draw,on:()=>on};
+  return{init,reset,tick,stamp,gouge,gougeSegment,draw,on:()=>on};
 })();
 DEF.init();
 /* ============================ HUD ============================ */
