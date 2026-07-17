@@ -876,7 +876,8 @@ function spawnBall(){balls.push({x:EDGE+30+Math.random()*(LW-2*EDGE-60),
   spd:Math.max(S.speed*1.35,24),re:1+Math.random()});}
 const Simulation=Object.freeze({update,spawnBall,segDist});
 /* ============================ PALETTE ============================ */
-const PAL_CYCLE=3200;
+const PAL_CYCLE=5600;
+const smooth01=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
 const STOPS=[
   {t:0.00,top:[164,182,208],bot:[220,228,238],tint:[0.94,0.96,1.0],fa:0.10,fc:[188,196,210],night:0.10,eyes:0.00,cap:0.92,sun:0.42,sunX:0.18},
   {t:0.14,top:[207,224,238],bot:[232,241,248],tint:[1,1,1],fa:0.02,fc:[200,208,216],night:0.00,eyes:0.00,cap:1.00,sun:0.10,sunX:0.24},
@@ -891,7 +892,7 @@ function palette(d){
   const t=((d%PAL_CYCLE)+PAL_CYCLE)%PAL_CYCLE/PAL_CYCLE;
   let a=STOPS[0],b=STOPS[STOPS.length-1];
   for(let i=0;i<STOPS.length-1;i++)if(t>=STOPS[i].t&&t<=STOPS[i+1].t){a=STOPS[i];b=STOPS[i+1];break;}
-  const span=Math.max(1e-6,b.t-a.t),k=a===b?0:clamp((t-a.t)/span,0,1);
+  const span=Math.max(1e-6,b.t-a.t),k=a===b?0:smooth01(clamp((t-a.t)/span,0,1));
   const mix=(u,v)=>[lerp(u[0],v[0],k),lerp(u[1],v[1],k),lerp(u[2],v[2],k)];
   const val=(u,v)=>lerp(u,v,k);
   return{top:mix(a.top,b.top),bot:mix(a.bot,b.bot),tint:mix(a.tint,b.tint),
@@ -916,12 +917,12 @@ function pushTrailSample(x,d,th,w){
   if(!tr.length){tr.push(sample);return;}
   const last=tr[tr.length-1];
   const span=Math.hypot((x-last.x)/PXM,(d-last.d));
-  const steps=span<0.25?1:Math.min(6,Math.max(1,Math.ceil(span/0.65)));
+  const steps=span<0.20?1:Math.min(8,Math.max(1,Math.ceil(span/0.5)));
   for(let i=1;i<=steps;i++){
     const k=i/steps;
     tr.push({x:lerp(last.x,x,k),d:lerp(last.d,d,k),th:lerp(last.th||th,th,k),w:lerp(last.w||w,w,k)});
   }
-  if(tr.length>180)tr.splice(0,tr.length-180);
+  if(tr.length>140)tr.splice(0,tr.length-140);
 }
 function smoothStroke(points){
   if(points.length<2)return;
@@ -942,13 +943,13 @@ function drawPlayerTracks(){
       const th=q.th||0,sn=Math.sin(th),off=(9+10*Math.abs(sn))/2;
       const p=projD(q.x+Math.cos(th)*off*sk,u-sn*off*sk/PXM);
       const outside=(sk===-(Math.sign(sn)||1))?Math.abs(sn):0;
-      pts.push({x:p.x,y:p.y,w:Math.max(0.9,q.w*(0.42+0.18*outside)*p.s),core:Math.max(0.5,q.w*(0.18+0.08*outside)*p.s)});
+      pts.push({x:p.x,y:p.y,w:Math.max(0.75,q.w*(0.34+0.14*outside)*p.s),core:Math.max(0.35,q.w*(0.12+0.05*outside)*p.s)});
     }
-    return pts;
+    return pts.slice(Math.max(0,pts.length-110));
   };
   const drawOne=pts=>{
     if(pts.length<2)return;
-    const bands=5;
+    const bands=4;
     for(let b=0;b<bands;b++){
       const a=Math.floor((pts.length-1)*b/bands),z=Math.min(pts.length,Math.ceil((pts.length-1)*(b+1)/bands)+2);
       const seg=pts.slice(a,z); if(seg.length<2)continue;
@@ -956,10 +957,10 @@ function drawPlayerTracks(){
       const avgW=seg.reduce((s,p)=>s+p.w,0)/seg.length;
       const avgC=seg.reduce((s,p)=>s+p.core,0)/seg.length;
       ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.strokeStyle=`rgba(255,255,255,${(0.025+0.13*t).toFixed(3)})`;
-      ctx.lineWidth=avgW;smoothStroke(seg);
-      ctx.strokeStyle=`rgba(180,220,255,${(0.010+0.040*t).toFixed(3)})`;
-      ctx.lineWidth=avgC;smoothStroke(seg);
+      ctx.strokeStyle=`rgba(255,255,255,${(0.015+0.070*t).toFixed(3)})`;
+      ctx.lineWidth=avgW*0.82;smoothStroke(seg);
+      ctx.strokeStyle=`rgba(180,220,255,${(0.006+0.020*t).toFixed(3)})`;
+      ctx.lineWidth=avgC*0.55;smoothStroke(seg);
     }
   };
   drawOne(build(-1));
@@ -983,13 +984,13 @@ function render(){
   if(pal.sun>0.02){
     const sx=LW*pal.sunX,sy=LH*0.15;
     const rg=ctx.createRadialGradient(sx,sy,2,sx,sy,LW*0.7);
-    rg.addColorStop(0,`rgba(255,214,150,${(0.20*pal.sun).toFixed(3)})`);
-    rg.addColorStop(0.34,`rgba(255,166,110,${(0.11*pal.sun).toFixed(3)})`);
+    rg.addColorStop(0,`rgba(255,214,150,${(0.14*pal.sun).toFixed(3)})`);
+    rg.addColorStop(0.34,`rgba(255,166,110,${(0.07*pal.sun).toFixed(3)})`);
     rg.addColorStop(1,'rgba(255,166,110,0)');
     ctx.fillStyle=rg;ctx.fillRect(-30,-30,LW+60,LH*0.62);
     const hg=ctx.createLinearGradient(0,LH*0.10,0,LH*0.60);
     hg.addColorStop(0,'rgba(255,210,160,0)');
-    hg.addColorStop(0.45,`rgba(255,186,120,${(0.08*pal.sun).toFixed(3)})`);
+    hg.addColorStop(0.45,`rgba(255,186,120,${(0.05*pal.sun).toFixed(3)})`);
     hg.addColorStop(1,'rgba(255,158,110,0)');
     ctx.fillStyle=hg;ctx.fillRect(-30,0,LW+60,LH*0.64);
   }
