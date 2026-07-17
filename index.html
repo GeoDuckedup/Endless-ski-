@@ -304,7 +304,7 @@ function fresh(){
       summit=clamp(350-(avg-150)/650*200,150,350);}}catch(e){}
   S={mode:'intro',summit,slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
-    camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,grainT:0,lastFlagD:-99,lastFlagX:null,
+    camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,lastFlagD:-99,lastFlagX:null,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
@@ -586,6 +586,10 @@ function update(dt){
   S.bankV+=((S.theta-S.bank)*150-S.bankV*12)*dt;S.bank+=S.bankV*dt;
   // powder field: how deep is the snow under the skis right now
   S.powK+=(powderAt(S.x,S.depth)-S.powK)*Math.min(1,6*dt);
+  // immersion: slow + flat + deep powder buries the skis; speed planes them out
+  {const spkS=S.speed/C.speedMax,flatS=1-Math.abs(Math.sin(S.theta));
+   const sinkT=clamp((0.4+0.7*S.powK)*(1-0.6*spkS)*(0.4+0.6*flatS)*1.6,0,0.95);
+   S.sink+=(sinkT-S.sink)*Math.min(1,3.5*dt);}
   // carve hiss + powder whoosh + speed rumble
   if(AC&&sndOn){ensureHiss();if(hiss){const hk=Math.abs(Math.sin(S.theta))*(S.speed/C.speedMax);
     hiss.g.gain.value=Math.min(0.11,hk*0.14);hiss.bp.frequency.value=1400+S.speed*40;
@@ -1193,8 +1197,10 @@ function drawNPC(n){
     ctx.beginPath();ctx.moveTo(-9,-9);ctx.lineTo(9,9);ctx.moveTo(9,-9);ctx.lineTo(-9,9);ctx.stroke();ctx.restore();return;}
   ctx.save();
   const tilt=clamp(n.vx/220,-0.6,0.6);ctx.rotate(-tilt*0.6);
-  ctx.strokeStyle='#3a2a1c';ctx.lineWidth=4;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(-6,-13);ctx.lineTo(-6,13);ctx.moveTo(6,-13);ctx.lineTo(6,13);ctx.stroke();
+  ctx.strokeStyle='rgba(58,42,28,0.25)';ctx.lineWidth=4;ctx.lineCap='round'; // buried tails: faint
+  ctx.beginPath();ctx.moveTo(-6,-13);ctx.lineTo(-6,-3);ctx.moveTo(6,-13);ctx.lineTo(6,-3);ctx.stroke();
+  ctx.strokeStyle='#3a2a1c';ctx.lineWidth=4; // exposed fronts: solid
+  ctx.beginPath();ctx.moveTo(-6,-3);ctx.lineTo(-6,13);ctx.moveTo(6,-3);ctx.lineTo(6,13);ctx.stroke();
   ctx.fillStyle='#6b4a2e';ctx.beginPath();ctx.arc(0,0,8,0,6.283);ctx.fill();
   ctx.strokeStyle='#ff8c2e';ctx.lineWidth=3;
   ctx.beginPath();ctx.moveTo(-5,2);ctx.lineTo(0,-3);ctx.lineTo(5,2);ctx.stroke();
@@ -1217,8 +1223,23 @@ function drawPlayer(){
   }
   if(S.iframe>0&&Math.sin(S.time*40)>0)ctx.globalAlpha=0.45;
   ctx.rotate(-S.bank);
-  ctx.strokeStyle='#1c2836';ctx.lineWidth=4.5;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(-6,-15);ctx.lineTo(-6,15);ctx.moveTo(6,-15);ctx.lineTo(6,15);ctx.stroke();
+  { // IMMERSION as absence: buried ski simply isn't visible. Works in every palette.
+    const sink=S.sink,edgeI=Math.abs(Math.sin(S.theta)),tdir=Math.sign(S.theta)||0;
+    ctx.lineCap='round';
+    for(const sk of[-1,1]){
+      const skSink=sink<0.04?0:Math.min(0.98,sink*(sk===tdir&&tdir!==0?1.25:tdir!==0?0.8:1));
+      const entry=-15+27*skSink; // where the ski meets the surface; tips stay clear
+      // buried portion: a faint ghost through the snow
+      if(skSink>0){ctx.strokeStyle='rgba(28,40,54,0.22)';ctx.lineWidth=4.5;
+        ctx.beginPath();ctx.moveTo(sk*6,-15);ctx.lineTo(sk*6,entry);ctx.stroke();}
+      // exposed portion: solid
+      ctx.strokeStyle='#1c2836';ctx.lineWidth=4.5;
+      ctx.beginPath();ctx.moveTo(sk*6,entry);ctx.lineTo(sk*6,15);ctx.stroke();
+    }
+    // live trench walls hugging the skis, flowing into the stamped ruts behind
+    ctx.strokeStyle='rgba(20,30,50,'+(0.18+0.3*edgeI).toFixed(2)+')';ctx.lineWidth=1.3;
+    ctx.beginPath();ctx.moveTo(-9.4,-14);ctx.lineTo(-9.4,11);ctx.moveTo(9.4,-14);ctx.lineTo(9.4,11);ctx.stroke();
+  }
   ctx.fillStyle='#e33b3b';ctx.beginPath();ctx.arc(0,0,8.5,0,6.283);ctx.fill();
   ctx.fillStyle='#f3dcc0';ctx.beginPath();ctx.arc(0,-9,4,0,6.283);ctx.fill();
   ctx.fillStyle='#2a72c8';ctx.beginPath();ctx.arc(0,-11,4,Math.PI,0);ctx.fill();
