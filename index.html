@@ -356,18 +356,18 @@ function addMarker(t,d,x){markers.push({t,d:Math.round(d*10)/10,x:Math.round(x)}
   try{store.setItem('ep_markers',JSON.stringify(markers));}catch(e){}}
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
-let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[];
+let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[];
 let debugOn=false;
 const PUBLIC_BUILD=true;
 function fresh(){
   R=mulberry32(C.SEED);
   gates.length=0;obs.length=0;npcs.length=0;edgeT.length=0;balls.length=0;
-  parts.length=0;spray.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;
+  parts.length=0;spray.length=0;sluff.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;
   M=baseM();
   S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
-    prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,
+    prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
@@ -504,6 +504,16 @@ function pushSpray(p){
   p.front=!!p.front;
   p.seed=p.seed===undefined?Math.random()*1000:p.seed;
   spray.push(p);return true;
+}
+function pushSluff(p){
+  const cap=32;
+  if(sluff.length>=cap)sluff.shift();
+  p.t=p.t||0.55;
+  p.maxT=p.maxT||p.t;
+  p.wait=p.wait||0.12;
+  p.waitMax=p.wait;
+  p.seed=p.seed===undefined?Math.random()*1000:p.seed;
+  sluff.push(p);return true;
 }
 const Effects=Object.freeze({floater,burstAt,bloodSmear,ringAt});
 /* ============================ ECONOMY EVENTS ============================ */
@@ -794,6 +804,34 @@ function update(dt){
         vy:-14+Math.random()*22, gravity:i%2===0?220:76, t:0.14+Math.random()*0.10, r:1.4+Math.random()*1.8});
     }
   }
+  // delayed sluff: larger powder cuts shed a little snow that releases from the outside berm
+  // and slides downhill a beat later, adding follow-through without becoming a gameplay object.
+  S.sluffCD=Math.max(0,S.sluffCD-dt);
+  if(S.speed>13&&S.powK>0.26&&pressure>0.18){
+    const carveK=clamp((pressure-0.16)/0.64,0,1);
+    const powK=clamp((S.powK-0.22)/0.58,0,1);
+    const sluffK=carveK*powK*clamp(S.speed/C.speedMax,0.35,1);
+    if(sluffK>0.08&&S.sluffCD<=0){
+      const n=1+((sluffK>0.70&&Math.random()<0.45)?1:0);
+      for(let i=0;i<n;i++){
+        const lag=0.10+Math.random()*0.16;
+        pushSluff({
+          x:S.x+out*(13+Math.random()*9),
+          y:PIN_Y+(S.bodyY||0)+10+Math.random()*7,
+          vx:out*(10+Math.random()*18),
+          vy:8+Math.random()*12,
+          slide:30+sluffK*36+Math.random()*18,
+          spread:2.0+sluffK*2.8+Math.random()*1.6,
+          roll:1.4+Math.random()*1.2,
+          out, mass:sluffK,
+          wait:lag,
+          t:0.34+0.36*sluffK+Math.random()*0.18,
+          seed:Math.random()*1000
+        });
+      }
+      S.sluffCD=0.08+Math.random()*0.10+0.10*(1-sluffK);
+    }
+  }
   for(let i=spray.length-1;i>=0;i--){const p=spray[i];p.t-=dt;
     const drag=p.type==='mist'?Math.exp(-1.8*dt):Math.exp(-0.35*dt);
     p.vx*=drag;p.vy+=(p.gravity||220)*dt;
@@ -809,6 +847,23 @@ function update(dt){
         DEF.stamp('lip',p.x,S.depth+(p.y-PIN_Y)/PXM,1.5,0.10);
       }
       spray.splice(i,1);}}
+  for(let i=sluff.length-1;i>=0;i--){const p=sluff[i];
+    p.t-=dt;
+    if(p.wait>0){
+      p.wait-=dt;
+      p.x+=p.vx*0.10*dt;
+      p.y+=(S.speed*PXM*0.30+p.vy*0.35)*dt;
+    }else{
+      const drag=Math.exp(-0.95*dt);
+      p.vx*=drag;
+      p.vx+=p.out*(8+12*p.mass)*dt;
+      p.vy=Math.min(84,p.vy+p.slide*dt);
+      p.x+=p.vx*dt;
+      p.y+=(S.speed*PXM*0.40+p.vy)*dt;
+      p.seed+=dt*p.roll;
+    }
+    if(p.t<=0)sluff.splice(i,1);
+  }
 
   // fresh visual trail close to the skier; the persistent deformation carries older history
   pushTrailSample(S.x,S.depth,S.theta,2+(S.speed/C.speedMax)*9);
@@ -1098,6 +1153,45 @@ function drawSprayLayer(front,pal){
   }
   ctx.globalAlpha=1;
 }
+function drawSluffLayer(pal){
+  if(!sluff.length)return;
+  const base=snowRGB(pal,true),soft=snowRGB(pal,false);
+  for(const p of sluff){
+    const life=clamp(p.t/Math.max(0.001,p.maxT||p.t),0,1);
+    const fade=Math.min(1,(1-life)*3.2)*Math.min(1,life*2.2);
+    const rel=p.wait>0?0:1;
+    const ang=Math.atan2((p.vy||12)+(rel?40:10),(p.vx||0)+(p.out||1)*6);
+    const vx=Math.cos(ang), vy=Math.sin(ang);
+    const px=-vy, py=vx;
+    const step=(2.6+p.spread*(rel?1.0:0.45));
+    const n=rel?5:3;
+    for(let i=0;i<n;i++){
+      const t=i/Math.max(1,n-1);
+      const ox=-vx*(2+t*(8+p.mass*10)) + px*Math.sin(p.seed+i*0.9)*(0.8+p.spread*0.16);
+      const oy=-vy*(2+t*(8+p.mass*10)) + py*Math.cos(p.seed*1.2+i*0.8)*(0.5+p.spread*0.12);
+      const rr=(1.6+p.mass*2.6)*(1-0.12*t)*(rel?1.0:0.78);
+      ctx.globalAlpha=fade*(rel?0.12:0.07)*(1-0.10*i);
+      ctx.fillStyle=`rgb(${soft[0]|0},${soft[1]|0},${soft[2]|0})`;
+      ctx.beginPath();ctx.arc(p.x+ox,p.y+oy,rr,0,6.283);ctx.fill();
+    }
+    // leading settling edge
+    const headX=p.x+px*Math.sin(p.seed*0.9)*(0.6+p.spread*0.1);
+    const headY=p.y+py*Math.cos(p.seed*1.1)*(0.4+p.spread*0.08);
+    ctx.globalAlpha=fade*(rel?0.18:0.10);
+    ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+    ctx.beginPath();ctx.arc(headX,headY,2.0+p.mass*2.8,0,6.283);ctx.fill();
+    // a few trailing grains so it feels like loose snow, not a single blob
+    if(rel){
+      for(let i=0;i<4;i++){
+        const d=step*(1+i*0.55), jitter=Math.sin(p.seed*1.7+i)*1.2;
+        ctx.globalAlpha=fade*(0.11-0.018*i);
+        ctx.fillStyle='#fff';
+        ctx.beginPath();ctx.arc(p.x-vx*d+px*jitter,p.y-vy*d+py*jitter*0.6,0.7+p.mass*0.9*(1-0.12*i),0,6.283);ctx.fill();
+      }
+    }
+  }
+  ctx.globalAlpha=1;
+}
 function drawCarvePlume(pal,front){
   if(S.mode!=='play'||S.speed<10)return;
   const p=clamp(S.turnPressure,0,1.45),pow=S.powK;
@@ -1314,8 +1408,9 @@ function render(){
     ctx.strokeStyle=r.col;ctx.globalAlpha=1-k;ctx.lineWidth=3*p.s;
     ctx.beginPath();ctx.arc(p.x,p.y,(8+k*(46+r.big))*p.s,0,6.283);ctx.stroke();}
   ctx.globalAlpha=1;
-  // back layer: broad plume and airborne material behind the skier
+  // back layer: broad plume, delayed sluff, and airborne material behind the skier
   drawCarvePlume(pal,false);
+  drawSluffLayer(pal);
   drawSprayLayer(false,pal);
   // floaters
   ctx.textAlign='center';
