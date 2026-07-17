@@ -84,7 +84,7 @@
     <label><span class="nm">Turn rate</span><input type="range" id="sTurn" min="120" max="320" step="5" value="240"><span class="vl" id="vTurn">240</span></label>
     <label><span class="nm">Flag fuel</span><input type="range" id="sFuel" min="3" max="14" step="0.5" value="7"><span class="vl" id="vFuel">7</span></label>
     <label><span class="nm">Bleed</span><input type="range" id="sBleed" min="0.1" max="0.9" step="0.05" value="0.4"><span class="vl" id="vBleed">0.40</span></label>
-    <label><span class="nm">Yeti ramp</span><input type="range" id="sYeti" min="0.004" max="0.034" step="0.001" value="0.016"><span class="vl" id="vYeti">0.016</span></label>
+    <label><span class="nm">Yeti pressure</span><input type="range" id="sYeti" min="0.75" max="1.25" step="0.05" value="1"><span class="vl" id="vYeti">1.00</span></label>
     <label><span class="nm">Obstacles</span><input type="range" id="sObs" min="3" max="11" step="1" value="7"><span class="vl" id="vObs">7</span></label>
   </div>
   <div class="ov" id="ovIntro">
@@ -127,7 +127,7 @@ const C={
   corStart:300, corMin:148, corShrink:0.05,
   gateChance:0.68,
   obsMax:7,
-  yetiGrace:30, yetiStart:42, yetiBase:10, yetiRamp:0.013, yetiXL:1.6, SAFE:30,
+  yetiGrace:30, yetiStart:42, yetiBase:10, yetiPressure:1, yetiXL:1.6, SAFE:30,
   lungeMin:6, lungeMax:10, teleT:0.6, lungeT:0.4, lungeBoost:16,
   feast:1.7, killCam:0.6, edgeCam:0.45,
   furyCrash:0.35, furyFault:0.12, furyStreakW:0.4, furyCalm:0.34, furyDecay:0.02,
@@ -167,6 +167,25 @@ const PerfBudget=(()=>{
   }
   function init(){level=initial();lastChange=performance.now();}
   return Object.freeze({profiles,profile,init,noteFrame,setLevel,get level(){return level;},get avg(){return avg;}});
+})();
+/* ==================== MODULE: FIXED DEPTH DIFFICULTY ==================== */
+const Difficulty=(()=>{
+  const smooth=(a,b,d)=>{const t=clamp((d-a)/(b-a),0,1);return t*t*(3-2*t);};
+  function profile(d){
+    const intro=smooth(0,650,d);
+    const long=smooth(500,8200,d);
+    const layout=clamp(intro*0.68+long*0.32,0,1);
+    const penalty=smooth(500,7500,d);
+    const speed=smooth(300,4800,d);
+    const attack=smooth(800,8200,d);
+    const overtime=d>8500?0.5+0.5*Math.sin((d-8500)/350):0;
+    return{layout,penalty,speed,attack,overtime};
+  }
+  function hurryPass(seconds){
+    if(!S||!S.yeti||!S.yeti.on||S.yeti.pass!==0)return;
+    S.yeti.passNext=Math.min(S.yeti.passNext||Infinity,S.time+Math.max(1,seconds));
+  }
+  return Object.freeze({profile,hurryPass});
 })();
 /* ============================ HELPERS ============================ */
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -343,33 +362,33 @@ function fresh(){
   gates.length=0;obs.length=0;npcs.length=0;edgeT.length=0;balls.length=0;
   parts.length=0;spray.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;
   M=baseM();
-  let summit=250;
-  try{const r=JSON.parse(store.getItem('ep_recent')||'[]')||[];
-    if(r.length>=3){const avg=r.reduce((a,b)=>a+b,0)/r.length;
-      summit=clamp(350-(avg-150)/650*200,150,350);}}catch(e){}
-  S={mode:'intro',summit,slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
+  S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,lastFlagD:-99,lastFlagX:null,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passNext:0},buffer:999,streak:0};
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passNext:0},buffer:999,streak:0};
   genTo();
   DEF.reset();
 }
-function corridorWidth(d){return Math.max(C.corMin,C.corStart-d*C.corShrink);}
+function corridorWidth(d){
+  const early=Difficulty.profile(d).layout;
+  const first=lerp(C.corStart,220,clamp(early/0.72,0,1));
+  return lerp(first,C.corMin,smooth01(clamp((d-1200)/(8200-1200),0,1)));
+}
 /* ============================ WORLD GEN ============================ */
 function genChunk(){
   const d0=S.gen;
   const wv=0.5+0.5*Math.sin(d0/300*6.283); // pacing wave: tight stretch, breather, repeat (~150m each)
   const half=Math.max(C.corMin*0.5,corridorWidth(d0)*(1.12-0.24*wv)/2);
-  const ez=clamp(d0/S.summit,0,1); // adaptive summit: the mellow zone fits the player
+  const ez=Difficulty.profile(d0).layout; // fixed, comparable progression through the record range
   S.corC=clamp(S.corC+(R()*2-1)*(28+42*ez),EDGE+half+10,LW-EDGE-half-10);
   corDbg.push({d:d0,c:S.corC,h:half}); if(corDbg.length>40)corDbg.shift();
   const spawnFlag=(gd,sd)=>{ // the flag sits BETWEEN center and the target lane:
       // the command forces you across it. Cut depth grows with depth, eases at the
-      // summit, breathes with the wave. Riding the center line satisfies nothing.
-      const push=Math.min(1,gd/1400);
+      // long fixed progression, breathing with the pacing wave. Riding center satisfies nothing.
+      const push=Difficulty.profile(gd).layout;
       const cutFrac=Math.min(0.55,(0.06+R()*0.26)*(1+0.35*push)*(0.25+0.75*ez)*(0.88+0.24*wv));
       const cut=clamp(half*cutFrac,22,half-34); // 22px floor: trivial for a thumb, never free for a statue
       let x=clamp(S.corC+sd*cut,EDGE+30,LW-EDGE-30);
@@ -403,7 +422,7 @@ function genChunk(){
       spawnFlag(d0+C.chunk*0.1,sd);spawnFlag(d0+C.chunk*0.45,sd);spawnFlag(d0+C.chunk*0.8,sd);}
     else if(r<0.88){ // gate formation: blue left + red right, thread between for the jackpot
       const gd=d0+R()*C.chunk*0.7;
-      const gap=Math.max(120,180-Math.min(1,gd/1400)*50);
+      const gap=Math.max(120,180-Difficulty.profile(gd).layout*50);
       let gx=clamp(S.corC+(R()*2-1)*half*0.3,EDGE+gap/2+30,LW-EDGE-gap/2-30);
       let ok=true;
       if(S.lastFlagX!==null){ // the thread-point must be reachable too
@@ -429,7 +448,7 @@ function genChunk(){
     const gd=d0+C.chunk*(0.3+R()*0.5);
     if(!spawnFlag(gd,-(S.lastSide||1)))spawnFlag(gd+0.01,(S.lastSide||1));
   }
-  const cnt=Math.min(C.obsMax*M.obs,(1.4+d0*0.007)*M.obs)*(0.35+0.65*ez)*(0.85+0.3*wv)*0.4;
+  const cnt=lerp(1.15,C.obsMax,ez)*M.obs*(0.82+0.30*wv)*0.42;
   let n=Math.floor(cnt)+(R()<(cnt%1)?1:0);
   for(let i=0;i<n;i++){
     for(let tr=0;tr<6;tr++){
@@ -447,7 +466,7 @@ function genChunk(){
         wf:0.7+R()*0.32,dbl:R()<0.4,cap:R()<0.22,lit:R()<0.8,hue:R()*360,eyes:R()<0.18,ph:R()*7});
     }
   }
-  if(Math.random()<C.npcChance*M.npc){
+  if(Math.random()<lerp(0.14,0.34,ez)*M.npc){
     npcs.push({d:d0+Math.random()*C.chunk,x:S.corC+(Math.random()*2-1)*half*0.8,
       spd:C.glide*(0.7+Math.random()*0.5),vx:0,tw:Math.random()*7,down:0,trail:[]});
   }
@@ -494,30 +513,37 @@ function cleanFlag(g,px){
   ringAt(g.x,g.d,'rgba('+heatRGB()+',.9)',Math.min(S.combo,20)*2.2); // ring grows with the chain
   sfx.gate(S.combo);
 }
-function wrongSide(g){ // ignored the mountain's command: chain breaks, nothing else
+function wrongSide(g){ // missed command: no fuel, broken rhythm, and deeper runs wake the yeti
+  const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
+  addFury(lerp(0.05,0.14,k));
+  Difficulty.hurryPass(lerp(8,3.2,k));
   ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
   burstAt(g.x,g.d,'#9aa5b5',8,60);
   tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
 }
 function faultFlag(g){
+  const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70); // chain gutters out
-  S.combo=0; S.speed*=C.faultCut; S.flash=Math.max(S.flash,0.25);
-  addFury(C.furyFault);
+  S.combo=0; S.speed*=lerp(C.faultCut,0.69,k); S.flash=Math.max(S.flash,0.25);
+  addFury(lerp(C.furyFault,0.24,k));
+  Difficulty.hurryPass(lerp(7,2.6,k));
   ringAt(g.x,g.d,'rgba(255,140,70,.9)',0); sfx.miss(); vib(20);
 }
 function crash(){
   if(S.iframe>0)return;
+  const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70); // chain gutters out
-  S.speed*=C.crashCut; S.combo=0; S.fuel=0;
-  S.stun=C.stun; S.iframe=C.iframe+C.stun; S.hitstop=C.hitstop;
+  S.speed*=lerp(C.crashCut,0.37,k); S.combo=0; S.fuel=0;
+  S.stun=lerp(C.stun,0.58,k); S.iframe=C.iframe+S.stun; S.hitstop=C.hitstop;
   S.shake=16; S.flash=0.5; S.lastCrash=S.time;
   burstAt(S.x,S.depth,'#ffffff',26,110);
   DEF.stamp('dark',S.x,S.depth,15,0.5);
   DEF.stamp('lip',S.x-12,S.depth,6,0.35);DEF.stamp('lip',S.x+12,S.depth,6,0.35);
   bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
-  addFury(C.furyCrash); // replaces the flat +5m lurch: rage instead of teleport
+  addFury(lerp(C.furyCrash,0.55,k)); // deeper crashes create a much hotter pursuit
+  Difficulty.hurryPass(lerp(6,2.0,k));
   addMarker('ko',S.depth,S.x);
   // mercy: the first gate after a knockdown is centered on your line and generous
   const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95); // beyond the visible edge: no on-screen teleport
@@ -525,28 +551,34 @@ function crash(){
     ng.side=away;ng.x=clamp(S.x-away*60,EDGE+115,LW-EDGE-115);}
   sfx.crash(); vib(60);
 }
-function shove(n){ // low-speed bump: a jostle, never a run-ender
+function shove(n){ // low-speed bump: recoverable, but increasingly costly deep down
+  const k=Difficulty.profile(S.depth).penalty;
   const dir=S.x>=n.x?1:-1;
   S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
-  S.speed*=0.85; S.iframe=0.5;
+  S.speed*=lerp(0.85,0.72,k); S.iframe=0.5;
+  S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(0,4,k));
+  addFury(lerp(0.04,0.12,k));Difficulty.hurryPass(lerp(8,3.2,k));
   n.down=0.8; n.x=clamp(n.x-dir*20,EDGE+10,LW-EDGE-10);
   burstAt((S.x+n.x)/2,S.depth,'#e8eef4',10,80);
   S.shake=Math.max(S.shake,5);
   tone(180,110,0.12,'square',0.16); vib(20);
 }
 function barge(n){
-  S.speed*=0.5; S.iframe=0.4; S.hitstop=0.05;
+  const k=Difficulty.profile(S.depth).penalty;
+  S.speed*=lerp(0.50,0.39,k); S.iframe=0.4; S.hitstop=0.05;
+  S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(3,8,k));
+  addFury(lerp(0.12,0.24,k));Difficulty.hurryPass(lerp(6,2.4,k));
   S.shake=Math.max(S.shake,9); S.flash=Math.max(S.flash,0.2);
   n.down=1.2;
   burstAt(n.x,n.d,'#ffffff',18,120);
   bloodSmear(n.x,n.d,Math.sin(S.theta),Math.cos(S.theta),1.5); // plowed through at speed
   tone(220,90,0.18,'square',0.22); vib(30);
 }
-function passBreak(){ // the hunt fails: it breaks off, spent
-  const Y=S.yeti;
-  Y.pass=3;Y.tired=Math.max(Y.tired,2.5);Y.tele=0;Y.burst=0;
-  Y.passNext=S.time+(C.passMin+Math.random()*C.passSpan)
-    *Math.max(0.55,1-S.depth/4000)*(1-0.3*Y.fury);
+function passBreak(){ // a successful escape earns real separation, but deep hunts return sooner
+  const Y=S.yeti,D=Difficulty.profile(S.depth);
+  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(3.0,2.2,D.attack));Y.tele=0;Y.burst=0;
+  const lo=lerp(C.passMin,12,D.attack),span=lerp(C.passSpan,9,D.attack);
+  Y.passNext=S.time+(lo+Math.random()*span)*(1-0.28*Y.fury)*(1-0.12*D.overtime);
 }
 function whiff(){ // it swiped where you were
   const Y=S.yeti;
@@ -595,8 +627,6 @@ function finalizeDeath(){
   el.rTitle.textContent=title;el.rTag.textContent=tag;
   el.rDist.textContent=dist+' m';el.rBest.textContent='BEST '+Math.floor(best)+' m';
   lastDeathReal=Date.now();
-  try{const r=JSON.parse(store.getItem('ep_recent')||'[]')||[];r.push(dist);
-    while(r.length>5)r.shift();store.setItem('ep_recent',JSON.stringify(r));}catch(e){}
   const span=Math.max(oldBest,dist,1);
   $('tYou').style.left=(dist/span*96)+'%';
   $('tBest').style.left=(oldBest/span*96)+'%';
@@ -780,7 +810,7 @@ function update(dt){
     if(n.d<S.depth-50)npcs.splice(i,1);
   }
   // boulders
-  if(S.depth>C.boulderAfter&&Math.random()<C.boulderRate*dt){spawnBall();if(Math.random()<0.3)S.ball2=0.4+Math.random()*0.5;}
+  if(S.depth>C.boulderAfter&&Math.random()<lerp(0.025,0.065,Difficulty.profile(S.depth).layout)*dt){spawnBall();if(Math.random()<lerp(0.20,0.38,Difficulty.profile(S.depth).layout))S.ball2=0.4+Math.random()*0.5;}
   if(S.ball2>0){S.ball2-=dt;if(S.ball2<=0)spawnBall();}
   for(let i=balls.length-1;i>=0;i--){
     const b=balls[i];b.d+=b.spd*dt;b.x+=b.vx*dt;b.re-=dt;
@@ -794,8 +824,10 @@ function update(dt){
     if(b.d>S.depth+62)balls.splice(i,1);
   }
   // yeti brain
-  if(!Y.on&&S.depth>C.yetiGrace){Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;Y.next=S.time+C.lungeMin+Math.random()*(C.lungeMax-C.lungeMin);}
+  if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
+    const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);}
   if(Y.on){
+    const D=Difficulty.profile(S.depth);
     S.buffer=S.depth-Y.d;
     const st=S.buffer>20?0:S.buffer>7?1:2;
     if(st>Y.st){sfx.roar();S.shake=Math.max(S.shake,8+st*3);vib(40);}
@@ -805,7 +837,8 @@ function update(dt){
     if(Y.tired>0){Y.tired-=dt;Y.pant-=dt;
       if(Y.pant<=0){Y.pant=0.6;tone(95,70,0.16,'sawtooth',0.12);}}
     else if(st>=1&&Y.pass===0){Y.press+=dt;
-      if(Y.press>C.sprint+C.sprintFury*Y.fury){Y.tired=Math.max(1.5,C.rest-C.restFury*Y.fury);Y.press=0;}}
+      const sprint=lerp(7.0,12.0,D.attack)+C.sprintFury*Y.fury;
+      if(Y.press>sprint){Y.tired=Math.max(1.5,lerp(4.5,2.2,D.attack)-C.restFury*Y.fury);Y.press=0;}}
     else Y.press=Math.max(0,Y.press-dt*0.5);
     if(Y.fury>0.6){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
     // hunting passes: it attacks on its own schedule, however far behind it fell
@@ -814,13 +847,14 @@ function update(dt){
       tone(55,150,1.3,'sawtooth',0.3);tone(110,300,1.3,'triangle',0.16);
     }
     let adv=0;
-    const deepK=Math.min(1,S.depth/2500);
+    const deepK=D.attack;
     if(Y.stag>0){Y.stag-=dt;adv=0;if(Y.pass===1||Y.pass===2)passBreak();} // a dodged strike ends the hunt
     else if(Y.eat>0){Y.eat-=dt;}
     else if(Y.pass===1){ // approach: closes fast regardless of gap
       Y.foot-=dt;if(Y.foot<=0){Y.foot=0.5;tone(72,50,0.09,'square',0.15);} // closing footfalls
       adv=S.speed+Math.max(6,S.buffer/2.5);
-      if(S.buffer<=12){Y.pass=2;Y.passT=3+3*deepK+2*Y.fury;Y.passLunges=1+(deepK>0.4?1:0);}
+      if(S.buffer<=12){Y.pass=2;Y.passT=3.5+4.0*deepK+1.5*Y.fury+0.8*D.overtime;
+        Y.passLunges=1+(deepK>0.35?1:0)+(deepK>0.78?1:0);}
     }
     else if(Y.pass===2){ // press: it grinds in, then strikes — dodge the strike or lose the ground
       Y.passT-=dt;
@@ -829,7 +863,7 @@ function update(dt){
       else if(Y.burst>0){Y.burst-=dt;adv=S.speed+C.lungeBoost; // the strike always resolves: catch, or whiff past you
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=S.speed+4;
-        if(Y.passLunges>0&&S.buffer<6){Y.passLunges--;Y.tele=C.teleT;Y.aimX=S.x;sfx.growl();}
+        if(Y.passLunges>0&&S.buffer<6){Y.passLunges--;Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();}
         else if(Y.passLunges<=0&&S.buffer>10)passBreak();}
       if(Y.passT<=0)passBreak();
     }
@@ -837,14 +871,15 @@ function update(dt){
       adv=Math.max(0,S.speed-7);
       if(S.buffer>C.SAFE+6)Y.pass=0;
     }
-    else{ // baseline pursuit: the rising floor, organic lunges, sprint/rest
-      const ys=(C.yetiBase+C.yetiRamp*S.depth)*M.yeti*(1+C.furySpeed*Y.fury)*(Y.tired>0?C.tiredMul:1);
+    else{ // capped running speed; attack sophistication carries the late-game escalation
+      const ys=Math.min(36.5,lerp(C.yetiBase,29.5,D.speed)*C.yetiPressure*M.yeti*(1+0.12*Y.fury))*(Y.tired>0?lerp(0.72,0.80,D.attack):1);
       if(Y.tele>0){Y.tele-=dt;if(Y.tele<=0){Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}}
       else if(Y.burst>0){Y.burst-=dt;adv=ys+C.lungeBoost;
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=ys;
-        if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.tele=C.teleT;Y.aimX=S.x;sfx.growl();
-          Y.next=S.time+(C.lungeMin+Math.random()*(C.lungeMax-C.lungeMin))*(1-C.furyLunge*Y.fury);}}
+        if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
+          const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);
+          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-C.furyLunge*Y.fury)*(1-0.10*D.overtime);}}
     }
     Y.d+=adv*dt;
     if(adv>0&&S.buffer<50){ // its passage marks the snow: footprints, and a furrow when it dives
@@ -854,7 +889,7 @@ function update(dt){
     }
     // committed lunges dive at where you WERE; staggering can't track
     const tx=(Y.tele>0||Y.burst>0)?Y.aimX:S.x;
-    const xr=Y.stag>0?0.3:(Y.burst>0?4:C.yetiXL);
+    const xr=Y.stag>0?0.3:(Y.burst>0?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
     Y.x+=(tx-Y.x)*Math.min(1,xr*dt);
     if(st===2){Y.foot-=dt;if(Y.foot<=0){Y.foot=0.45;S.shake=Math.max(S.shake,4);}}
     if(S.buffer<=0){
@@ -1226,7 +1261,7 @@ function drawYetiLayer(nightK){
     ctx.fillStyle=fr;ctx.fillRect(-30,-30,LW+60,LH*0.4+30);}
   if(S.mode==='dying'&&S.cause==='caught')return;
   if(Y.tele>0){ // snow-ripple at the committed lunge aim: the dodge is readable
-    const k=1-Y.tele/C.teleT,ap=projD(Y.aimX,0);
+    const k=1-Y.tele/(Y.teleMax||C.teleT),ap=projD(Y.aimX,0);
     for(let i=0;i<2;i++){const kk=(k+i*0.5)%1;
       ctx.strokeStyle='rgba(200,225,255,'+(0.35*(1-kk))+')';ctx.lineWidth=2.5;
       ctx.beginPath();ctx.arc(ap.x,ap.y,10+kk*44,0,6.283);ctx.stroke();}}
@@ -1549,7 +1584,7 @@ slider('sReturn','vReturn',v=>C.returnRate=v*D2R);
 slider('sTurn','vTurn',v=>C.turnRate=v*D2R);
 slider('sFuel','vFuel',v=>C.flagFuel=v);
 slider('sBleed','vBleed',v=>C.bleed=v,v=>v.toFixed(2));
-slider('sYeti','vYeti',v=>C.yetiRamp=v,v=>v.toFixed(3));
+slider('sYeti','vYeti',v=>C.yetiPressure=v,v=>v.toFixed(2));
 slider('sObs','vObs',v=>C.obsMax=v);
 /* ============================ RESIZE ============================ */
 function resize(){
@@ -1576,7 +1611,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,audio:Audio,leaderboard:Leaderboard,generation:Generation,
+  persistence:Persistence,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -1597,8 +1632,7 @@ requestAnimationFrame(frame);
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,balls,markers,smears,spray,parts,snow}),
-  _setRecent:a=>Persistence.setJSON('ep_recent',a),
-  lb:Leaderboard,def:DEF,quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
+  lb:Leaderboard,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
