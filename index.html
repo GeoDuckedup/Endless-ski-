@@ -1103,21 +1103,9 @@ function drawCarvePlume(pal,front){
   const p=clamp(S.turnPressure,0,1.45),pow=S.powK;
   if(p<0.045&&pow<0.18)return;
   const y=PIN_Y+(S.bodyY||0),base=snowRGB(pal,true),soft=snowRGB(pal,false);
-  // Running flat through deep snow produces a low, body-hugging bow wave rather than an artificial fan.
-  if(p<0.14){
-    const k=clamp(pow*(0.45+0.55*S.speed/C.speedMax),0,1);
-    if(k<0.08)return;
-    ctx.save();ctx.translate(S.x,y+2);
-    for(const sk of[-1,1]){
-      ctx.fillStyle=`rgba(${base[0]|0},${base[1]|0},${base[2]|0},${((front?0.06:0.09)*k).toFixed(3)})`;
-      ctx.beginPath();ctx.ellipse(sk*(8+5*k),12+2*k,10+8*k,4.2+2.4*k,sk*0.22,0,6.283);ctx.fill();
-      if(front){
-        ctx.fillStyle=`rgba(255,255,255,${(0.035*k).toFixed(3)})`;
-        ctx.beginPath();ctx.ellipse(sk*5,9+2*k,7+4*k,3+1.8*k,0,0,6.283);ctx.fill();
-      }
-    }
-    ctx.restore();return;
-  }
+  // When skiing relatively straight, avoid symmetric bow-wave ovals; immersion now comes from ski burial
+  // plus compact contact puffs generated elsewhere.
+  if(p<0.14)return;
   const out=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
   const mass=clamp(0.14+p*0.72+pow*0.30,0,0.96);
   ctx.save();ctx.translate(S.x+out*2,y+2);
@@ -1521,11 +1509,20 @@ function drawPlayer(){
   ctx.fillStyle='#2a72c8';ctx.beginPath();ctx.arc(0,-11,4,Math.PI,0);ctx.fill();
   if(S.powK>0.10||S.sink>0.08){
     const bury=clamp(0.26+1.12*S.sink+0.42*S.powK,0,1.28);
+    const t=S.time;
     for(const sk of[-1,1]){
-      ctx.fillStyle=`rgba(${snowC[0]|0},${snowC[1]|0},${snowC[2]|0},${(0.12+0.18*bury).toFixed(3)})`;
-      ctx.beginPath();ctx.ellipse(sk*5.8,10+6*bury,8.2+6.2*bury,3.5+2.9*bury,sk*0.15,0,6.283);ctx.fill();
-      ctx.fillStyle=`rgba(255,255,255,${(0.03+0.05*bury).toFixed(3)})`;
-      ctx.beginPath();ctx.ellipse(sk*4.7,7+4*bury,4.8+3.5*bury,2.0+1.3*bury,sk*0.10,0,6.283);ctx.fill();
+      const bx=sk*5.5, by=9+5.5*bury;
+      // Compact irregular contact snow near each ski instead of obvious oval masks.
+      for(let i=0;i<3;i++){
+        const ph=t*(2.2+i*0.45)+sk*(1.7+i*0.9);
+        const ox=(sk*(1.3+i*0.9)) + Math.sin(ph)*0.9;
+        const oy=(i*1.7) + Math.cos(ph*1.12)*0.7;
+        const rr=(1.8+bury*(1.8-0.25*i));
+        ctx.fillStyle=`rgba(${snowC[0]|0},${snowC[1]|0},${snowC[2]|0},${(0.07+0.08*bury-0.012*i).toFixed(3)})`;
+        ctx.beginPath();ctx.arc(bx+ox,by+oy,rr,0,6.283);ctx.fill();
+      }
+      ctx.fillStyle=`rgba(255,255,255,${(0.025+0.035*bury).toFixed(3)})`;
+      ctx.beginPath();ctx.arc(bx+sk*0.8,by-2.0,1.7+1.0*bury,0,6.283);ctx.fill();
     }
   }
   ctx.restore();ctx.globalAlpha=1;
