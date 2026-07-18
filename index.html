@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5d.0</title>
+<title>ENDLESS POWDER v5d.1</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -165,7 +165,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5d.0</div>
+    <div class="version">v5d.1</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -197,7 +197,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5d.0 retains the validated best-run migration and adds a read-only compatible-memorial data bridge without drawing shared bodies yet.</div>
+    <div class="authSub">v5d.1 projects compatible best-run memorials into mountain space and renders restrained downed-skier bodies without labels or overlap reconciliation yet.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -233,7 +233,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5d.0';
+const BUILD_VERSION='v5d.1';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -579,7 +579,7 @@ const Identity=(()=>{
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5d.0 retains the canonical /best_runs/{uid} record for authenticated
+   v5d.1 retains the canonical /best_runs/{uid} record for authenticated
    personal-best submissions and the public leaderboard. */
 const BEST_RUN_PATH='/endless_powder/best_runs';
 const BEST_RUN_SCHEMA_VERSION='best-runs-v1';
@@ -640,9 +640,9 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
-   v5d.0 is a read-only bridge between the validated top-50 best-run records
-   and the later world-space memorial renderer. It performs no network request
-   and deliberately draws nothing during this subphase. */
+   v5d.1 keeps the read-only bridge between the validated top-50 best-run records
+   and the world-space memorial renderer. It performs no network request; compatible
+   records now become nearby projected bodies while labels and reconciliation remain deferred. */
 const SHARED_MEMORIAL_LIMIT=50;
 const SharedMemorials=(()=>{
   let ownerUid='',rows=[];
@@ -694,10 +694,20 @@ const SharedMemorials=(()=>{
   function stats(){return Object.assign({},report);}
   function byUid(uid){uid=String(uid||'');return rows.find(e=>e.uid===uid)||null;}
   function current(){return ownerUid?byUid(ownerUid):null;}
-  return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,stats,byUid,current});
+  let lastRender=Object.freeze({frame:0,loaded:0,nearby:0,drawn:0,culled:0,samples:[]});
+  function noteRender(next){
+    const samples=Array.isArray(next&&next.samples)?next.samples.slice(0,8).map(e=>Object.freeze(Object.assign({},e))):[];
+    lastRender=Object.freeze({frame:(lastRender.frame||0)+1,loaded:Math.max(0,(next&&next.loaded)|0),
+      nearby:Math.max(0,(next&&next.nearby)|0),drawn:Math.max(0,(next&&next.drawn)|0),
+      culled:Math.max(0,(next&&next.culled)|0),samples:Object.freeze(samples)});
+    return lastRender.drawn;
+  }
+  function renderStats(){return {frame:lastRender.frame,loaded:lastRender.loaded,nearby:lastRender.nearby,
+    drawn:lastRender.drawn,culled:lastRender.culled,samples:lastRender.samples.map(e=>Object.assign({},e))};}
+  return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,stats,byUid,current,noteRender,renderStats});
 })();
 /* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5d.0 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
+   v5d.1 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
    records; the client then applies the full ranking order: score, distance,
    clean flags, fewer collisions. The legacy /scores collection is isolated. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
@@ -1601,7 +1611,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5d.0 best-run submission, leaderboard and memorial bridge
+  lastFinishedRun=run; // complete death-aware payload used by the v5d.1 best-run submission, leaderboard and memorial bridge
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -2439,6 +2449,94 @@ function drawCarvePlume(pal,front){
   ctx.restore();
 }
 
+/* ====================== SHARED MEMORIAL RENDERING ======================
+   v5d.1 renders only compatible best-run records already held by SharedMemorials.
+   No labels, UID-derived outfits, overlap grouping or local-stain suppression occur yet. */
+function memorialApproach(m){
+  const th=Number.isFinite(m.deathTheta)?m.deathTheta:0;
+  const len=m.deathCause==='caught'?2.7:m.deathCause==='edge'?2.0:2.35;
+  const dx=Math.sin(th)*PXM,dd=Math.cos(th);
+  const sideX=Math.cos(th)*5.2,sideD=-Math.sin(th)*5.2/PXM;
+  const endA={x:m.deathX+sideX,d:m.deathDepth+sideD};
+  const endB={x:m.deathX-sideX,d:m.deathDepth-sideD};
+  return {
+    th,dx,dd,len,
+    a0:{x:endA.x-dx*len,d:endA.d-dd*len},a1:endA,
+    b0:{x:endB.x-dx*len,d:endB.d-dd*len},b1:endB
+  };
+}
+function memorialPose(cause,th){
+  const side=Math.sign(Math.sin(th))||1;
+  if(cause==='tree')return {fall:1.06*side,spread:1.15,blood:1.10,bodyY:1};
+  if(cause==='boulder')return {fall:-0.86*side,spread:1.30,blood:1.18,bodyY:2};
+  if(cause==='edge')return {fall:0.62*side,spread:1.05,blood:0.84,bodyY:0};
+  return {fall:0.18*side,spread:0.90,blood:0.72,bodyY:-1};
+}
+function drawMemorialGround(m,p,approach,pose,nightK){
+  const a0=projD(approach.a0.x,approach.a0.d-S.depth),a1=projD(approach.a1.x,approach.a1.d-S.depth);
+  const b0=projD(approach.b0.x,approach.b0.d-S.depth),b1=projD(approach.b1.x,approach.b1.d-S.depth);
+  ctx.save();ctx.lineCap='round';
+  ctx.strokeStyle='rgba(74,92,112,'+(0.16+0.08*nightK).toFixed(3)+')';
+  ctx.lineWidth=Math.max(0.75,1.55*p.s);
+  ctx.beginPath();ctx.moveTo(a0.x,a0.y);ctx.lineTo(a1.x,a1.y);ctx.moveTo(b0.x,b0.y);ctx.lineTo(b1.x,b1.y);ctx.stroke();
+  ctx.translate(p.x,p.y);
+  ctx.fillStyle='rgba(65,83,104,'+(0.10+0.06*nightK).toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse(0,4*p.s,20*p.s,7*p.s,pose.fall*0.18,0,6.283);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,'+(0.11+0.04*(1-nightK)).toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse(-4*p.s,1*p.s,15*p.s,4.5*p.s,pose.fall*0.12,0,6.283);ctx.fill();
+  const bloodA=(0.22+0.08*nightK)*pose.blood;
+  ctx.fillStyle='rgba(112,25,24,'+bloodA.toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse(7*p.s,5*p.s,10.5*p.s*pose.blood,4.6*p.s,pose.fall*0.32,0,6.283);ctx.fill();
+  ctx.fillStyle='rgba(78,18,20,'+(bloodA*0.62).toFixed(3)+')';
+  ctx.beginPath();ctx.arc((11+3*pose.blood)*p.s,5*p.s,2.5*p.s,0,6.283);ctx.fill();
+  ctx.restore();
+}
+function drawSharedMemorialBody(m,p,approach,pose,nightK){
+  const ahead=projD(m.deathX+approach.dx*0.55,m.deathDepth-S.depth+approach.dd*0.55);
+  const travelAngle=Math.atan2(ahead.y-p.y,ahead.x-p.x);
+  const bodyAngle=travelAngle-Math.PI/2+pose.fall;
+  ctx.save();ctx.translate(p.x,p.y+pose.bodyY*p.s);ctx.rotate(bodyAngle);ctx.scale(p.s*1.12,p.s*1.12);
+  ctx.globalAlpha=0.92;
+  ctx.fillStyle='rgba(10,15,22,0.22)';ctx.beginPath();ctx.ellipse(1,5,18,6,0,0,6.283);ctx.fill();
+  ctx.lineCap='round';
+  // Skis and poles are displaced by the impact but remain restrained at distance.
+  ctx.strokeStyle='#243345';ctx.lineWidth=3.2;
+  ctx.beginPath();ctx.moveTo(-7,-3);ctx.lineTo(-12,18*pose.spread);ctx.moveTo(6,-2);ctx.lineTo(14,16*pose.spread);ctx.stroke();
+  ctx.strokeStyle='rgba(48,61,76,0.75)';ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-18,10);ctx.moveTo(5,1);ctx.lineTo(17,8);ctx.stroke();
+  ctx.strokeStyle='#293b50';ctx.lineWidth=5.2;
+  ctx.beginPath();ctx.moveTo(-4,3);ctx.lineTo(-10,12);ctx.moveTo(4,3);ctx.lineTo(11,11);ctx.stroke();
+  ctx.strokeStyle='#9f3437';ctx.lineWidth=7.2;
+  ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(0,5);ctx.stroke();
+  ctx.strokeStyle='#8e2e32';ctx.lineWidth=4.2;
+  ctx.beginPath();ctx.moveTo(-1,-4);ctx.lineTo(-11,1);ctx.moveTo(1,-3);ctx.lineTo(10,-9);ctx.stroke();
+  ctx.fillStyle='#ead3b9';ctx.beginPath();ctx.arc(0,-12,3.8,0,6.283);ctx.fill();
+  ctx.fillStyle='#2f669c';ctx.beginPath();ctx.arc(0,-14,4.2,Math.PI,0);ctx.fill();
+  if(m.deathCause==='caught'){
+    ctx.strokeStyle='rgba(165,205,225,0.36)';ctx.lineWidth=2.2;
+    ctx.beginPath();ctx.arc(0,0,17,-2.5,-0.45);ctx.stroke();
+  }
+  ctx.globalAlpha=1;ctx.restore();
+  return {angle:bodyAngle};
+}
+function drawSharedMemorials(nightK){
+  const source=SharedMemorials.compatible(),visible=[];
+  for(const m of source){
+    const u=m.deathDepth-S.depth;
+    if(u<UTOP-3||u>UBOT+3)continue;
+    visible.push({m,u});
+  }
+  visible.sort((a,b)=>a.u-b.u||a.m.rank-b.m.rank);
+  const samples=[];
+  for(const item of visible){
+    const m=item.m,p=projD(m.deathX,item.u),approach=memorialApproach(m),pose=memorialPose(m.deathCause,approach.th);
+    drawMemorialGround(m,p,approach,pose,nightK);
+    const out=drawSharedMemorialBody(m,p,approach,pose,nightK);
+    if(samples.length<8)samples.push({uid:m.uid,x:+p.x.toFixed(2),y:+p.y.toFixed(2),s:+p.s.toFixed(4),angle:+out.angle.toFixed(4),cause:m.deathCause});
+  }
+  SharedMemorials.noteRender({loaded:source.length,nearby:visible.length,drawn:visible.length,culled:source.length-visible.length,samples});
+}
+
 function render(){
   const Q=PerfBudget.profile();
   CZ=S.camZ||220;UTOP=uOfz(-120,CZ);UBOT=uOfz(LH+100,CZ);
@@ -2577,6 +2675,8 @@ function render(){
     for(const dr of sm.drops){const pd=projD(sm.x+dr.ox,u+dr.od/PXM);
       ctx.beginPath();ctx.arc(pd.x,pd.y,dr.r*pd.s,0,6.283);ctx.fill();}
   }
+  // Shared best-run memorials: projected bodies, restrained blood and final approach tracks.
+  drawSharedMemorials(nightK);
   // obstacles
   for(const o of obs){const u=o.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const dk=clamp((S.depth-1200)/600,0,1); // hazard rim-light as the world darkens
@@ -3046,7 +3146,7 @@ function hud(){
     el.combo.style.transform='scale('+(1+S.comboPulse*0.35)+')';
   }else{el.combo.textContent='';}
 }
-const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF});
+const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF,memorialStats:()=>SharedMemorials.renderStats()});
 /* ====================== MODULE: INPUT ====================== */
 let anchor=null;
 const keys={};
@@ -3119,7 +3219,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5d.0 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. v5d.1 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
