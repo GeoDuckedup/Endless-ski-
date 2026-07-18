@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v4f.2.1</title>
+<title>ENDLESS POWDER v5b.1</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -124,7 +124,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v4f.2.1</div>
+    <div class="version">v5b.1</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -160,6 +160,9 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
+const BUILD_VERSION='v5b.1';
+const WORLD_VERSION='mountain-v4-course-1';
+const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
   thetaMax:62*D2R, turnRate:240*D2R, returnRate:170*D2R,
   touchDZ:12, touchFull:155, steerLerp:28,
@@ -182,7 +185,7 @@ const C={
   chaseAfter:500, chaseCleanGap:25, chaseDangerGap:9,
   lullMin:1.0, lullMax:3.0, npcHuntCooldown:10,
   phaseMin:230, phaseMax:320,
-  markerCap:180, SEED:1337
+  localDeathCap:50, SEED:1337
 };
 /* ==================== MODULE: PERFORMANCE BUDGETS ==================== */
 const PerfBudget=(()=>{
@@ -335,6 +338,136 @@ const PHASES=[
   {n:'SWITCHBACK',w:1,f:m=>{m.alt=true;m.fuel=1.3;}},
   {n:'HUNGRY',w:1,f:m=>{m.yeti=1.22;m.fuel=1.5;}}
 ];
+/* ====================== MODULE: SILENT IDENTITY ======================
+   Firebase Anonymous Authentication is invisible to the player. The public Web API
+   key can be supplied in FIREBASE_API_KEY, window.ENDLESS_POWDER_FIREBASE_API_KEY,
+   or localStorage key ep_firebase_api_key. Firebase Hosting config is also probed.
+   When auth is unavailable, play remains fully functional under a stable local ID. */
+const FIREBASE_PROJECT_ID='endless-powder';
+let FIREBASE_API_KEY='AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI'; // Public Firebase Web API key.
+const AUTH_SESSION_KEY='ep_firebase_auth_v5b';
+const INSTALL_ID_KEY='ep_install_id_v5b';
+const API_KEY_OVERRIDE_KEY='ep_firebase_api_key';
+const Identity=(()=>{
+  let state={mode:'starting',uid:'',idToken:'',refreshToken:'',expiresAt:0,apiKey:'',error:''};
+  let boot=null,refreshing=null;
+  const now=()=>Date.now();
+  const safeString=v=>typeof v==='string'?v:'';
+  function makeInstallId(){
+    let id=safeString(store.getItem(INSTALL_ID_KEY));
+    if(id)return id;
+    try{id=crypto.randomUUID();}
+    catch(e){id='ep-'+now().toString(36)+'-'+Math.random().toString(36).slice(2,14);}
+    try{store.setItem(INSTALL_ID_KEY,id);}catch(e){}
+    return id;
+  }
+  const localUid=()=>('local-'+makeInstallId()).replace(/[^A-Za-z0-9_-]/g,'').slice(0,128);
+  function loadSession(){
+    const s=Persistence.getJSON(AUTH_SESSION_KEY,null);
+    if(!s||typeof s!=='object'||!safeString(s.uid))return null;
+    return{uid:safeString(s.uid),idToken:safeString(s.idToken),refreshToken:safeString(s.refreshToken),
+      expiresAt:Number.isFinite(+s.expiresAt)?+s.expiresAt:0,apiKey:safeString(s.apiKey)};
+  }
+  function saveSession(){
+    if(!state.uid||!state.refreshToken)return;
+    Persistence.setJSON(AUTH_SESSION_KEY,{uid:state.uid,idToken:state.idToken,refreshToken:state.refreshToken,
+      expiresAt:state.expiresAt,apiKey:state.apiKey});
+  }
+  function applySession(s,mode){
+    state.uid=safeString(s.uid)||localUid();
+    state.idToken=safeString(s.idToken);
+    state.refreshToken=safeString(s.refreshToken);
+    state.expiresAt=Number.isFinite(+s.expiresAt)?+s.expiresAt:0;
+    state.apiKey=safeString(s.apiKey)||state.apiKey;
+    state.mode=mode||'authenticated';state.error='';saveSession();
+    return state;
+  }
+  async function requestJSON(url,options,timeout){
+    let timer=0,controller=null;
+    try{
+      if(typeof AbortController!=='undefined'){
+        controller=new AbortController();
+        options=Object.assign({},options||{},{signal:controller.signal});
+        timer=setTimeout(()=>controller.abort(),timeout||5000);
+      }
+      const r=await fetch(url,options||{});
+      let body=null;try{body=await r.json();}catch(e){}
+      if(!r.ok){
+        const msg=body&&body.error&&(body.error.message||body.error)||('HTTP '+r.status);
+        throw new Error(String(msg));
+      }
+      return body||{};
+    }finally{if(timer)clearTimeout(timer);}
+  }
+  async function discoverApiKey(saved){
+    const direct=safeString(window.ENDLESS_POWDER_FIREBASE_API_KEY)||safeString(FIREBASE_API_KEY)||
+      safeString(store.getItem(API_KEY_OVERRIDE_KEY))||safeString(saved&&saved.apiKey);
+    if(direct)return direct.trim();
+    if(typeof fetch!=='function')return'';
+    const urls=['/__/firebase/init.json','https://'+FIREBASE_PROJECT_ID+'.firebaseapp.com/__/firebase/init.json'];
+    for(const url of urls){
+      try{const cfg=await requestJSON(url,{cache:'force-cache',credentials:'omit'},1600);
+        if(cfg&&typeof cfg.apiKey==='string'&&cfg.apiKey){
+          try{store.setItem(API_KEY_OVERRIDE_KEY,cfg.apiKey);}catch(e){}
+          return cfg.apiKey;
+        }}catch(e){}
+    }
+    return'';
+  }
+  async function createAnonymous(key){
+    const data=await requestJSON('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(key),{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})},6000);
+    return{uid:safeString(data.localId),idToken:safeString(data.idToken),refreshToken:safeString(data.refreshToken),
+      expiresAt:now()+Math.max(60,parseInt(data.expiresIn||'3600',10)-45)*1000,apiKey:key};
+  }
+  async function refreshAnonymous(key,token){
+    const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(token);
+    const data=await requestJSON('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(key),{
+      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body},6000);
+    return{uid:safeString(data.user_id),idToken:safeString(data.id_token),refreshToken:safeString(data.refresh_token)||token,
+      expiresAt:now()+Math.max(60,parseInt(data.expires_in||'3600',10)-45)*1000,apiKey:key};
+  }
+  async function start(){
+    if(boot)return boot;
+    boot=(async()=>{
+      const saved=loadSession();
+      state.uid=saved&&saved.uid?saved.uid:localUid();
+      state.mode=saved&&saved.uid?'cached-id':'local';
+      if(saved){state.idToken=saved.idToken;state.refreshToken=saved.refreshToken;state.expiresAt=saved.expiresAt;state.apiKey=saved.apiKey;}
+      const key=await discoverApiKey(saved);state.apiKey=key;
+      if(!key){state.mode=saved&&saved.uid?'cached-id':'local';return state;}
+      try{
+        if(saved&&saved.uid&&saved.idToken&&saved.expiresAt>now()+60000)
+          return applySession(Object.assign({},saved,{apiKey:key}),'authenticated-cached');
+        if(saved&&saved.refreshToken)
+          return applySession(await refreshAnonymous(key,saved.refreshToken),'authenticated-refreshed');
+        return applySession(await createAnonymous(key),'authenticated-new');
+      }catch(e){
+        state.error=(e&&e.message)||String(e);
+        state.mode=saved&&saved.uid?'offline-cached':'local';
+        state.idToken=saved&&saved.expiresAt>now()?saved.idToken:'';
+        return state;
+      }
+    })();
+    return boot;
+  }
+  async function ensure(){
+    await start();
+    if(!state.apiKey||!state.refreshToken||state.expiresAt>now()+60000)return state;
+    if(!refreshing)refreshing=refreshAnonymous(state.apiKey,state.refreshToken)
+      .then(s=>applySession(s,'authenticated-refreshed'))
+      .catch(e=>{state.error=(e&&e.message)||String(e);state.idToken='';state.mode='offline-cached';return state;})
+      .finally(()=>{refreshing=null;});
+    return refreshing;
+  }
+  async function token(){await ensure();return state.idToken||'';}
+  async function url(raw){const t=await token();if(!t)return raw;
+    return raw+(raw.includes('?')?'&':'?')+'auth='+encodeURIComponent(t);}
+  function uid(){return state.uid||localUid();}
+  function status(){return{mode:state.mode,uid:uid(),authenticated:state.mode.indexOf('authenticated')===0,
+    tokenReady:!!state.idToken,expiresAt:state.expiresAt,error:state.error,configured:!!state.apiKey};}
+  return Object.freeze({start,ensure,token,url,uid,status});
+})();
 /* ==================== ONLINE LEADERBOARD (Firebase RTDB REST) ====================
    Ported from JumpOvertheMoon's HighScoreService. Set FIREBASE_DB_URL to enable —
    leave empty and the feature hides itself entirely. No SDK: plain REST + fetch. */
@@ -372,7 +505,8 @@ const LB=(()=>{
     if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
     lastRefresh=Date.now();
     try{
-      const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
+      const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
+      const r=await fetch(url);
       if(r.ok){cache.top=norm(await r.json());save();renderBoard();lbStatus('');}
       else lbStatus('board unreachable ('+r.status+') — check database rules');
     }catch(e){lbStatus('board offline');}
@@ -382,8 +516,8 @@ const LB=(()=>{
     try{
       while(cache.pending.length){
         const e=cache.pending[0];
-        const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json',
-          {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
+        const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json');
+        const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
         if(!r.ok){lbStatus('submit blocked ('+r.status+') — will retry; check database rules');break;}
         cache.pending.shift();save();
       }
@@ -420,13 +554,35 @@ function renderBoard(){
   }).join('');
 }
 /* ============================ PERSISTENCE ============================ */
-let markers=[];try{markers=JSON.parse(store.getItem('ep_markers')||'[]')||[];}catch(e){markers=[];}
+function validLocalDeath(m){
+  return !!m&&m.worldVersion===WORLD_VERSION&&Number.isFinite(m.depth)&&m.depth>=0&&
+    Number.isFinite(m.x)&&m.x>=EDGE&&m.x<=LW-EDGE&&Number.isFinite(m.theta)&&
+    typeof m.cause==='string'&&Number.isFinite(m.timestamp)&&m.timestamp>0;
+}
+let localDeaths=Persistence.getJSON(LOCAL_DEATH_KEY,[]);
+if(!Array.isArray(localDeaths))localDeaths=[];
+localDeaths=localDeaths.filter(validLocalDeath).sort((a,b)=>a.timestamp-b.timestamp).slice(-C.localDeathCap);
+Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
+// Pre-v5 markers mixed NPC deaths, nonfatal crashes, and duplicate player writes, so they are intentionally retired.
+try{store.removeItem('ep_markers');}catch(e){}
 let longestDistance=parseFloat(store.getItem('ep_best')||'0')||0;
 let bestScore=parseFloat(store.getItem('ep_best_score_v2')||'0')||0;
 let lastDeathReal=0;
-function addMarker(t,d,x){markers.push({t,d:Math.round(d*10)/10,x:Math.round(x)});
-  if(markers.length>C.markerCap)markers.splice(0,markers.length-C.markerCap);
-  try{store.setItem('ep_markers',JSON.stringify(markers));}catch(e){}}
+function recordLocalDeath(){
+  if(!S)return false;
+  const timestamp=Date.now();
+  const rec={
+    deathId:'local-'+timestamp.toString(36)+'-'+Math.floor(Math.random()*0xffffff).toString(36),
+    depth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
+    x:Math.round(clamp(Number.isFinite(S.deathX)?S.deathX:S.x,EDGE,LW-EDGE)*10)/10,
+    theta:Math.round((Number.isFinite(S.deathTheta)?S.deathTheta:S.theta)*1000)/1000,
+    cause:String(S.cause||'caught'),timestamp,worldVersion:WORLD_VERSION
+  };
+  localDeaths.push(rec);
+  if(localDeaths.length>C.localDeathCap)localDeaths.splice(0,localDeaths.length-C.localDeathCap);
+  Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
+  return true;
+}
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
 let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[],carveSegs=[];
@@ -439,6 +595,7 @@ function fresh(){
   M=baseM();
   S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
+    deathRecorded:false,deathX:null,deathDepth:null,deathTheta:0,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
     prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,tightBoost:0,
     scoreFlag:0,scoreCombo:0,scorePenalty:0,cleanFlags:0,flagsAttempted:0,bestCombo:0,collisions:0,
@@ -963,7 +1120,6 @@ function crash(){
   DEF.stamp('lip',S.x-12,S.depth,6,0.35);DEF.stamp('lip',S.x+12,S.depth,6,0.35);
   bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
   addCleanDebt(2.0);addFury(C.furyCrash+0.05,0.78);
-  addMarker('ko',S.depth,S.x);
   const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95);
   if(ng){const away=S.x<LW/2?1:-1;
     ng.side=away;ng.x=clamp(S.x-away*60,EDGE+115,LW-EDGE-115);}
@@ -977,8 +1133,7 @@ function fatalTerrain(cause,x,d){
   DEF.stamp('dark',x,d,17,0.55);
   DEF.stamp('lip',x-13,d,7,0.38);DEF.stamp('lip',x+13,d,7,0.38);
   bloodSmear(x,d,Math.sin(S.theta),Math.cos(S.theta),1.15);
-  addMarker('ko',d,x);
-  die(cause);
+  die(cause,{x,d,theta:S.theta});
 }
 function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   recordCollision(250);
@@ -1021,7 +1176,7 @@ function startYetiLull(reason,minT,maxT,back){
 function consumeNpc(n){
   const i=npcs.indexOf(n);if(i<0)return false;
   const Y=S.yeti;npcs.splice(i,1);
-  burstAt(n.x,n.d,'#e03434',28,110);addMarker('eat',n.d,n.x);
+  burstAt(n.x,n.d,'#e03434',28,110);
   bloodSmear(n.x,n.d,0,1,1.7,'110,10,14');
   Y.x=n.x;Y.eat=C.feast;Y.npcTarget=null;Y.npcTele=0;Y.npcBurst=0;Y.pass=0;
   Y.gapImpulse=clamp((Y.gapImpulse||0)+1.0+Math.random()*0.8,-14,12);
@@ -1075,9 +1230,13 @@ function lungeMiss(){ // committed dive hit empty snow
   burstAt(Y.x,Y.d+1,'#ffffff',16,110);
   S.shake=Math.max(S.shake,6); tone(140,60,0.22,'square',0.22);
 }
-function die(cause){
+function die(cause,spot){
   if(S.mode!=='play')return;
-  S.cause=cause; S.mode='dying';
+  S.cause=cause;
+  S.deathX=spot&&Number.isFinite(spot.x)?spot.x:S.x;
+  S.deathDepth=spot&&Number.isFinite(spot.d)?spot.d:S.depth;
+  S.deathTheta=spot&&Number.isFinite(spot.theta)?spot.theta:S.theta;
+  S.mode='dying';
   S.dying=(cause==='caught'?C.killCam:C.edgeCam)*((Date.now()-lastDeathReal<60000)?0.55:1);
   // One strong death impact; it now decays instead of being re-applied throughout the kill cam.
   S.shake=Math.max(S.shake,cause==='caught'?16:18);
@@ -1086,11 +1245,13 @@ function die(cause){
   if(cause==='caught'){sfx.roar();vib([80,60,160]);}else{sfx.crash();vib(120);}
 }
 let lastFinishedRun=null;
-function finalizeDeath(){
+function finalizePlayerDeath(){
+  if(S.deathRecorded)return;
+  recordLocalDeath();
+  S.deathRecorded=true;
   S.mode='dead';
   S.shake=0;
   S.flash=0;
-  addMarker('death',S.depth,S.x);
   const dist=Math.max(0,Math.floor(S.depth));
   const dPts=dist*2,score=Math.max(0,dPts+S.scoreFlag+S.scoreCombo-S.scorePenalty);
   const oldScore=bestScore,oldDistance=longestDistance;
@@ -1155,7 +1316,7 @@ function update(dt){
     S.dying-=dt;
     S.shake=Math.max(0,S.shake-48*dt);
     S.flash=Math.max(0,S.flash-2.4*dt);
-    if(S.dying<=0)finalizeDeath();return;
+    if(S.dying<=0)finalizePlayerDeath();return;
   }
   if(S.mode!=='play')return;
   const Q=PerfBudget.profile();
@@ -2049,21 +2210,25 @@ function render(){
       const a=projD(c.c-c.h,u),b=projD(c.c+c.h,u),a2=projD(c.c-c.h,Math.min(u+C.chunk,UBOT)),b2=projD(c.c+c.h,Math.min(u+C.chunk,UBOT));
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b2.x,b2.y);ctx.lineTo(a2.x,a2.y);ctx.closePath();ctx.stroke();}}
   DEF.draw(); // the carved medium: everyone's passage, under everything that stands on it
-  // markers — with dried bloodstains: the mountain remembers what happened here
+  // Private local history: up to 50 restrained player-death stains. No NPC marker persists between runs.
   const dkAll=clamp((S.depth-1200)/600,0,1);
-  for(const m of markers){const u=m.d-S.depth;if(u<UTOP||u>UBOT)continue;
-    const p=projD(m.x,u),r=7*p.s;
-    if(m.t!=='death'||true){
-      const hs=hsh(m.d*3.7+m.x),big=m.t==='eat'?1.5:m.t==='death'?1.1:0.8;
-      const sa=(m.t==='eat'?0.26:m.t==='death'?0.2:0.14)+0.08*dkAll;
-      ctx.fillStyle='rgba('+(120+40*dkAll)+',35,28,'+sa.toFixed(2)+')';
-      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(hs*6.28);
-      ctx.beginPath();ctx.ellipse(0,0,(9+hs*7)*big*p.s,(5+hs*3)*big*p.s,0,0,6.283);ctx.fill();
-      ctx.restore();
-    }
-    ctx.strokeStyle=m.t==='eat'?'rgba(150,20,20,0.55)':m.t==='death'?'rgba(90,95,105,0.6)':'rgba(120,126,136,0.35)';
-    ctx.lineWidth=3*p.s;
-    ctx.beginPath();ctx.moveTo(p.x-r,p.y-r);ctx.lineTo(p.x+r,p.y+r);ctx.moveTo(p.x+r,p.y-r);ctx.lineTo(p.x-r,p.y+r);ctx.stroke();}
+  for(const m of localDeaths){
+    const u=m.depth-S.depth;if(u<UTOP||u>UBOT)continue;
+    const p=projD(m.x,u),hs=hsh(m.depth*3.7+m.x+m.timestamp*0.000001);
+    const th=Number.isFinite(m.theta)?m.theta:0;
+    // A short, subdued approach scar gives the stain direction without creating a persistent body icon.
+    const tailD=0.85+hs*0.55,tailX=Math.sin(th)*(12+hs*10);
+    const pa=projD(m.x-tailX,m.depth-Math.cos(th)*tailD),pb=projD(m.x,m.depth);
+    ctx.strokeStyle='rgba(108,118,128,'+(0.12+0.05*dkAll).toFixed(2)+')';
+    ctx.lineWidth=Math.max(0.8,2.1*pb.s);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(th+hs*0.45);
+    ctx.fillStyle='rgba('+(112+32*dkAll)+',30,25,'+(0.17+0.07*dkAll).toFixed(2)+')';
+    ctx.beginPath();ctx.ellipse(0,0,(8+hs*6)*p.s,(4.2+hs*2.7)*p.s,0,0,6.283);ctx.fill();
+    ctx.fillStyle='rgba(90,24,22,'+(0.10+0.05*dkAll).toFixed(2)+')';
+    ctx.beginPath();ctx.arc((4+hs*3)*p.s,-1.5*p.s,(2.2+hs*1.5)*p.s,0,6.283);ctx.fill();
+    ctx.restore();
+  }
   // fresh blood: this run's consequences, streaked along the impact direction
   for(const sm of smears){const u=sm.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const hl=sm.len/2;
@@ -2603,7 +2768,7 @@ function bindInput(){
 }
 const Input=Object.freeze({bind:bindInput,beginRun,pdown,pmove,pup,kb});
 Input.bind();
-Leaderboard.refresh();Leaderboard.drain();
+Identity.start().finally(()=>{Leaderboard.refresh();Leaderboard.drain();});
 /* tune sliders */
 function slider(id,vid,fn,fmt){const s=$(id),v=$(vid);
   s.addEventListener('input',()=>{const val=parseFloat(s.value);fn(val);v.textContent=fmt?fmt(val):val;});}
@@ -2638,7 +2803,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
+  persistence:Persistence,identity:Identity,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -2658,8 +2823,8 @@ requestAnimationFrame(frame);
 /* ============================ TEST HOOK ============================ */
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
-  arrays:()=>({gates,obs,npcs,balls,markers,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
+  arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
+  lb:Leaderboard,identity:Identity,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
