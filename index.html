@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5d.4.1</title>
+<title>ENDLESS POWDER v5e.4</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -161,9 +161,29 @@
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #memorialActions button.primary{background:#d8cdff;color:#120d22;border-color:transparent}
 
+  /* Local/shared reconciliation release verification is hidden during normal play and opens only with ?reconcilecheck=1. */
+  #reconcileDiag{position:absolute;z-index:23;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(255,215,106,.42);border-radius:14px;
+    background:rgba(5,9,15,.97);box-shadow:0 18px 60px rgba(0,0,0,.62);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  #reconcileDiag.show{display:block}
+  #reconcileDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #reconcileDiag .reconcileSub{opacity:.62;margin-bottom:14px}
+  .reconcileRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .reconcileRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .reconcileRow b{font-weight:850;word-break:break-word}
+  #reconcileOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(255,215,106,.08);white-space:pre-line;font-weight:800}
+  #reconcileDetails{margin-top:10px;white-space:pre-line;opacity:.72;word-break:break-word}
+  #reconcileActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #reconcileActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #reconcileActions button.primary{background:#ffd76a;color:#191204;border-color:transparent}
+
   /* Phone diagnostics become full-viewport scroll surfaces. Normal gameplay keeps its locked canvas viewport. */
   @media (hover:none), (pointer:coarse), (max-width:699px){
-    #authDiag.show,#bestDiag.show,#memorialDiag.show{
+    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show{
       position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-height:none;
       margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:scroll;overflow-x:hidden;
       padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px)
@@ -196,7 +216,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5d.4.1</div>
+    <div class="version">v5e.4</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -228,7 +248,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5d.4.1 preserves the shared-memorial release check and adds full mobile scrolling for all hidden validation screens.</div>
+    <div class="authSub">v5e.4 validates the complete local/shared reconciliation layer while preserving private history, public best-run bodies and offline play.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -279,6 +299,27 @@
     <div id="memorialDetails"></div>
     <div id="memorialActions"><button class="primary" id="memorialRetry" type="button">RUN CHECKS</button><button id="memorialClose" type="button">CLOSE</button></div>
   </div>
+
+
+  <div id="reconcileDiag" aria-live="polite">
+    <h2>LOCAL / SHARED RECONCILIATION CHECK</h2>
+    <div class="reconcileSub">Read-only Firebase status plus deterministic in-memory tests. Temporary deaths and memorials are restored immediately and are never written to live database records.</div>
+    <div class="reconcileRow"><span>Authentication</span><b id="reconcileAuth" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Local match</span><b id="reconcileMatch" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>False-match guards</span><b id="reconcileFalse" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Stain suppression</span><b id="reconcileSuppress" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Missing memorial</span><b id="reconcileMissing" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>World mismatch</span><b id="reconcileWorld" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Personal-best move</span><b id="reconcileMove" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Overlap treatment</span><b id="reconcileOverlap" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>50 + 50 stress</span><b id="reconcileStress" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Offline restoration</span><b id="reconcileOffline" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Ledger integrity</span><b id="reconcileLedger" class="authNeutral">CHECKING</b></div>
+    <div class="reconcileRow"><span>Legacy /scores</span><b id="reconcileLegacy" class="authNeutral">CHECKING</b></div>
+    <div id="reconcileOverall">Running validation…</div>
+    <div id="reconcileDetails"></div>
+    <div id="reconcileActions"><button class="primary" id="reconcileRetry" type="button">RUN CHECKS</button><button id="reconcileClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -286,7 +327,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5d.4.1';
+const BUILD_VERSION='v5e.4';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -635,7 +676,7 @@ const Identity=(()=>{
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5d.4 retains the canonical /best_runs/{uid} record for authenticated
+   v5e.4 retains the canonical /best_runs/{uid} record for authenticated
    personal-best submissions and the public leaderboard. */
 const BEST_RUN_PATH='/endless_powder/best_runs';
 const BEST_RUN_SCHEMA_VERSION='best-runs-v1';
@@ -696,10 +737,16 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
-   v5d.4 keeps the read-only bridge between the validated top-50 best-run records
+   v5e.4 keeps the read-only bridge between the validated top-50 best-run records
    and the world-space memorial renderer. It performs no network request; compatible
-   records now become projected bodies with deterministic outfits and one proximity-gated label; local reconciliation remains deferred. */
+   records become projected bodies with deterministic outfits, stable overlap groups
+   and one proximity-gated label; LocalSharedMatch coordinates private-stain suppression
+   and visual attenuation without another network path. */
 const SHARED_MEMORIAL_LIMIT=50;
+// v5e.4 late-bound hooks: SharedMemorials may initialize before local death history is loaded,
+// while an accepted server write may need to reconcile the public body after all modules exist.
+let reconcileRefresh=()=>null;
+let acceptedBestRefresh=()=>null;
 const SharedMemorials=(()=>{
   let ownerUid='',rows=[];
   let report=Object.freeze({source:0,accepted:0,invalid:0,worldMismatch:0,duplicateUid:0,
@@ -736,6 +783,7 @@ const SharedMemorials=(()=>{
     rows=next;
     report=Object.freeze({source:source.length,accepted:rows.length,invalid,worldMismatch,duplicateUid,
       ownerUid,ownerPresent:!!ownerUid&&rows.some(e=>e.uid===ownerUid),worldVersion:WORLD_VERSION,updatedAt:Date.now()});
+    reconcileRefresh();
     return rows.length;
   }
   function ingest(source,uid){ownerUid=cleanOwner(uid);return rebuild(source);}
@@ -743,6 +791,7 @@ const SharedMemorials=(()=>{
     const next=cleanOwner(uid);if(next===ownerUid)return report.ownerPresent;
     ownerUid=next;rows=rows.map(e=>Object.freeze(Object.assign({},e,{isCurrentUser:!!ownerUid&&e.uid===ownerUid})));
     report=Object.freeze(Object.assign({},report,{ownerUid,ownerPresent:!!ownerUid&&rows.some(e=>e.uid===ownerUid),updatedAt:Date.now()}));
+    reconcileRefresh();
     return report.ownerPresent;
   }
   function records(){return rows.slice();}
@@ -751,7 +800,8 @@ const SharedMemorials=(()=>{
   function byUid(uid){uid=String(uid||'');return rows.find(e=>e.uid===uid)||null;}
   function current(){return ownerUid?byUid(ownerUid):null;}
   let lastRender=Object.freeze({frame:0,loaded:0,nearby:0,drawn:0,culled:0,groups:0,overlapGroups:0,
-    overlapBodies:0,budgetSkipped:0,ownerDrawn:0,detailFull:0,detailReduced:0,detailMinimal:0,labeled:0,labelUid:'',labelDistance:null,samples:[]});
+    overlapBodies:0,budgetSkipped:0,ownerDrawn:0,anchorsDrawn:0,secondaryDrawn:0,ownerSecondary:0,
+    detailFull:0,detailReduced:0,detailMinimal:0,labeled:0,labelUid:'',labelDistance:null,labelGroupSize:0,samples:[]});
   function noteRender(next){
     const samples=Array.isArray(next&&next.samples)?next.samples.slice(0,8).map(e=>Object.freeze(Object.assign({},e))):[];
     const labelUid=next&&typeof next.labelUid==='string'?next.labelUid:'';
@@ -760,20 +810,24 @@ const SharedMemorials=(()=>{
       nearby:Math.max(0,(next&&next.nearby)|0),drawn:Math.max(0,(next&&next.drawn)|0),
       culled:Math.max(0,(next&&next.culled)|0),groups:Math.max(0,(next&&next.groups)|0),
       overlapGroups:Math.max(0,(next&&next.overlapGroups)|0),overlapBodies:Math.max(0,(next&&next.overlapBodies)|0),
-      budgetSkipped:Math.max(0,(next&&next.budgetSkipped)|0),ownerDrawn:Math.max(0,(next&&next.ownerDrawn)|0),detailFull:Math.max(0,(next&&next.detailFull)|0),
+      budgetSkipped:Math.max(0,(next&&next.budgetSkipped)|0),ownerDrawn:Math.max(0,(next&&next.ownerDrawn)|0),
+      anchorsDrawn:Math.max(0,(next&&next.anchorsDrawn)|0),secondaryDrawn:Math.max(0,(next&&next.secondaryDrawn)|0),
+      ownerSecondary:Math.max(0,(next&&next.ownerSecondary)|0),detailFull:Math.max(0,(next&&next.detailFull)|0),
       detailReduced:Math.max(0,(next&&next.detailReduced)|0),detailMinimal:Math.max(0,(next&&next.detailMinimal)|0),
-      labeled:labelUid?1:0,labelUid,labelDistance,samples:Object.freeze(samples)});
+      labeled:labelUid?1:0,labelUid,labelDistance,labelGroupSize:Math.max(0,(next&&next.labelGroupSize)|0),samples:Object.freeze(samples)});
     return lastRender.drawn;
   }
   function renderStats(){return {frame:lastRender.frame,loaded:lastRender.loaded,nearby:lastRender.nearby,
     drawn:lastRender.drawn,culled:lastRender.culled,groups:lastRender.groups,overlapGroups:lastRender.overlapGroups,
-    overlapBodies:lastRender.overlapBodies,budgetSkipped:lastRender.budgetSkipped,ownerDrawn:lastRender.ownerDrawn,detailFull:lastRender.detailFull,
-    detailReduced:lastRender.detailReduced,detailMinimal:lastRender.detailMinimal,labeled:lastRender.labeled,
-    labelUid:lastRender.labelUid,labelDistance:lastRender.labelDistance,samples:lastRender.samples.map(e=>Object.assign({},e))};}
+    overlapBodies:lastRender.overlapBodies,budgetSkipped:lastRender.budgetSkipped,ownerDrawn:lastRender.ownerDrawn,
+    anchorsDrawn:lastRender.anchorsDrawn,secondaryDrawn:lastRender.secondaryDrawn,ownerSecondary:lastRender.ownerSecondary,
+    detailFull:lastRender.detailFull,detailReduced:lastRender.detailReduced,detailMinimal:lastRender.detailMinimal,labeled:lastRender.labeled,
+    labelUid:lastRender.labelUid,labelDistance:lastRender.labelDistance,labelGroupSize:lastRender.labelGroupSize,
+    samples:lastRender.samples.map(e=>Object.assign({},e))};}
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,stats,byUid,current,noteRender,renderStats});
 })();
 /* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5d.4 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
+   v5e.4 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
    records; the client then applies the full ranking order: score, distance,
    clean flags, fewer collisions. The legacy /scores collection is isolated. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
@@ -804,7 +858,11 @@ const LB=(()=>{
       }
     }
   }catch(e){}
-  let lastRefresh=0,busy=false,lastSub=null,lastNotice='';
+  let lastRefresh=0,busy=false,lastSub=null,lastNotice='',refreshSeq=0,appliedRefreshSeq=0;
+  // Session-only authoritative overlay. A successful PUT is applied immediately and
+  // cannot be reverted by an older in-flight top-50 response. It is intentionally
+  // not persisted: the server and normal cached board remain authoritative on reload.
+  let acceptedLive=null;
   const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
   const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
   const sanit=sanitizeInitials;
@@ -821,7 +879,24 @@ const LB=(()=>{
     attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
     deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
     worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  function applyAcceptedOverlay(records){
+    records=Array.isArray(records)?records:[];
+    if(!acceptedLive)return records;
+    const auth=Identity.status(),uid=String(auth.uid||'');
+    if(!uid||uid.indexOf('local-')===0||acceptedLive.uid!==uid){acceptedLive=null;return records;}
+    const item=itemOf(acceptedLive.uid,acceptedLive.record);
+    if(!item){acceptedLive=null;return records;}
+    return records.filter(e=>e.uid!==item.uid).concat(item);
+  }
+  function acknowledgeAcceptedOverlay(remoteRows){
+    if(!acceptedLive||!Array.isArray(remoteRows))return;
+    const server=remoteRows.find(e=>e.uid===acceptedLive.uid);
+    // Only a fresh collection response may retire the session overlay. Cache rows
+    // also pass through syncTop, so clearing it there would re-open the stale-response race.
+    if(server&&server.score>=acceptedLive.record.score)acceptedLive=null;
+  }
   const syncTop=()=>{
+    cache.records=applyAcceptedOverlay(cache.records);
     cache.records.sort(cmp);cache.records=cache.records.slice(0,LB_FETCH);cache.top=cache.records.slice(0,LB_SIZE);
     SharedMemorials.ingest(cache.records,Identity.status().uid);
   };
@@ -854,6 +929,14 @@ const LB=(()=>{
     if(uid===ownerHint()){cache.remoteBest=recordOf(item);cache.remoteUid=uid;}
     save();if(paint)renderBoard();return true;
   }
+  function commitAccepted(uid,record,source){
+    const item=itemOf(uid,record);if(!item)return null;
+    const previous=cache.records.find(e=>e.uid===item.uid)||null;
+    acceptedLive={uid:item.uid,record:recordOf(item),source:String(source||'server-write'),acceptedAt:Date.now()};
+    if(!mergeRecord(item.uid,recordOf(item)))return null;
+    return acceptedBestRefresh({uid:item.uid,record:recordOf(item),previous:recordOf(previous),
+      source:acceptedLive?acceptedLive.source:String(source||'server-write'),acceptedAt:Date.now()});
+  }
   async function fetchTimed(url,options,timeout){
     let timer=0,controller=null;
     try{
@@ -868,12 +951,17 @@ const LB=(()=>{
   async function refresh(force){
     if(!on())return;
     if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
-    lastRefresh=Date.now();
+    lastRefresh=Date.now();const seq=++refreshSeq;
     try{
       const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
       const r=await fetchTimed(url,{cache:'no-store'});
       if(r.ok){
-        cache.records=norm(await readJSON(r));syncTop();
+        const remoteRows=norm(await readJSON(r));
+        // A later refresh may finish first after a successful write. Never allow an
+        // older response to roll the leaderboard or public body backward.
+        if(seq<appliedRefreshSeq)return;
+        appliedRefreshSeq=seq;acknowledgeAcceptedOverlay(remoteRows);
+        cache.records=remoteRows;syncTop();
         const uid=ownerHint(),own=uid&&cache.records.find(e=>e.uid===uid);
         if(own){cache.remoteBest=recordOf(own);cache.remoteUid=uid;}
         save();renderBoard();if(!lastNotice)lbStatus('');
@@ -886,9 +974,13 @@ const LB=(()=>{
       if(!r.ok)return false;
       const stored=await readJSON(r);
       if(stored!==null&&validStored(stored)&&stored.score>=pending.record.score){
-        cache.remoteBest=stored;cache.remoteUid=uid;mergeRecord(uid,stored);
+        cache.remoteBest=stored;cache.remoteUid=uid;
+        // A matching score can represent an accepted write whose response was lost;
+        // a higher score is simply the newer authoritative record from another tab.
+        if(stored.score===pending.record.score)commitAccepted(uid,stored,'server-confirmed');
+        else mergeRecord(uid,stored);
         const completed=cache.pending===pending;if(completed)cache.pending=null;save();
-        setNotice('personal best unchanged');
+        setNotice(stored.score===pending.record.score?'personal best confirmed — memorial updated':'personal best unchanged');
         return completed?'complete':'newer';
       }
     }catch(e){}
@@ -923,9 +1015,11 @@ const LB=(()=>{
       const writeUrl=await Identity.url(rawUrl);
       const write=await fetchTimed(writeUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending.record)});
       if(write.ok){
-        cache.remoteBest=pending.record;cache.remoteUid=auth.uid;mergeRecord(auth.uid,pending.record);
+        cache.remoteBest=pending.record;cache.remoteUid=auth.uid;
+        const reconciliation=commitAccepted(auth.uid,pending.record,created?'server-create':'server-replace');
         if(cache.pending===pending)cache.pending=null;else rerun=true;save();
-        setNotice(created?'personal best created':'new personal best saved');
+        const live=reconciliation&&reconciliation.visible?' — memorial updated':'';
+        setNotice((created?'personal best created':'new personal best saved')+live);
         setTimeout(()=>refresh(true),0);return;
       }
       if(write.status===403){const confirmed=await confirmServerBest(rawUrl,pending,auth.uid);
@@ -954,7 +1048,8 @@ const LB=(()=>{
   }
   if(retiredLegacyPending)save();
   return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,records:()=>cache.records.slice(),
-    compare:cmp,notice:()=>lastNotice,retiredLegacyPending:()=>retiredLegacyPending,_setUrl:u=>{FIREBASE_DB_URL=u;}};
+    compare:cmp,notice:()=>lastNotice,acceptedLive:()=>acceptedLive?{uid:acceptedLive.uid,record:Object.assign({},acceptedLive.record),source:acceptedLive.source,acceptedAt:acceptedLive.acceptedAt}:null,
+    retiredLegacyPending:()=>retiredLegacyPending,_setUrl:u=>{FIREBASE_DB_URL=u;}};
 })();
 const Leaderboard=LB;
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
@@ -995,8 +1090,128 @@ function recordLocalDeath(){
   localDeaths.push(rec);
   if(localDeaths.length>C.localDeathCap)localDeaths.splice(0,localDeaths.length-C.localDeathCap);
   Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
+  reconcileRefresh();
   return true;
 }
+/* ================= MODULE: LOCAL / SHARED RECONCILIATION =================
+   v5e.4 identifies the current user's local stain that corresponds to their
+   compatible public best-run memorial and suppresses exactly that one stain at
+   render time. Other private stains remain stored and visible; stains beneath dense
+   public groups are only visually attenuated to prevent cumulative blood clutter. */
+const LOCAL_SHARED_DEPTH_TOLERANCE=1.5;
+const LOCAL_SHARED_X_TOLERANCE=18;
+const LocalSharedMatch=(()=>{
+  let state=Object.freeze({matched:false,reason:'not-evaluated',ownerUid:'',memorialUid:'',
+    memorialDepth:null,memorialX:null,totalLocal:0,compatibleLocal:0,candidates:0,
+    localIndex:-1,deathId:'',depthDelta:null,xDelta:null,metric:null,updatedAt:0});
+  function snapshot(next){state=Object.freeze(next);return Object.assign({},state);}
+  function refresh(){
+    const memorial=SharedMemorials.current(),owner=SharedMemorials.stats().ownerUid||'';
+    const base={matched:false,reason:'',ownerUid:owner,memorialUid:memorial?memorial.uid:'',
+      memorialDepth:memorial?memorial.deathDepth:null,memorialX:memorial?memorial.deathX:null,
+      totalLocal:localDeaths.length,compatibleLocal:0,candidates:0,localIndex:-1,deathId:'',
+      depthDelta:null,xDelta:null,metric:null,updatedAt:Date.now()};
+    if(!owner){base.reason='no-authenticated-owner';return snapshot(base);}
+    if(!memorial){base.reason='no-current-user-memorial';return snapshot(base);}
+    let best=null;
+    for(let i=0;i<localDeaths.length;i++){
+      const local=localDeaths[i];
+      if(!validLocalDeath(local)||local.worldVersion!==WORLD_VERSION)continue;
+      base.compatibleLocal++;
+      const depthDelta=Math.abs(local.depth-memorial.deathDepth);
+      const xDelta=Math.abs(local.x-memorial.deathX);
+      if(!(depthDelta<LOCAL_SHARED_DEPTH_TOLERANCE&&xDelta<LOCAL_SHARED_X_TOLERANCE))continue;
+      base.candidates++;
+      const metric=Math.hypot(depthDelta/LOCAL_SHARED_DEPTH_TOLERANCE,xDelta/LOCAL_SHARED_X_TOLERANCE);
+      const candidate={local,index:i,depthDelta,xDelta,metric};
+      if(!best||metric<best.metric-1e-9||
+        (Math.abs(metric-best.metric)<=1e-9&&(depthDelta<best.depthDelta-1e-9||
+        (Math.abs(depthDelta-best.depthDelta)<=1e-9&&(xDelta<best.xDelta-1e-9||
+        (Math.abs(xDelta-best.xDelta)<=1e-9&&local.timestamp>best.local.timestamp))))))best=candidate;
+    }
+    if(!best){base.reason=base.compatibleLocal?'no-positional-match':'no-compatible-local-deaths';return snapshot(base);}
+    base.matched=true;base.reason='matched';base.localIndex=best.index;
+    base.deathId=typeof best.local.deathId==='string'?best.local.deathId:'';
+    base.depthDelta=Math.round(best.depthDelta*1000)/1000;
+    base.xDelta=Math.round(best.xDelta*1000)/1000;
+    base.metric=Math.round(best.metric*1000000)/1000000;
+    return snapshot(base);
+  }
+  function current(){return refresh();}
+  function matchedLocal(){
+    const m=refresh();return m.matched&&m.localIndex>=0&&localDeaths[m.localIndex]
+      ?Object.assign({},localDeaths[m.localIndex]):null;
+  }
+  function isMatchedDeath(local,index,match){
+    const m=match||refresh();if(!m.matched||!local)return false;
+    // Rendering supplies the array index so exactly one record can be suppressed,
+    // even if malformed legacy data somehow contains a duplicate deathId.
+    if(Number.isInteger(index))return index===m.localIndex;
+    if(m.deathId&&typeof local.deathId==='string')return local.deathId===m.deathId;
+    return localDeaths[m.localIndex]===local;
+  }
+  let renderState=Object.freeze({frame:0,total:0,visible:0,drawn:0,suppressed:0,
+    clusterDimmed:0,maxClusterSize:0,suppressedDeathId:'',matchActive:false,updatedAt:0});
+  function noteRender(next){
+    renderState=Object.freeze({frame:renderState.frame+1,total:Math.max(0,(next&&next.total)|0),
+      visible:Math.max(0,(next&&next.visible)|0),drawn:Math.max(0,(next&&next.drawn)|0),
+      suppressed:Math.max(0,(next&&next.suppressed)|0),clusterDimmed:Math.max(0,(next&&next.clusterDimmed)|0),
+      maxClusterSize:Math.max(0,(next&&next.maxClusterSize)|0),
+      suppressedDeathId:next&&typeof next.suppressedDeathId==='string'?next.suppressedDeathId:'',
+      matchActive:!!(next&&next.matchActive),updatedAt:Date.now()});
+    return renderState.suppressed;
+  }
+  function renderStats(){return Object.assign({},renderState);}
+  reconcileRefresh=refresh;
+  refresh();
+  return Object.freeze({depthTolerance:LOCAL_SHARED_DEPTH_TOLERANCE,xTolerance:LOCAL_SHARED_X_TOLERANCE,
+    refresh,current,stats:()=>Object.assign({},state),matchedLocal,isMatchedDeath,noteRender,renderStats});
+})();
+/* ============== MODULE: IMMEDIATE PERSONAL-BEST RECONCILIATION ==============
+   v5e.4 treats a successful authenticated best-run write as an atomic local
+   presentation update: the old UID body is replaced, the newly matching private
+   stain becomes suppressible immediately, and an older in-flight collection
+   response cannot move the body backward. No optimistic body is shown before the
+   server accepts the record. */
+const PersonalBestReconciliation=(()=>{
+  let state=Object.freeze({status:'idle',uid:'',source:'',visible:false,outsideTop50:false,
+    moved:false,oldBodyRemoved:false,matchActive:false,suppressionReady:false,
+    previousScore:null,score:null,previousDepth:null,deathDepth:null,
+    previousX:null,deathX:null,acceptedAt:0,updatedAt:0});
+  const sameRecord=(m,r)=>!!m&&!!r&&m.uid&&m.score===r.score&&m.distance===r.distance&&
+    Math.abs(m.deathX-r.deathX)<0.001&&Math.abs(m.deathDepth-r.deathDepth)<0.001&&
+    Math.abs(m.deathTheta-r.deathTheta)<0.001&&m.deathCause===r.deathCause&&
+    m.worldVersion===r.worldVersion&&m.timestamp===r.timestamp;
+  function apply(event){
+    event=event&&typeof event==='object'?event:{};
+    const uid=String(event.uid||''),record=event.record,previous=event.previous;
+    const base={status:'invalid',uid,source:String(event.source||''),visible:false,outsideTop50:false,
+      moved:false,oldBodyRemoved:false,matchActive:false,suppressionReady:false,
+      previousScore:previous&&Number.isFinite(previous.score)?previous.score:null,
+      score:record&&Number.isFinite(record.score)?record.score:null,
+      previousDepth:previous&&Number.isFinite(previous.deathDepth)?previous.deathDepth:null,
+      deathDepth:record&&Number.isFinite(record.deathDepth)?record.deathDepth:null,
+      previousX:previous&&Number.isFinite(previous.deathX)?previous.deathX:null,
+      deathX:record&&Number.isFinite(record.deathX)?record.deathX:null,
+      acceptedAt:Number.isFinite(+event.acceptedAt)?+event.acceptedAt:Date.now(),updatedAt:Date.now()};
+    if(!/^[A-Za-z0-9_-]{1,128}$/.test(uid)||!BestRuns.valid(record,Math.max(Date.now(),+(record&&record.timestamp)||0))){
+      state=Object.freeze(base);return Object.assign({},state);
+    }
+    const current=SharedMemorials.byUid(uid),owner=SharedMemorials.stats().ownerUid;
+    const same=sameRecord(current,record),uidCount=SharedMemorials.records().filter(e=>e.uid===uid).length;
+    const moved=!previous||previous.score!==record.score||previous.deathCause!==record.deathCause||
+      Math.abs((previous.deathDepth||0)-record.deathDepth)>0.001||Math.abs((previous.deathX||0)-record.deathX)>0.001||
+      Math.abs((previous.deathTheta||0)-record.deathTheta)>0.001;
+    const match=owner===uid?LocalSharedMatch.current():{matched:false};
+    base.status=same?'reconciled':'accepted-outside-top-50';
+    base.visible=same;base.outsideTop50=!same;base.moved=moved;
+    base.oldBodyRemoved=uidCount<2&&(!previous||!same||moved);
+    base.matchActive=!!match.matched;base.suppressionReady=same&&!!match.matched;
+    state=Object.freeze(base);return Object.assign({},state);
+  }
+  acceptedBestRefresh=apply;
+  return Object.freeze({apply,current:()=>Object.assign({},state)});
+})();
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
 let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[],carveSegs=[];
@@ -1677,7 +1892,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5d.4 best-run submission, leaderboard and memorial bridge
+  lastFinishedRun=run; // complete death-aware payload used by the v5e.4 best-run submission and immediate memorial reconciliation
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -2516,9 +2731,10 @@ function drawCarvePlume(pal,front){
 }
 
 /* ====================== SHARED MEMORIAL RENDERING ======================
-   v5d.4 renders compatible best-run records already held by SharedMemorials.
+   v5e.4 renders compatible best-run records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
    UID-derived outfits, deterministic overlap groups, distance-based detail and
-   performance budgets require no added Firebase fields. Local-stain suppression remains deferred. */
+   performance budgets require no added Firebase fields. The matching current-user
+   local stain is suppressed in the private-history layer immediately below. */
 const MEMORIAL_LABEL_RANGE=12.5;
 const MEMORIAL_LABEL_FULL=6.5;
 const MEMORIAL_GROUP_X=24;
@@ -2569,9 +2785,14 @@ function memorialDetailLevel(p,Q){
   if(p.s>=0.96)return 2;
   return p.s>=Q.memorialDetailScale?1:0;
 }
-function drawMemorialGround(m,p,approach,pose,nightK,detail,alpha){
-  ctx.save();ctx.globalAlpha=alpha;ctx.lineCap='round';
-  if(detail>0){
+function drawMemorialGround(m,p,approach,pose,nightK,detail,alpha,role){
+  role=role||'solo';
+  const secondary=role==='secondary';
+  const groundAlpha=secondary?alpha*0.42:alpha;
+  ctx.save();ctx.globalAlpha=groundAlpha;ctx.lineCap='round';
+  // Dense groups share the anchor's final approach. Secondary bodies add only a
+  // faint compressed patch so parallel tracks do not form a dark comb.
+  if(!secondary&&detail>0){
     const a0=projD(approach.a0.x,approach.a0.d-S.depth),a1=projD(approach.a1.x,approach.a1.d-S.depth);
     ctx.strokeStyle='rgba(74,92,112,'+(0.14+0.07*nightK).toFixed(3)+')';
     ctx.lineWidth=Math.max(0.7,1.45*p.s);
@@ -2581,14 +2802,19 @@ function drawMemorialGround(m,p,approach,pose,nightK,detail,alpha){
     ctx.stroke();
   }
   ctx.translate(p.x,p.y);
-  ctx.fillStyle='rgba(65,83,104,'+(0.09+0.05*nightK).toFixed(3)+')';
-  ctx.beginPath();ctx.ellipse(0,4*p.s,(detail?20:15)*p.s,(detail?7:5.5)*p.s,pose.fall*0.18,0,6.283);ctx.fill();
-  if(detail>1){ctx.fillStyle='rgba(255,255,255,'+(0.10+0.04*(1-nightK)).toFixed(3)+')';
+  ctx.fillStyle='rgba(65,83,104,'+(secondary?0.055:(0.09+0.05*nightK)).toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse(0,4*p.s,(secondary?(detail?13:10):(detail?20:15))*p.s,
+    (secondary?(detail?4.5:3.5):(detail?7:5.5))*p.s,pose.fall*0.18,0,6.283);ctx.fill();
+  if(!secondary&&detail>1){ctx.fillStyle='rgba(255,255,255,'+(0.10+0.04*(1-nightK)).toFixed(3)+')';
     ctx.beginPath();ctx.ellipse(-4*p.s,1*p.s,15*p.s,4.5*p.s,pose.fall*0.12,0,6.283);ctx.fill();}
-  const bloodA=(0.20+0.08*nightK)*pose.blood;
+  // One full blood pool belongs to the group's ranked anchor. Secondary bodies
+  // receive a tiny low-alpha mark rather than stacking full pools.
+  const bloodScale=secondary?0.34:1;
+  const bloodA=(0.20+0.08*nightK)*pose.blood*(secondary?0.34:1);
   ctx.fillStyle='rgba(112,25,24,'+bloodA.toFixed(3)+')';
-  ctx.beginPath();ctx.ellipse(7*p.s,5*p.s,(detail?10.5:8.0)*p.s*pose.blood,(detail?4.6:3.7)*p.s,pose.fall*0.32,0,6.283);ctx.fill();
-  if(detail>0){ctx.fillStyle='rgba(78,18,20,'+(bloodA*0.62).toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse((secondary?5:7)*p.s,5*p.s,(detail?10.5:8.0)*p.s*pose.blood*bloodScale,
+    (detail?4.6:3.7)*p.s*bloodScale,pose.fall*0.32,0,6.283);ctx.fill();
+  if(!secondary&&detail>0){ctx.fillStyle='rgba(78,18,20,'+(bloodA*0.62).toFixed(3)+')';
     ctx.beginPath();ctx.arc((11+3*pose.blood)*p.s,5*p.s,2.5*p.s,0,6.283);ctx.fill();}
   ctx.restore();
 }
@@ -2657,10 +2883,23 @@ function memorialGroups(items){
   }
   return groups;
 }
+function localStainClusterTreatment(local,shared){
+  if(!local||!Array.isArray(shared)||shared.length<2)return {count:0,alpha:1};
+  let count=0;
+  for(const m of shared){
+    if(Math.abs(local.x-m.deathX)<=MEMORIAL_GROUP_X&&Math.abs(local.depth-m.deathDepth)<=MEMORIAL_GROUP_D)count++;
+  }
+  if(count<2)return {count,alpha:1};
+  // Private history stays visible, but it recedes beneath a dense public memorial
+  // cluster so local and shared blood do not accumulate into one opaque patch.
+  return {count,alpha:count>=4?0.30:count===3?0.38:0.50};
+}
 function memorialOffset(item,index){
   if(index===0)return {x:0,d:0};
   const h=memorialHash(item.m.uid),side=(h&1)?1:-1;
-  return {x:side*(5+(h>>>2)%5),d:(((h>>>6)%5)-2)*0.18};
+  // Stable offsets are large enough to separate silhouettes but remain well inside
+  // the visual overlap group that generated them.
+  return {x:side*(7+(h>>>2)%7),d:(((h>>>6)%7)-3)*0.16};
 }
 function prepareMemorialGroups(items,Q){
   const groups=memorialGroups(items),priority=groups.slice().sort((a,b)=>(b.own?1:0)-(a.own?1:0)||a.minDistance-b.minDistance||a.representative.m.rank-b.representative.m.rank);
@@ -2671,7 +2910,10 @@ function prepareMemorialGroups(items,Q){
     if(group.own&&group.own!==group.representative)ordered.push(group.own);
     for(const item of group.members)if(!ordered.includes(item))ordered.push(item);
     const cap=Math.min(ordered.length,Math.max(1,Q.memorialGroupBodies|0),budget);
-    group.render=ordered.slice(0,cap).map((item,i)=>({item,index:i,offset:memorialOffset(item,i),alpha:i===0?1:Math.max(0.30,0.58-(i-1)*0.10)}));
+    group.render=ordered.slice(0,cap).map((item,i)=>{
+      const alpha=i===0?1:(item.m.isCurrentUser?0.68:Math.max(0.26,0.48-(i-1)*0.10));
+      return{item,index:i,offset:memorialOffset(item,i),alpha};
+    });
     budget-=cap;budgetSkipped+=ordered.length-cap;
   }
   return {groups:priority.filter(g=>g.render&&g.render.length).sort((a,b)=>a.representative.u-b.representative.u||a.representative.m.rank-b.representative.m.rank),budgetSkipped};
@@ -2729,31 +2971,53 @@ function drawSharedMemorials(nightK){
     visible.push({m,u,p});
   }
   const prepared=prepareMemorialGroups(visible,Q),samples=[],labelCandidates=[];
-  let drawn=0,overlapGroups=0,overlapBodies=0,ownerDrawn=0,detailFull=0,detailReduced=0,detailMinimal=0;
+  let drawn=0,overlapGroups=0,overlapBodies=0,ownerDrawn=0,anchorsDrawn=0,secondaryDrawn=0,ownerSecondary=0;
+  let detailFull=0,detailReduced=0,detailMinimal=0,labelGroupSize=0;
   for(const group of prepared.groups){
     if(group.members.length>1){overlapGroups++;overlapBodies+=group.members.length-1;}
-    let ownRendered=null,representativeRendered=null;
-    for(const entry of group.render){
+    const ready=group.render.map(entry=>{
       const base=entry.item,m=base.m,off=entry.offset;
       const rendered=off.x||off.d?Object.assign({},m,{deathX:m.deathX+off.x,deathDepth:m.deathDepth+off.d}):m;
       const u=rendered.deathDepth-S.depth,p=projD(rendered.deathX,u),approach=memorialApproach(rendered),pose=memorialPose(rendered.deathCause,approach.th),style=memorialStyle(rendered.uid);
-      const detail=memorialDetailLevel(p,Q);
-      drawMemorialGround(rendered,p,approach,pose,nightK,detail,entry.alpha);
-      const out=drawSharedMemorialBody(rendered,p,approach,pose,nightK,style,detail,entry.alpha);
-      const labelItem={m:base.m,u:base.u,p};
-      if(base===group.representative)representativeRendered=labelItem;
-      if(base.m.isCurrentUser)ownRendered=labelItem;
-      drawn++;if(m.isCurrentUser)ownerDrawn++;if(detail===2)detailFull++;else if(detail===1)detailReduced++;else detailMinimal++;
-      if(samples.length<8)samples.push({uid:m.uid,x:+p.x.toFixed(2),y:+p.y.toFixed(2),s:+p.s.toFixed(4),angle:+out.angle.toFixed(4),cause:m.deathCause,
-        style:style.index,current:!!m.isCurrentUser,groupSize:group.members.length,groupIndex:entry.index,alpha:+entry.alpha.toFixed(2),detail});
+      return {entry,base,m,rendered,u,p,approach,pose,style,detail:memorialDetailLevel(p,Q)};
+    });
+    // Draw secondary ground and bodies first. The rank-one anchor is drawn last so
+    // it remains the visual dominant even when silhouettes overlap.
+    const backToFront=ready.slice().sort((a,b)=>b.entry.index-a.entry.index);
+    for(const r of backToFront){
+      const role=r.entry.index===0?(group.members.length>1?'anchor':'solo'):'secondary';
+      drawMemorialGround(r.rendered,r.p,r.approach,r.pose,nightK,r.detail,r.entry.alpha,role);
     }
-    if(ownRendered||representativeRendered)labelCandidates.push(ownRendered||representativeRendered);
+    let ownRendered=null,representativeRendered=null;
+    for(const r of backToFront){
+      const out=drawSharedMemorialBody(r.rendered,r.p,r.approach,r.pose,nightK,r.style,r.detail,r.entry.alpha);
+      const labelItem={m:r.base.m,u:r.base.u,p:r.p,groupSize:group.members.length};
+      if(r.base===group.representative)representativeRendered=labelItem;
+      if(r.base.m.isCurrentUser)ownRendered=labelItem;
+      drawn++;
+      if(r.m.isCurrentUser)ownerDrawn++;
+      if(r.entry.index===0)anchorsDrawn++;else{secondaryDrawn++;if(r.m.isCurrentUser)ownerSecondary++;}
+      if(r.detail===2)detailFull++;else if(r.detail===1)detailReduced++;else detailMinimal++;
+      if(samples.length<8)samples.push({uid:r.m.uid,x:+r.p.x.toFixed(2),y:+r.p.y.toFixed(2),s:+r.p.s.toFixed(4),angle:+out.angle.toFixed(4),cause:r.m.deathCause,
+        style:r.style.index,current:!!r.m.isCurrentUser,groupSize:group.members.length,groupIndex:r.entry.index,
+        role:r.entry.index===0?'anchor':'secondary',alpha:+r.entry.alpha.toFixed(2),detail:r.detail});
+    }
+    // One candidate per overlap group. The current user's body wins only when it
+    // is physically near-tied with the ranked anchor; otherwise the anchor labels.
+    let groupCandidate=representativeRendered||ownRendered;
+    if(ownRendered&&representativeRendered){
+      const ownD=memorialDistance(ownRendered.m,ownRendered.u),repD=memorialDistance(representativeRendered.m,representativeRendered.u);
+      if(ownD<=repD+0.75)groupCandidate=ownRendered;
+    }
+    if(groupCandidate)labelCandidates.push(groupCandidate);
   }
   pendingMemorialLabel=chooseMemorialLabel(labelCandidates);
+  if(pendingMemorialLabel)labelGroupSize=pendingMemorialLabel.groupSize||1;
   SharedMemorials.noteRender({loaded:source.length,nearby:visible.length,drawn,culled:source.length-visible.length,
     groups:prepared.groups.length,overlapGroups,overlapBodies,budgetSkipped:prepared.budgetSkipped,ownerDrawn,
-    detailFull,detailReduced,detailMinimal,labelUid:pendingMemorialLabel?pendingMemorialLabel.m.uid:'',
-    labelDistance:pendingMemorialLabel?pendingMemorialLabel.distance:null,samples});
+    anchorsDrawn,secondaryDrawn,ownerSecondary,detailFull,detailReduced,detailMinimal,
+    labelUid:pendingMemorialLabel?pendingMemorialLabel.m.uid:'',labelDistance:pendingMemorialLabel?pendingMemorialLabel.distance:null,
+    labelGroupSize,samples});
 }
 
 function render(){
@@ -2864,25 +3128,39 @@ function render(){
       const a=projD(c.c-c.h,u),b=projD(c.c+c.h,u),a2=projD(c.c-c.h,Math.min(u+C.chunk,UBOT)),b2=projD(c.c+c.h,Math.min(u+C.chunk,UBOT));
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b2.x,b2.y);ctx.lineTo(a2.x,a2.y);ctx.closePath();ctx.stroke();}}
   DEF.draw(); // the carved medium: everyone's passage, under everything that stands on it
-  // Private local history: up to 50 restrained player-death stains. No NPC marker persists between runs.
+  // Private local history: up to 50 restrained player-death stains. The one stain
+  // duplicated by the current user's compatible public best-run body is hidden only
+  // at render time; its localStorage record remains intact.
   const dkAll=clamp((S.depth-1200)/600,0,1);
-  for(const m of localDeaths){
+  const localMatch=LocalSharedMatch.current(),sharedForLocal=SharedMemorials.compatible();
+  let localVisible=0,localDrawn=0,localSuppressed=0,clusterDimmed=0,maxClusterSize=0,suppressedDeathId='';
+  for(let localIndex=0;localIndex<localDeaths.length;localIndex++){
+    const m=localDeaths[localIndex];
+    if(LocalSharedMatch.isMatchedDeath(m,localIndex,localMatch)){
+      localSuppressed++;suppressedDeathId=typeof m.deathId==='string'?m.deathId:'';continue;
+    }
     const u=m.depth-S.depth;if(u<UTOP||u>UBOT)continue;
+    localVisible++;
+    const cluster=localStainClusterTreatment(m,sharedForLocal);
+    if(cluster.alpha<1){clusterDimmed++;maxClusterSize=Math.max(maxClusterSize,cluster.count);}
     const p=projD(m.x,u),hs=hsh(m.depth*3.7+m.x+m.timestamp*0.000001);
     const th=Number.isFinite(m.theta)?m.theta:0;
+    ctx.save();ctx.globalAlpha=cluster.alpha;
     // A short, subdued approach scar gives the stain direction without creating a persistent body icon.
     const tailD=0.85+hs*0.55,tailX=Math.sin(th)*(12+hs*10);
     const pa=projD(m.x-tailX,m.depth-Math.cos(th)*tailD),pb=projD(m.x,m.depth);
     ctx.strokeStyle='rgba(108,118,128,'+(0.12+0.05*dkAll).toFixed(2)+')';
     ctx.lineWidth=Math.max(0.8,2.1*pb.s);ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(th+hs*0.45);
+    ctx.translate(p.x,p.y);ctx.rotate(th+hs*0.45);
     ctx.fillStyle='rgba('+(112+32*dkAll)+',30,25,'+(0.17+0.07*dkAll).toFixed(2)+')';
     ctx.beginPath();ctx.ellipse(0,0,(8+hs*6)*p.s,(4.2+hs*2.7)*p.s,0,0,6.283);ctx.fill();
     ctx.fillStyle='rgba(90,24,22,'+(0.10+0.05*dkAll).toFixed(2)+')';
     ctx.beginPath();ctx.arc((4+hs*3)*p.s,-1.5*p.s,(2.2+hs*1.5)*p.s,0,6.283);ctx.fill();
-    ctx.restore();
+    ctx.restore();localDrawn++;
   }
+  LocalSharedMatch.noteRender({total:localDeaths.length,visible:localVisible,drawn:localDrawn,
+    suppressed:localSuppressed,clusterDimmed,maxClusterSize,suppressedDeathId,matchActive:localMatch.matched});
   // fresh blood: this run's consequences, streaked along the impact direction
   for(const sm of smears){const u=sm.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const hl=sm.len/2;
@@ -3368,7 +3646,7 @@ function hud(){
     el.combo.style.transform='scale('+(1+S.comboPulse*0.35)+')';
   }else{el.combo.textContent='';}
 }
-const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF,memorialStats:()=>SharedMemorials.renderStats(),memorialStyle});
+const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF,memorialStats:()=>SharedMemorials.renderStats(),memorialStyle,localStainClusterTreatment});
 /* ====================== MODULE: INPUT ====================== */
 let anchor=null;
 const keys={};
@@ -3408,7 +3686,7 @@ function bindInput(){
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
   document.addEventListener('touchmove',e=>{
-    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show'):null;
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
@@ -3444,7 +3722,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5d.4 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. v5e.4 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
@@ -3472,7 +3750,11 @@ function memorialCheckRequested(){
   try{return new URLSearchParams(location.search).get('memorialcheck')==='1'||store.getItem('ep_memorial_diag')==='1';}
   catch(e){return false;}
 }
-function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested();}
+function reconcileCheckRequested(){
+  try{return new URLSearchParams(location.search).get('reconcilecheck')==='1'||store.getItem('ep_reconcile_diag')==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested();}
 const BestCheck=(()=>{
   const RELOAD_KEY='ep_bestcheck_reload_v5c4';
   const PROBE_KEY='ep_bestcheck_queue_probe_v5c4';
@@ -3627,7 +3909,7 @@ const BestCheck=(()=>{
   return Object.freeze({init,run,last:()=>lastReport,requested:bestCheckRequested});
 })();
 /* ================== MODULE: SHARED MEMORIAL RELEASE CHECK ==================
-   v5d.4 validates the read-only bridge and renderer with temporary in-memory
+   v5e.4 validates the read-only bridge and renderer with temporary in-memory
    records. It never submits, replaces or deletes a Firebase best-run record. */
 const MemorialCheck=(()=>{
   const PROBE_KEY='ep_memorialcheck_cache_probe_v5d4';
@@ -3789,14 +4071,200 @@ const MemorialCheck=(()=>{
   }
   return Object.freeze({init,run,last:()=>lastReport,requested:memorialCheckRequested});
 })();
+/* ================ MODULE: RECONCILIATION RELEASE CHECK ================
+   v5e.4 validates private local stains and public best-run bodies together.
+   All test records live only in memory or an isolated probe key. The live local
+   death ledger and Firebase best-run records are restored without mutation. */
+const ReconciliationCheck=(()=>{
+  const PROBE_KEY='ep_reconcilecheck_probe_v5e4';
+  const LEGACY_PATH='/endless_powder/scores';
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood');
+  const warn=(id,text)=>row(id,text||'CHECK','authWarn');
+  const fail=(id,text)=>row(id,text||'FAIL','authBad');
+  const clone=o=>JSON.parse(JSON.stringify(o));
+  const realUid=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''))&&String(uid).indexOf('local-')!==0;
+  function makeRecord(uid,over){
+    over=Object.assign({},over||{});
+    const deathDepth=Number.isFinite(+over.deathDepth)?+over.deathDepth:1001;
+    const run={score:Number.isFinite(+over.score)?+over.score:9000,
+      distance:Number.isFinite(+over.distance)?+over.distance:Math.floor(deathDepth),
+      cleanFlags:Number.isFinite(+over.cleanFlags)?+over.cleanFlags:12,
+      attemptedFlags:Number.isFinite(+over.attemptedFlags)?+over.attemptedFlags:14,
+      bestCombo:Number.isFinite(+over.bestCombo)?+over.bestCombo:8,
+      collisions:Number.isFinite(+over.collisions)?+over.collisions:1,
+      deathX:Number.isFinite(+over.deathX)?+over.deathX:LW/2,deathDepth,
+      deathTheta:Number.isFinite(+over.deathTheta)?+over.deathTheta:0,
+      deathCause:over.deathCause||'caught',worldVersion:over.worldVersion||WORLD_VERSION,
+      timestamp:Number.isFinite(+over.timestamp)?+over.timestamp:Date.now()-1000};
+    return Object.assign({uid:String(uid)},BestRuns.build(over.initials||'TST',run));
+  }
+  function makeLocal(id,over){
+    over=Object.assign({},over||{});
+    return {deathId:String(id),depth:Number.isFinite(+over.depth)?+over.depth:1001,
+      x:Number.isFinite(+over.x)?+over.x:LW/2,theta:Number.isFinite(+over.theta)?+over.theta:0,
+      cause:over.cause||'caught',timestamp:Number.isFinite(+over.timestamp)?+over.timestamp:Date.now()-1000,
+      worldVersion:over.worldVersion||WORLD_VERSION};
+  }
+  function canonicalRows(){return SharedMemorials.records().map(e=>{const out={uid:e.uid};for(const k of BEST_RUN_FIELDS)out[k]=e[k];return out;});}
+  function requestCount(fragment){
+    try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(fragment)).length;}
+    catch(e){return 0;}
+  }
+  function snapshot(){
+    return {rows:canonicalRows(),owner:SharedMemorials.stats().ownerUid,locals:clone(localDeaths),
+      ledgerRaw:store.getItem(LOCAL_DEATH_KEY),quality:PerfBudget.level,
+      view:{depth:S.depth,x:S.x,mode:S.mode,theta:S.theta,camZ:S.camZ,camLead:S.camLead}};
+  }
+  function restore(snap){
+    localDeaths.splice(0,localDeaths.length,...snap.locals.map(e=>Object.assign({},e)));
+    SharedMemorials.ingest(snap.rows,snap.owner);PerfBudget.setLevel(snap.quality);
+    S.depth=snap.view.depth;S.x=snap.view.x;S.mode=snap.view.mode;S.theta=snap.view.theta;
+    S.camZ=snap.view.camZ;S.camLead=snap.view.camLead;reconcileRefresh();
+    try{Rendering.render();}catch(e){}
+    try{if(snap.ledgerRaw===null)store.removeItem(LOCAL_DEATH_KEY);else store.setItem(LOCAL_DEATH_KEY,snap.ledgerRaw);}catch(e){}
+  }
+  function setView(depth){S.depth=Number.isFinite(depth)?depth:995;S.x=LW/2;S.theta=0;S.mode='intro';S.camLead=0;}
+  function renderProbe(){Rendering.render();return {local:LocalSharedMatch.renderStats(),shared:SharedMemorials.renderStats()};}
+  function deterministic(){
+    const snap=snapshot(),result={match:false,falseGuard:false,suppression:false,missing:false,world:false,
+      move:false,overlap:false,stress:false,offline:false,ledger:false,error:''};
+    try{
+      const owner='reconcile-owner-v5e4';setView(995);PerfBudget.setLevel(2);
+
+      localDeaths.splice(0,localDeaths.length,
+        makeLocal('match',{depth:1000.4,x:361,timestamp:1001}),
+        makeLocal('other-a',{depth:1004,x:260,timestamp:1002}),
+        makeLocal('other-b',{depth:1007,x:500,timestamp:1003}));
+      SharedMemorials.ingest([makeRecord(owner,{initials:'YOU',score:9100,deathX:360,deathDepth:1000.5})],owner);
+      const m=LocalSharedMatch.current();
+      result.match=m.matched&&m.deathId==='match'&&m.candidates===1&&m.depthDelta<LOCAL_SHARED_DEPTH_TOLERANCE&&m.xDelta<LOCAL_SHARED_X_TOLERANCE;
+      const firstRender=renderProbe();
+      result.suppression=firstRender.local.total===3&&firstRender.local.suppressed===1&&firstRender.local.drawn===2&&
+        firstRender.local.suppressedDeathId==='match'&&firstRender.shared.ownerDrawn===1&&localDeaths.length===3;
+
+      localDeaths.splice(0,localDeaths.length,makeLocal('depth-boundary',{depth:999,x:360}),makeLocal('x-boundary',{depth:1000.5,x:378}));
+      const guarded=LocalSharedMatch.current();
+      result.falseGuard=!guarded.matched&&guarded.reason==='no-positional-match'&&guarded.candidates===0;
+
+      SharedMemorials.ingest([],owner);
+      const missing=LocalSharedMatch.current();
+      result.missing=!missing.matched&&missing.reason==='no-current-user-memorial';
+
+      localDeaths.splice(0,localDeaths.length,makeLocal('wrong-local',{depth:1000.5,x:360,worldVersion:'mountain-incompatible'}));
+      SharedMemorials.ingest([makeRecord(owner,{deathX:360,deathDepth:1000.5,worldVersion:'mountain-incompatible'})],owner);
+      const world=LocalSharedMatch.current(),ws=SharedMemorials.stats();
+      result.world=!world.matched&&world.reason==='no-current-user-memorial'&&ws.worldMismatch===1&&ws.accepted===0;
+
+      const oldRecord=makeRecord(owner,{initials:'YOU',score:9200,deathX:260,deathDepth:1001,deathTheta:-.2});
+      const newRecord=makeRecord(owner,{initials:'YOU',score:9800,deathX:470,deathDepth:1010,deathTheta:.35,timestamp:Date.now()-500});
+      localDeaths.splice(0,localDeaths.length,makeLocal('old-best',{depth:1001,x:260}),makeLocal('new-best',{depth:1010,x:470,timestamp:Date.now()-400}));
+      SharedMemorials.ingest([oldRecord],owner);
+      const oldMatch=LocalSharedMatch.current();
+      SharedMemorials.ingest([newRecord],owner);
+      const move=PersonalBestReconciliation.apply({uid:owner,record:Object.fromEntries(BEST_RUN_FIELDS.map(k=>[k,newRecord[k]])),
+        previous:Object.fromEntries(BEST_RUN_FIELDS.map(k=>[k,oldRecord[k]])),source:'diagnostic-memory',acceptedAt:Date.now()});
+      const newMatch=LocalSharedMatch.current(),loaded=SharedMemorials.records();
+      result.move=oldMatch.matched&&oldMatch.deathId==='old-best'&&move.visible&&move.moved&&move.suppressionReady&&
+        newMatch.matched&&newMatch.deathId==='new-best'&&loaded.filter(e=>e.uid===owner).length===1&&loaded[0].deathDepth===1010;
+
+      const group=[];for(let i=0;i<5;i++)group.push(makeRecord(i===4?owner:'group-'+i,{initials:'OVR',score:11000-i,
+        deathX:360+(i%2),deathDepth:1003+(i%2)*.3,deathTheta:i*.08,deathCause:i%2?'tree':'caught'}));
+      localDeaths.splice(0,localDeaths.length,...Array.from({length:6},(_,i)=>makeLocal('cluster-'+i,{depth:1003+(i%2)*.2,x:360+(i%3),timestamp:2000+i})));
+      SharedMemorials.ingest(group,owner);setView(997);const dense=renderProbe();
+      result.overlap=dense.shared.overlapGroups===1&&dense.shared.anchorsDrawn===1&&dense.shared.secondaryDrawn>=1&&
+        dense.shared.ownerDrawn===1&&dense.shared.labeled<=1&&dense.local.suppressed===1&&dense.local.clusterDimmed>=4&&dense.local.maxClusterSize>=5;
+
+      const shared50=[],local50=[];let n=0;
+      for(let r=0;r<5;r++)for(let c=0;c<10;c++){
+        const uid=n===49?owner:'stress-'+n,depth=1001+r*4,x=75+c*62;
+        shared50.push(makeRecord(uid,{score:15000-n,deathX:x,deathDepth:depth,deathTheta:(c-4.5)*.04,deathCause:['caught','edge','tree','boulder'][n%4]}));
+        local50.push(makeLocal('stress-local-'+n,{depth,x,timestamp:3000+n}));n++;
+      }
+      localDeaths.splice(0,localDeaths.length,...local50);SharedMemorials.ingest(shared50,owner);setView(995);PerfBudget.setLevel(2);
+      const stress=renderProbe();
+      result.stress=SharedMemorials.stats().accepted===50&&localDeaths.length===50&&stress.shared.loaded===50&&stress.shared.drawn<=50&&
+        stress.local.total===50&&stress.local.suppressed===1&&stress.local.drawn+stress.local.suppressed<=50;
+
+      try{
+        const probe={owner,records:[makeRecord(owner,{deathX:420,deathDepth:1006})],locals:[makeLocal('offline-match',{x:420,depth:1006})]};
+        Persistence.setJSON(PROBE_KEY,probe);const back=Persistence.getJSON(PROBE_KEY,null);
+        localDeaths.splice(0,localDeaths.length,...back.locals);SharedMemorials.ingest(back.records,back.owner);
+        const offlineMatch=LocalSharedMatch.current();
+        result.offline=!!back&&offlineMatch.matched&&offlineMatch.deathId==='offline-match';
+      }catch(e){result.offline=false;}finally{try{store.removeItem(PROBE_KEY);}catch(e){}}
+
+      result.ledger=store.getItem(LOCAL_DEATH_KEY)===snap.ledgerRaw;
+    }catch(e){result.error=(e&&e.message)||String(e);}
+    finally{restore(snap);result.ledger=result.ledger&&store.getItem(LOCAL_DEATH_KEY)===snap.ledgerRaw;}
+    return result;
+  }
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('reconcileRetry');if(btn)btn.textContent='CHECKING…';
+    ['reconcileAuth','reconcileMatch','reconcileFalse','reconcileSuppress','reconcileMissing','reconcileWorld','reconcileMove','reconcileOverlap','reconcileStress','reconcileOffline','reconcileLedger','reconcileLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    const details=[];
+    try{
+      const liveBefore={match:LocalSharedMatch.current(),render:LocalSharedMatch.renderStats(),shared:SharedMemorials.stats()};
+      const d=deterministic(),liveAfter={match:LocalSharedMatch.current(),render:LocalSharedMatch.renderStats(),shared:SharedMemorials.stats()},auth=Identity.status();
+      auth.authenticated&&auth.tokenReady?pass('reconcileAuth','CONNECTED — UID MATCH'):warn('reconcileAuth','OFFLINE / LOCAL FALLBACK');
+      d.match?pass('reconcileMatch','PASS — CLOSEST MATCH'):fail('reconcileMatch','FAIL');
+      d.falseGuard?pass('reconcileFalse','PASS — STRICT BOUNDARIES'):fail('reconcileFalse','FAIL');
+      d.suppression?pass('reconcileSuppress','PASS — EXACTLY ONE'):fail('reconcileSuppress','FAIL');
+      d.missing?pass('reconcileMissing','PASS — LOCAL STAINS KEPT'):fail('reconcileMissing','FAIL');
+      d.world?pass('reconcileWorld','PASS — INCOMPATIBLE EXCLUDED'):fail('reconcileWorld','FAIL');
+      d.move?pass('reconcileMove','PASS — BODY + MATCH MOVED'):fail('reconcileMove','FAIL');
+      d.overlap?pass('reconcileOverlap','PASS — RESTRAINED DENSITY'):fail('reconcileOverlap','FAIL');
+      d.stress?pass('reconcileStress','PASS — 50 LOCAL + 50 SHARED'):fail('reconcileStress','FAIL');
+      d.offline?pass('reconcileOffline','PASS — CACHE RE-MATCHED'):fail('reconcileOffline','FAIL');
+      d.ledger?pass('reconcileLedger','UNCHANGED — PRIVATE HISTORY SAFE'):fail('reconcileLedger','FAIL — LEDGER CHANGED');
+      const legacy=requestCount(LEGACY_PATH);legacy===0?pass('reconcileLegacy','ISOLATED — 0 REQUESTS'):fail('reconcileLegacy',legacy+' REQUEST(S)');
+      const deterministicOK=d.match&&d.falseGuard&&d.suppression&&d.missing&&d.world&&d.move&&d.overlap&&d.stress&&d.offline&&d.ledger;
+      details.push('Build: '+BUILD_VERSION);
+      details.push('World: '+WORLD_VERSION);
+      details.push('UID: '+(auth.uid||'—'));
+      details.push('Live current-user memorial: '+(liveAfter.shared.ownerPresent?'YES':'NO'));
+      details.push('Live local/shared match: '+(liveAfter.match.matched?'MATCHED':'NONE — '+liveAfter.match.reason));
+      details.push('Live local records: '+liveAfter.match.totalLocal);
+      details.push('Live compatible shared records: '+liveAfter.shared.accepted);
+      details.push('Best-run collection requests: '+requestCount('/endless_powder/best_runs'));
+      details.push('Diagnostic Firebase writes: NONE');
+      details.push('Diagnostic local-ledger writes: NONE');
+      if(d.error)details.push('Local test error: '+d.error);
+      const overall=$('reconcileOverall');
+      if(overall){
+        if(deterministicOK&&legacy===0&&auth.authenticated){overall.textContent='VERIFIED — v5e RECONCILIATION PASSED';overall.className='authGood';}
+        else if(deterministicOK&&legacy===0){overall.textContent='LOCAL RECONCILIATION VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else{overall.textContent='VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const de=$('reconcileDetails');if(de)de.textContent=details.join('\n');
+      lastReport={deterministic:d,liveBefore,liveAfter,authenticated:auth.authenticated,legacyRequests:legacy,
+        passed:deterministicOK&&legacy===0&&auth.authenticated};
+    }catch(e){
+      fail('reconcileMatch','ERROR');const overall=$('reconcileOverall');if(overall){overall.textContent='VALIDATION ERROR';overall.className='authBad';}
+      const de=$('reconcileDetails');if(de)de.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN CHECKS';}
+    return lastReport;
+  }
+  function init(){
+    const box=$('reconcileDiag');if(!box||!reconcileCheckRequested())return;
+    box.classList.add('show');
+    $('reconcileRetry').addEventListener('click',e=>{e.stopPropagation();run();});
+    $('reconcileClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});
+  }
+  return Object.freeze({init,run,last:()=>lastReport,requested:reconcileCheckRequested});
+})();
 Input.bind();
 initAuthDiag();
 BestCheck.init();
 MemorialCheck.init();
+ReconciliationCheck.init();
 Identity.start().finally(async()=>{
   Identity.verify();SharedMemorials.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
   if(bestCheckRequested())await BestCheck.run();
   if(memorialCheckRequested())await MemorialCheck.run();
+  if(reconcileCheckRequested())await ReconciliationCheck.run();
   if(!diagnosticRequested())Leaderboard.drain();
 });
 /* tune sliders */
@@ -3833,7 +4301,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,sharedMemorials:SharedMemorials,
+  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -3855,7 +4323,7 @@ requestAnimationFrame(frame);
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,sharedMemorials:SharedMemorials,
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
