@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v3d</title>
+<title>ENDLESS POWDER v4b</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -44,12 +44,12 @@
   .ov .big{font-size:calc(88*var(--u));font-weight:900;margin:calc(14*var(--u)) 0 0}
   .ov .best{font-size:calc(24*var(--u));opacity:.75;margin-top:calc(4*var(--u))}
   .scoreUnit{font-size:calc(18*var(--u));font-weight:800;letter-spacing:.22em;opacity:.62;margin-top:calc(-5*var(--u))}
-  #rBreakdown{width:min(78%,calc(560*var(--u)));margin-top:calc(18*var(--u));font-variant-numeric:tabular-nums}
-  .scoreRow{display:flex;justify-content:space-between;align-items:center;padding:calc(4*var(--u)) calc(2*var(--u));font-size:calc(20*var(--u));border-bottom:1px solid rgba(255,255,255,.08)}
-  .scoreRow span{opacity:.72}.scoreRow b{font-weight:850}.scoreRow.penalty b{color:#ff9a8a}
-  #runStats{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(10*var(--u));margin-top:calc(15*var(--u))}
-  #runStats span{display:flex;flex-direction:column;gap:calc(2*var(--u));font-size:calc(21*var(--u));font-weight:850}
-  #runStats small{font-size:calc(11*var(--u));font-weight:750;letter-spacing:.09em;opacity:.55}
+  #ovResults{cursor:pointer;touch-action:manipulation}
+  #resultSummary{width:min(78%,calc(500*var(--u)));margin-top:calc(24*var(--u));font-variant-numeric:tabular-nums}
+  .resultRow{display:flex;justify-content:space-between;align-items:baseline;padding:calc(10*var(--u)) calc(4*var(--u));border-bottom:1px solid rgba(255,255,255,.11);font-size:calc(24*var(--u))}
+  .resultRow span{font-size:calc(17*var(--u));font-weight:750;letter-spacing:.13em;text-transform:uppercase;opacity:.58}
+  .resultRow b{font-size:calc(30*var(--u));font-weight:900}
+  #rContinue{margin-top:calc(38*var(--u));font-size:calc(19*var(--u));font-weight:850;letter-spacing:.18em;color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
   .ov .go{margin-top:calc(40*var(--u));font-size:calc(26*var(--u));font-weight:800;letter-spacing:.18em;
     color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
@@ -111,34 +111,18 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v3d</div>
+    <div class="version">v4b</div>
   </div>
-  <div class="ov hide" id="ovResults">
+  <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
     <div class="tag" id="rTag"></div>
-    <div class="big" id="rScore">0</div>
-    <div class="scoreUnit">POINTS</div>
-    <div class="best" id="rBest"></div>
-    <div id="rNew" style="display:none">NEW BEST SCORE</div>
-    <div id="rBreakdown">
-      <div class="scoreRow"><span>Distance points</span><b id="rDistancePts">0</b></div>
-      <div class="scoreRow"><span>Flag points</span><b id="rFlagPts">0</b></div>
-      <div class="scoreRow"><span>Combo bonus</span><b id="rComboPts">0</b></div>
-      <div class="scoreRow penalty"><span>Collision penalties</span><b id="rPenaltyPts">0</b></div>
-      <div id="runStats">
-        <span><b id="rRunDistance">0 m</b><small>DISTANCE</small></span>
-        <span><b id="rAccuracy">0 / 0</b><small>CLEAN FLAGS</small></span>
-        <span><b id="rAccuracyPct">0%</b><small>ACCURACY</small></span>
-        <span><b id="rBestCombo">0×</b><small>BEST COMBO</small></span>
-        <span><b id="rCollisions">0</b><small>COLLISIONS</small></span>
-      </div>
+    <div id="resultSummary">
+      <div class="resultRow"><span>Score</span><b id="rScore">0</b></div>
+      <div class="resultRow"><span>Distance</span><b id="rRunDistance">0 m</b></div>
+      <div class="resultRow"><span>Flags</span><b id="rAccuracy">0 / 0</b></div>
+      <div class="resultRow"><span>Accuracy</span><b id="rAccuracyPct">0%</b></div>
     </div>
-    <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
-    <div id="rLegend"><span><b class="you"></b>RUN</span><span id="rPrevLegend"><b class="bestMark"></b>PREVIOUS LONGEST</span></div>
-    <div class="actionRow">
-      <button class="actionBtn primary" id="rLeaderboard" type="button">LEADERBOARD</button>
-      <button class="actionBtn" id="rRetry" type="button">RUN AGAIN</button>
-    </div>
+    <div id="rContinue">TAP FOR LEADERBOARD</div>
   </div>
   <div class="ov hide" id="ovLeaderboard">
     <h1>LEADERBOARD</h1>
@@ -240,6 +224,11 @@ const Difficulty=(()=>{
 })();
 /* ============================ HELPERS ============================ */
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function approachLimited(current,target,response,maxSpeed,dt){
+  if(!Number.isFinite(current))return target;
+  const eased=(target-current)*(1-Math.exp(-Math.max(0,response)*dt));
+  return current+clamp(eased,-Math.max(0,maxSpeed)*dt,Math.max(0,maxSpeed)*dt);
+}
 const lerp=(a,b,k)=>a+(b-a)*k;
 const hshG=n=>{const x=Math.sin(n*127.1)*43758.5453;return x-Math.floor(x);};
 function powderAt(x,d){ // deterministic deep-powder patches on the seeded mountain
@@ -270,7 +259,7 @@ const $=id=>document.getElementById(id);
 const cv=$('cv'), stage=$('stage');
 const ctx=cv.getContext('2d');
 const el={depth:$('hDepth'),score:$('hScore'),combo:$('hCombo'),
-  intro:$('ovIntro'),results:$('ovResults'),leaderboard:$('ovLeaderboard'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),rBest:$('rBest'),
+  intro:$('ovIntro'),results:$('ovResults'),leaderboard:$('ovLeaderboard'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),
   tune:$('tunePanel')};
 /* ============================ AUDIO ============================ */
 let AC=null, sndOn=store.getItem('ep_snd')!=='0';
@@ -440,7 +429,7 @@ function fresh(){
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0},
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0},
     buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
   DEF.reset();
@@ -605,6 +594,39 @@ function chaseTargetGap(D,P){
   const threat=clamp(0.68*P+0.18*debt+0.10*miss+0.12*neglect,0,1);
   return lerp(C.chaseCleanGap,C.chaseDangerGap,threat);
 }
+function updateYetiVisual(Y,dt){
+  const actualGap=clamp(S.depth-Y.d,0,90);
+  const violent=Y.burst>0||Y.npcBurst>0;
+  const committed=violent||Y.tele>0||Y.npcTele>0||Y.pass===1;
+  const recovering=Y.lull>0||Y.eat>0||Y.pass===3;
+
+  // The physical chase can react immediately for gameplay, while the visible body has mass.
+  // Stalking and flag-driven gap changes are deliberately slower than attacks or grabs.
+  const gapResponse=violent?10.0:committed?4.8:recovering?1.55:2.15;
+  const gapSpeed=violent?48:committed?20:recovering?6.5:9.5;
+  Y.renderGap=approachLimited(Y.renderGap,actualGap,gapResponse,gapSpeed,dt);
+
+  const xResponse=violent?11.0:(Y.npcTele>0||Y.tele>0)?6.0:Y.pass===1?3.6:2.35;
+  const xSpeed=violent?760:(Y.npcTele>0||Y.tele>0)?360:Y.pass===1?220:125;
+  Y.renderX=approachLimited(Y.renderX,Y.x,xResponse,xSpeed,dt);
+
+  const prox=clamp(1-Y.renderGap/C.SAFE,0,1);
+  const baseScale=lerp(0.98,1.22,smooth01(prox));
+  const scaleTarget=baseScale*(violent?1.035:1);
+  Y.renderScale=approachLimited(Y.renderScale,scaleTarget,violent?10:3.0,violent?1.2:0.34,dt);
+
+  let postureTarget=1-0.075*Y.fury;
+  let offsetTarget=0;
+  if(Y.tele>0){postureTarget*=0.82;offsetTarget+=6;}
+  else if(Y.burst>0){postureTarget*=1.08;}
+  else if(Y.npcTele>0){postureTarget*=0.85;offsetTarget+=5;}
+  else if(Y.npcBurst>0){postureTarget*=1.07;}
+  else if(Y.eat>0){postureTarget*=0.92;offsetTarget+=8;}
+  if(Y.stag>0){postureTarget*=0.88;offsetTarget+=4;}
+  if(Y.tired>0){postureTarget*=0.90;offsetTarget+=6;}
+  Y.renderPosture=approachLimited(Y.renderPosture,postureTarget,violent?10:4.0,violent?1.4:0.62,dt);
+  Y.renderYOffset=approachLimited(Y.renderYOffset,offsetTarget,violent?10:4.2,violent?48:25,dt);
+}
 function addCleanDebt(amount){
   const D=Difficulty.profile(S.depth);
   S.cleanDebt=clamp((S.cleanDebt||0)+Math.max(0,amount||0)*D.hard,0,10);
@@ -618,7 +640,8 @@ function registerFlagMiss(baseFury,debtAdd,extraLungeChance){
   const gain=addFury(baseFury+streakBonus,Math.min(0.98,(extraLungeChance||0)+0.13*Math.max(0,n-1)));
   if(Y.on&&D.hard>0.1){
     const nudge=([0,2.0,4.5,7.0,8.0][n]||8.0)*D.hard;
-    Y.d=Math.min(S.depth-1.25,Y.d+nudge);
+    // Queue forward pressure instead of visibly teleporting the yeti toward the player.
+    Y.gapImpulse=clamp((Y.gapImpulse||0)-nudge,-14,12);
     Y.surge=Math.max(Y.surge,([0,1.1,1.9,2.6,2.9][n]||2.9)*D.hard);
     Y.surgePower=Math.max(Y.surgePower,([0,4.0,8.5,12.5,14.0][n]||14.0)*D.hard+2.5*debtLevel());
     if(n===1)Difficulty.hurryPass(2.2);
@@ -725,7 +748,8 @@ function cleanFlag(g,px){
   // Past 500 m, every clean flag buys literal space. Tight passes and milestones buy more.
   if(S.yeti.on&&S.depth>=C.chaseAfter){
     const push=(1.15+1.45*tight+(milestone?0.85:0))*D.hard;
-    S.yeti.d-=push;S.buffer=S.depth-S.yeti.d;
+    // Clean skiing buys space gradually; the creature no longer hops backward at each pole.
+    S.yeti.gapImpulse=clamp((S.yeti.gapImpulse||0)+push,-14,12);
     if(milestone&&S.yeti.pass!==2&&Math.random()<(S.combo>=10?0.68:0.44)){
       startYetiLull('clean',1.0,2.35,1.0+1.4*tight);
     }
@@ -824,7 +848,8 @@ function startYetiLull(reason,minT,maxT,back){
   const dur=clamp((minT||C.lullMin)+Math.random()*Math.max(0,(maxT||C.lullMax)-(minT||C.lullMin)),C.lullMin,C.lullMax);
   const nextBack=Math.max(Y.lullBack,back||1.5),extraBack=Math.max(0,nextBack-Y.lullBack);
   Y.lull=Math.max(Y.lull,dur);Y.lullBack=nextBack;
-  Y.d-=extraBack;Y.pass=0;Y.tele=0;Y.burst=0;Y.passLunges=0;Y.passTotal=0;
+  Y.gapImpulse=clamp((Y.gapImpulse||0)+extraBack,-14,12);
+  Y.pass=0;Y.tele=0;Y.burst=0;Y.passLunges=0;Y.passTotal=0;
   Y.next=Math.max(Y.next||0,S.time+dur+0.8);
   Y.passNext=Math.max(Y.passNext||0,S.time+dur+0.8);
   Y.lullNext=S.time+16+Math.random()*16;
@@ -836,7 +861,7 @@ function consumeNpc(n){
   burstAt(n.x,n.d,'#e03434',28,110);addMarker('eat',n.d,n.x);
   bloodSmear(n.x,n.d,0,1,1.7,'110,10,14');
   Y.x=n.x;Y.eat=C.feast;Y.npcTarget=null;Y.npcTele=0;Y.npcBurst=0;Y.pass=0;
-  Y.d-=1.0+Math.random()*0.8;
+  Y.gapImpulse=clamp((Y.gapImpulse||0)+1.0+Math.random()*0.8,-14,12);
   Y.lull=Math.max(Y.lull,0.45+Math.random()*0.55);Y.lullBack=0;
   Y.next=S.time+Y.eat+Y.lull+0.8;Y.passNext=Y.next;
   Y.npcNext=S.time+C.npcHuntCooldown+Math.random()*8;
@@ -906,7 +931,6 @@ function finalizeDeath(){
   if(newDistance){longestDistance=dist;store.setItem('ep_best',String(longestDistance));}
   const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions};
   lastFinishedRun=run;
-  $('rLeaderboard').style.display=LB.on()?'inline-block':'none';
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -924,8 +948,6 @@ function finalizeDeath(){
     $('lbRunSummary').textContent='Online leaderboard unavailable';
   }
   const anyRecord=newScore||newDistance;
-  $('rNew').style.display=anyRecord?'block':'none';
-  $('rNew').textContent=newScore&&newDistance?'NEW SCORE + DISTANCE':newScore?'NEW BEST SCORE':'NEW LONGEST';
   if(anyRecord){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
   if(S.cause==='edge'){title='Off the trail';tag='Left the marked slope';}
@@ -936,23 +958,11 @@ function finalizeDeath(){
   else if(S.combo===0){title='Caught';tag='Lost the rhythm';}
   else{title='Caught';tag='Caught by the yeti';}
   el.rTitle.textContent=title;el.rTag.textContent=tag;
-  el.rScore.textContent=fmtNum(score);
-  el.rBest.textContent='BEST SCORE '+fmtNum(bestScore)+'  •  LONGEST '+fmtNum(longestDistance)+' m';
-  $('rDistancePts').textContent=fmtNum(dPts);
-  $('rFlagPts').textContent=fmtNum(S.scoreFlag);
-  $('rComboPts').textContent=fmtNum(S.scoreCombo);
-  $('rPenaltyPts').textContent=S.scorePenalty?'−'+fmtNum(S.scorePenalty):'0';
+  el.rScore.textContent=fmtNum(score)+' pts';
   $('rRunDistance').textContent=fmtNum(dist)+' m';
   $('rAccuracy').textContent=fmtNum(S.cleanFlags)+' / '+fmtNum(S.flagsAttempted);
   $('rAccuracyPct').textContent=(S.flagsAttempted?Math.round(S.cleanFlags/S.flagsAttempted*100):0)+'%';
-  $('rBestCombo').textContent=fmtNum(S.bestCombo)+'×';
-  $('rCollisions').textContent=fmtNum(S.collisions);
   lastDeathReal=Date.now();
-  const span=Math.max(oldDistance,dist,1);
-  $('tYou').style.left=(dist/span*96)+'%';
-  $('tBest').style.left=(oldDistance/span*96)+'%';
-  $('tBest').style.display=oldDistance>0?'block':'none';
-  $('rPrevLegend').style.display=oldDistance>0?'flex':'none';
   $('btnRow').style.display='flex';
   el.leaderboard.classList.add('hide');
   el.results.classList.remove('hide');
@@ -1279,10 +1289,17 @@ function update(dt){
     return n;
   }
   if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
+    Y.gapImpulse=0;Y.renderGap=C.yetiStart;Y.renderX=S.x;Y.renderScale=0.98;Y.renderPosture=1;Y.renderYOffset=0;
     const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);
     Y.lullNext=S.time+14+Math.random()*12;Y.npcNext=S.time+5+Math.random()*7;}
   if(Y.on){
     const D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
+    if(Math.abs(Y.gapImpulse||0)>0.001){
+      const attackLocked=Y.burst>0||Y.npcBurst>0;
+      const resolveSpeed=attackLocked?2.4:(Y.tele>0||Y.npcTele>0)?3.4:5.6;
+      const step=clamp(Y.gapImpulse,-resolveSpeed*dt,resolveSpeed*dt);
+      Y.d-=step;Y.gapImpulse-=step;
+    }
     S.buffer=S.depth-Y.d;
     const st=S.buffer>20?0:S.buffer>7?1:2;
     if(st>Y.st){sfx.roar();S.shake=Math.max(S.shake,8+st*3);vib(40);}
@@ -1401,6 +1418,7 @@ function update(dt){
     const tx=(Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0)?Y.aimX:S.x;
     const xr=Y.stag>0?0.3:((Y.burst>0||Y.npcBurst>0)?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
     Y.x+=(tx-Y.x)*Math.min(1,xr*dt);
+    updateYetiVisual(Y,dt);
     if(st===2){Y.foot-=dt;if(Y.foot<=0){Y.foot=0.45;S.shake=Math.max(S.shake,4);}}
     if(S.buffer<=0&&Y.pass!==4&&Y.eat<=0){
       if(Math.abs(Y.x-S.x)<C.grabR){die('caught');return;}
@@ -1847,7 +1865,7 @@ function edgeGlow(x,dir,k){
   ctx.fillStyle=gr;ctx.fillRect(dir>0?x:x-140,-30,140,LH+60);
 }
 function drawYetiLayer(nightK){
-  const Y=S.yeti,buf=S.buffer;
+  const Y=S.yeti,buf=Number.isFinite(Y.renderGap)?Y.renderGap:S.buffer;
   const prox=clamp(1-buf/C.SAFE,0,1);
   if(prox>0.02){const fr=ctx.createLinearGradient(0,0,0,LH*0.4);
     fr.addColorStop(0,'rgba(190,225,255,'+(0.55*prox)+')');fr.addColorStop(1,'rgba(190,225,255,0)');
@@ -1864,19 +1882,16 @@ function drawYetiLayer(nightK){
       ctx.strokeStyle='rgba(225,238,250,'+(0.28*(1-k))+')';ctx.lineWidth=2;
       ctx.beginPath();ctx.arc(ap.x,ap.y,12+k*28,0,6.283);ctx.stroke();}
   }
-  const yy=lerp(-58,PIN_Y-96,prox);
-  const scale=[0.98,1.14,1.34][Y.st];
-  let sy=1,oy=0,eyesRed=Y.st===2;
-  if(Y.tele>0){sy=0.8;oy=6;eyesRed=true;}
-  else if(Y.burst>0){sy=1.14;eyesRed=true;}
-  else if(Y.npcTele>0){sy=0.84;oy=5;eyesRed=true;}
-  else if(Y.npcBurst>0){sy=1.12;eyesRed=true;}
-  else if(Y.eat>0){sy=0.9;oy=8;}
-  if(Y.stag>0){sy*=0.85;oy+=4;} // stumbled
-  if(Y.tired>0){sy*=0.88;oy+=6;} // spent: head down, heaving
-  sy*=1-0.08*Y.fury; // furious = low stalking hunch
-  // give the yeti the depth-consistent scale for its screen row
-  const uu=uOfz(yy+oy,CZ),ps=CZ/(CZ-uu),px=LW/2+(Y.x-LW/2)*ps;
+  const violent=Y.burst>0||Y.npcBurst>0;
+  const walkBob=violent?0:Math.sin(S.time*(4.8+1.8*prox))*(0.45+0.85*prox);
+  const yy=lerp(-58,PIN_Y-96,prox)+walkBob;
+  const scale=Number.isFinite(Y.renderScale)?Y.renderScale:lerp(0.98,1.22,smooth01(prox));
+  const sy=Number.isFinite(Y.renderPosture)?Y.renderPosture:1;
+  const oy=Number.isFinite(Y.renderYOffset)?Y.renderYOffset:0;
+  const eyesRed=Y.st===2||Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0;
+  // Projection and body scale now follow the same smoothed depth signal, preventing size popping.
+  const uu=uOfz(yy+oy,CZ),ps=CZ/(CZ-uu),rx=Number.isFinite(Y.renderX)?Y.renderX:Y.x;
+  const px=LW/2+(rx-LW/2)*ps;
   drawYetiBody(px,yy+oy,scale*ps,sy,Y.eat,eyesRed,nightK);
   if(Y.st===2){const pw=0.25+0.15*Math.sin(S.time*6);
     const vg=ctx.createRadialGradient(LW/2,LH/2,LH*0.3,LW/2,LH/2,LH*0.72);
@@ -2197,7 +2212,6 @@ function beginRun(){Generation.fresh();if(lastDeathReal)S.speed=17;
   $('btnRow').style.display='none';el.tune.classList.remove('show');
   S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');el.leaderboard.classList.add('hide');Audio.ac();}
 function showLeaderboard(){
-  if(!LB.on())return;
   el.results.classList.add('hide');el.leaderboard.classList.remove('hide');
   renderBoard();LB.refresh(true);LB.drain();
 }
@@ -2208,8 +2222,7 @@ function bindInput(){
   document.addEventListener('touchmove',e=>{if(!el.tune.classList.contains('show'))e.preventDefault();},{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
   el.intro.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
-  $('rLeaderboard').addEventListener('click',e=>{e.stopPropagation();showLeaderboard();});
-  $('rRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
+  el.results.addEventListener('pointerdown',e=>{e.preventDefault();showLeaderboard();});
   $('lbBack').addEventListener('click',e=>{e.stopPropagation();showResults();});
   $('lbRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
