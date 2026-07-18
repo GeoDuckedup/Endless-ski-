@@ -68,6 +68,7 @@
   .lbRow i{margin-left:auto;font-style:normal;opacity:.85}
   .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
   #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
+  .version{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:max(11px,calc(15*var(--u)));font-weight:700;letter-spacing:.16em;color:rgba(220,232,244,.48);text-transform:uppercase;pointer-events:none}
 </style>
 </head>
 <body>
@@ -92,6 +93,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
+    <div class="version">v1</div>
   </div>
   <div class="ov hide" id="ovResults">
     <h1 id="rTitle">Caught</h1>
@@ -173,16 +175,17 @@ const PerfBudget=(()=>{
 const Difficulty=(()=>{
   const smooth=(a,b,d)=>{const t=clamp((d-a)/(b-a),0,1);return t*t*(3-2*t);};
   function profile(d){
-    const intro=smooth(0,650,d);
-    const training=smooth(250,700,d); // pressure consequences reach full strength at 700 m
-    const pressure=lerp(0.30,1,training);
-    const long=smooth(500,8200,d);
+    const intro=smooth(0,560,d);
+    const training=smooth(140,500,d); // training wheels are fully off at 500 m
+    const hard=smooth(340,500,d);     // sharp clean-skiing consequence ramp into 500 m
+    const pressure=lerp(0.32,1.08,training);
+    const long=smooth(500,7200,d);
     const layout=clamp(intro*0.68+long*0.32,0,1);
-    const penalty=smooth(500,7500,d);
-    const speed=smooth(300,4800,d);
-    const attack=smooth(800,8200,d);
-    const overtime=d>8500?0.5+0.5*Math.sin((d-8500)/350):0;
-    return{layout,penalty,speed,attack,overtime,training,pressure};
+    const penalty=smooth(420,6200,d);
+    const speed=smooth(260,3600,d);
+    const attack=smooth(450,6200,d);
+    const overtime=d>7600?0.5+0.5*Math.sin((d-7600)/320):0;
+    return{layout,penalty,speed,attack,overtime,training,pressure,hard};
   }
   function hurryPass(seconds){
     if(!S||!S.yeti||!S.yeti.on||S.yeti.pass!==0)return;
@@ -526,14 +529,20 @@ function addFury(base,extraLungeChance){ // one pressure system: every sloppy ev
   if(S.time-S.lastMistake<=6)S.mistakeChain=Math.min(4,S.mistakeChain+1);
   else S.mistakeChain=1;
   S.lastMistake=S.time;S.streak=S.mistakeChain;
-  const chainMul=[1,1,1.25,1.50,1.60][S.mistakeChain]||1.60;
-  const gain=base*D.pressure*chainMul;
+  const chainMul=[1,1,1.30,1.58,1.75][S.mistakeChain]||1.75;
+  const post500Mul=lerp(1,1.55,D.hard);
+  const gain=base*D.pressure*chainMul*post500Mul;
   Y.fury=Math.min(1,Y.fury+gain);
-  // Higher pressure shortens the calendar until the next hunt; critical pressure can force an emergency pass.
-  if(Y.on&&Y.pass===0){
-    const urgency=lerp(8.0,2.2,clamp(Y.fury*0.82+D.training*0.18,0,1));
-    Difficulty.hurryPass(urgency);
-    if(D.training>=1&&Y.fury>=0.85)Difficulty.hurryPass(1.15);
+  // Past 500 m pressure is operational, not cosmetic: it wakes the yeti, advances the hunt clock,
+  // and makes a close predator prepare its next strike immediately.
+  if(Y.on){
+    Y.tired=Math.max(0,Y.tired-gain*1.6*D.hard);
+    if(Y.pass===0){
+      const urgency=lerp(7.0,1.15,clamp(Y.fury*0.88+D.training*0.12,0,1));
+      Difficulty.hurryPass(urgency);
+      if(D.hard>=0.95&&Y.fury>=0.62)Difficulty.hurryPass(0.80);
+      if(D.hard>=0.95&&Y.fury>=0.82)Y.next=Math.min(Y.next||Infinity,S.time+0.48);
+    }
   }
   // A collision during an active hunt can authorize one extra follow-up, never beyond three total.
   if(extraLungeChance&&Y.pass===2&&D.training>0.55&&Y.passTotal<3&&Math.random()<extraLungeChance*D.training){
@@ -565,14 +574,14 @@ function cleanFlag(g,px){
 function softMiss(g){ // reached the side but did not truly commit around the flag
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',8,62);
   S.combo=0;
-  addFury(0.08,0);
+  addFury(0.10,0.14);
   ringAt(g.x,g.d,'rgba(185,195,205,.75)',14);
   tone(210,155,0.11,'sine',0.13);
 }
 function wrongSide(g){ // no speed punishment; the cost is broken rhythm and rising predator pressure
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
-  addFury(0.13,0.08);
+  addFury(0.16,0.32);
   ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
   burstAt(g.x,g.d,'#9aa5b5',8,60);
   tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
@@ -581,7 +590,7 @@ function faultFlag(g){
   const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0; S.speed*=lerp(C.faultCut,0.69,k); S.flash=Math.max(S.flash,0.25);
-  addFury(C.furyFault,0.30);
+  addFury(C.furyFault+0.03,0.48);
   ringAt(g.x,g.d,'rgba(255,140,70,.9)',0); sfx.miss(); vib(20);
 }
 function crash(){
@@ -595,7 +604,7 @@ function crash(){
   DEF.stamp('dark',S.x,S.depth,15,0.5);
   DEF.stamp('lip',S.x-12,S.depth,6,0.35);DEF.stamp('lip',S.x+12,S.depth,6,0.35);
   bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
-  addFury(C.furyCrash,0.55);
+  addFury(C.furyCrash+0.05,0.78);
   addMarker('ko',S.depth,S.x);
   const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95);
   if(ng){const away=S.x<LW/2?1:-1;
@@ -608,7 +617,7 @@ function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
   S.speed*=lerp(0.85,0.72,k); S.iframe=0.5;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(0,4,k));
-  addFury(0.20,0.40);
+  addFury(0.24,0.62);
   n.down=0.8; n.x=clamp(n.x-dir*20,EDGE+10,LW-EDGE-10);
   burstAt((S.x+n.x)/2,S.depth,'#e8eef4',10,80);
   S.shake=Math.max(S.shake,5);
@@ -618,7 +627,7 @@ function barge(n){
   const k=Difficulty.profile(S.depth).penalty;
   S.speed*=lerp(0.50,0.39,k); S.iframe=0.4; S.hitstop=0.05;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(3,8,k));
-  addFury(0.30,0.65);
+  addFury(0.34,0.86);
   S.shake=Math.max(S.shake,9); S.flash=Math.max(S.flash,0.2);
   n.down=1.2;
   burstAt(n.x,n.d,'#ffffff',18,120);
@@ -629,9 +638,10 @@ function passBreak(){ // a successful escape earns separation, though high press
   const Y=S.yeti,D=Difficulty.profile(S.depth);
   Y.pass=3;Y.tired=Math.max(Y.tired,lerp(3.0,2.2,D.attack));Y.tele=0;Y.burst=0;
   Y.passLunges=0;Y.passTotal=0;Y.cleanWindow=0;
-  const lo=lerp(C.passMin,12,D.attack),span=lerp(C.passSpan,9,D.attack);
-  const delay=(lo+Math.random()*span)*(1-0.45*Y.fury)*(1-0.12*D.overtime);
-  Y.passNext=S.time+Math.max(6,delay);
+  const passK=Math.max(D.attack,D.hard*0.92);
+  const lo=lerp(C.passMin,7.5,passK),span=lerp(C.passSpan,5.5,passK);
+  const delay=(lo+Math.random()*span)*(1-0.66*Y.fury)*(1-0.14*D.overtime);
+  Y.passNext=S.time+Math.max(lerp(5.5,2.8,D.hard),delay);
 }
 function whiff(){ // it swiped where you were; a clean dodge buys a brief recovery opportunity
   const Y=S.yeti;
@@ -673,6 +683,7 @@ function finalizeDeath(){
   if(isNew){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
   if(S.cause==='edge'){title='Off the trail';tag='Skied into the trees';}
+  else if(S.cause==='boulder'){title='Wiped out';tag='Direct boulder impact';}
   else if(S.time-S.lastCrash<2){title='Caught';tag='Knocked down — then caught';}
   else if(S.combo===0&&S.speed<C.glide+3){title='Caught';tag='Ran out of speed';}
   else if(S.combo===0){title='Caught';tag='Lost the rhythm';}
@@ -928,7 +939,12 @@ function update(dt){
     const py0=S.prevD*PXM,py1=S.depth*PXM;
     for(const o of obs){
       if(o.d<S.prevD-2.5||o.d>S.depth+2.5)continue;
-      if(segDist(S.prevX,py0,S.x,py1,o.x,o.d*PXM)<o.r*C.forgive+PR){crash();break;}
+      const hit=segDist(S.prevX,py0,S.x,py1,o.x,o.d*PXM);
+      if(hit<o.r*C.forgive+PR){
+        const directRock=!o.tree&&S.depth>=500&&S.speed>=24&&hit<o.r*0.34+PR*0.42;
+        if(directRock){S.lastCrash=S.time;die('boulder');return;}
+        crash();break;
+      }
     }
   }
   // NPCs
@@ -971,25 +987,30 @@ function update(dt){
     if(b.re<=0){b.vx=(Math.random()*2-1)*45;b.re=1+Math.random()*1.5;}
     if(b.x<EDGE+b.r){b.x=EDGE+b.r;b.vx=Math.abs(b.vx);}
     if(b.x>LW-EDGE-b.r){b.x=LW-EDGE-b.r;b.vx=-Math.abs(b.vx);}
-    if(S.iframe<=0&&Math.abs(b.d-S.depth)<(b.r+PR)/PXM+0.6&&Math.abs(b.x-S.x)<b.r*0.8+PR){crash();balls.splice(i,1);continue;}
+    if(S.iframe<=0&&Math.abs(b.d-S.depth)<(b.r+PR)/PXM+0.6&&Math.abs(b.x-S.x)<b.r*0.8+PR){
+      const direct=S.depth>=500&&Math.abs(b.x-S.x)<b.r*0.34+PR*0.40&&Math.abs(b.d-S.depth)<(b.r*0.42+PR*0.35)/PXM+0.24;
+      balls.splice(i,1);
+      if(direct){S.lastCrash=S.time;die('boulder');return;}
+      crash();continue;
+    }
     for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);
       bloodSmear(n.x,n.d,Math.sign(b.vx)||0,1,0.9);}
     if(b.d>S.depth+62)balls.splice(i,1);
   }
   // yeti brain
   function choosePassLunges(D,fury){
-    if(S.depth<250)return 1; // opening training zone: always one readable attack
+    if(S.depth<220)return 1; // opening remains readable
     const ramp=D.training;
     let secondChance;
-    if(fury<0.25)secondChance=0.04;
-    else if(fury<0.50)secondChance=lerp(0.12,0.30,(fury-0.25)/0.25);
-    else if(fury<0.75)secondChance=lerp(0.36,0.56,(fury-0.50)/0.25);
-    else secondChance=lerp(0.68,0.82,(fury-0.75)/0.25);
+    if(fury<0.20)secondChance=0.05;
+    else if(fury<0.45)secondChance=lerp(0.18,0.42,(fury-0.20)/0.25);
+    else if(fury<0.70)secondChance=lerp(0.52,0.76,(fury-0.45)/0.25);
+    else secondChance=lerp(0.84,0.95,(fury-0.70)/0.30);
     secondChance*=ramp;
     let n=Math.random()<secondChance?2:1;
-    if(n===2&&S.depth>=2500&&fury>0.55){
-      const late=clamp((S.depth-2500)/2500,0,1);
-      const thirdChance=late*lerp(0.03,0.18,clamp((fury-0.55)/0.45,0,1));
+    if(n===2&&S.depth>=1800&&fury>0.58){
+      const late=clamp((S.depth-1800)/2200,0,1);
+      const thirdChance=late*lerp(0.04,0.20,clamp((fury-0.58)/0.42,0,1));
       if(Math.random()<thirdChance)n=3;
     }
     return n;
@@ -1002,7 +1023,7 @@ function update(dt){
     const st=S.buffer>20?0:S.buffer>7?1:2;
     if(st>Y.st){sfx.roar();S.shake=Math.max(S.shake,8+st*3);vib(40);}
     Y.st=st;
-    Y.fury=Math.max(0,Y.fury-C.furyDecay*dt);
+    Y.fury=Math.max(0,Y.fury-C.furyDecay*lerp(1,0.12,D.hard)*dt);
     Y.cleanWindow=Math.max(0,Y.cleanWindow-dt);
     // sprint/rest: a predator can't run forever — fury lengthens sprints, shortens rests
     if(Y.tired>0){Y.tired-=dt;Y.pant-=dt;
@@ -1013,7 +1034,7 @@ function update(dt){
     else Y.press=Math.max(0,Y.press-dt*0.5);
     if(Y.fury>0.6){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
     // hunting passes: it attacks on its own schedule, however far behind it fell
-    if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>18){
+    if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>lerp(18,12,D.hard)){
       Y.pass=1;vib(30);
       tone(55,150,1.3,'sawtooth',0.3);tone(110,300,1.3,'triangle',0.16);
     }
@@ -1050,7 +1071,10 @@ function update(dt){
       if(S.buffer>C.SAFE+6)Y.pass=0;
     }
     else{ // capped running speed; attack sophistication carries the late-game escalation
-      const ys=Math.min(36.5,lerp(C.yetiBase,29.5,D.speed)*C.yetiPressure*M.yeti*(1+0.12*Y.fury))*(Y.tired>0?lerp(0.72,0.80,D.attack):1);
+      // Once training ends, fury materially closes the gap. Clean skiing keeps this term near zero;
+      // coasting through flags at high fury lets the predator run in the mid-20s to mid-30s.
+      const pressureRun=16.5*Y.fury*D.hard;
+      const ys=Math.min(36.5,(lerp(C.yetiBase,27.5,D.speed)+pressureRun)*C.yetiPressure*M.yeti)*(Y.tired>0?lerp(0.72,0.84,D.attack):1);
       if(Y.tele>0){Y.tele-=dt;if(Y.tele<=0){Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}}
       else if(Y.burst>0){Y.burst-=dt;adv=ys+C.lungeBoost;
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
