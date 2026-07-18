@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5d.4</title>
+<title>ENDLESS POWDER v5d.4.1</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -144,9 +144,10 @@
   /* Shared-memorial release verification is hidden during normal play and opens only with ?memorialcheck=1. */
   #memorialDiag{position:absolute;z-index:22;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
     top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
-    overflow:auto;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(216,205,255,.42);border-radius:14px;
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(216,205,255,.42);border-radius:14px;
     background:rgba(5,9,15,.97);box-shadow:0 18px 60px rgba(0,0,0,.62);color:#eaf5ff;text-align:left;
-    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y}
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
   #memorialDiag.show{display:block}
   #memorialDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
   #memorialDiag .memorialSub{opacity:.62;margin-bottom:14px}
@@ -159,6 +160,17 @@
   #memorialActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #memorialActions button.primary{background:#d8cdff;color:#120d22;border-color:transparent}
+
+  /* Phone diagnostics become full-viewport scroll surfaces. Normal gameplay keeps its locked canvas viewport. */
+  @media (hover:none), (pointer:coarse), (max-width:699px){
+    #authDiag.show,#bestDiag.show,#memorialDiag.show{
+      position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-height:none;
+      margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:scroll;overflow-x:hidden;
+      padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px)
+        calc(env(safe-area-inset-bottom) + 30px) calc(env(safe-area-inset-left) + 18px);
+      -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;
+    }
+  }
 </style>
 </head>
 <body>
@@ -184,7 +196,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5d.4</div>
+    <div class="version">v5d.4.1</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -216,7 +228,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5d.4 adds the read-only shared-memorial release check while preserving the v5d.3 renderer, performance budgets and deferred local-stain reconciliation.</div>
+    <div class="authSub">v5d.4.1 preserves the shared-memorial release check and adds full mobile scrolling for all hidden validation screens.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -274,7 +286,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5d.4';
+const BUILD_VERSION='v5d.4.1';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -3395,7 +3407,10 @@ function showResults(){el.leaderboard.classList.add('hide');el.results.classList
 function bindInput(){
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
-  document.addEventListener('touchmove',e=>{if(!el.tune.classList.contains('show'))e.preventDefault();},{passive:false});
+  document.addEventListener('touchmove',e=>{
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show'):null;
+    if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
+  },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
   el.intro.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
   el.results.addEventListener('pointerdown',e=>{e.preventDefault();showLeaderboard();});
