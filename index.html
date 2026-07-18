@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v3c</title>
+<title>ENDLESS POWDER v3d</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -111,7 +111,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v3c</div>
+    <div class="version">v3d</div>
   </div>
   <div class="ov hide" id="ovResults">
     <h1 id="rTitle">Caught</h1>
@@ -182,6 +182,8 @@ const C={
   grabR:46, whiffBack:7, whiffFury:0.25, whiffStag:0.8,
   lungeMissBack:3, lungeMissFury:0.1, lungeMissStag:0.5,
   npcChance:0.22, boulderAfter:240, boulderRate:0.045,
+  chaseAfter:500, chaseCleanGap:25, chaseDangerGap:9,
+  lullMin:1.0, lullMax:3.0, npcHuntCooldown:10,
   phaseMin:230, phaseMax:320,
   markerCap:180, SEED:1337
 };
@@ -438,7 +440,7 @@ function fresh(){
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0},
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0},
     buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
   DEF.reset();
@@ -597,6 +599,12 @@ function effectiveYetiPressure(D){
   const missK=clamp((S.missStreak||0)/3,0,1)*hard;
   return clamp(Y.fury+0.52*debtLevel()*hard+0.18*missK+0.22*(S.neglectK||0)*hard,0,1);
 }
+function chaseTargetGap(D,P){
+  if(S.depth<C.chaseAfter)return C.SAFE;
+  const debt=debtLevel(),miss=clamp((S.missStreak||0)/3,0,1),neglect=S.neglectK||0;
+  const threat=clamp(0.68*P+0.18*debt+0.10*miss+0.12*neglect,0,1);
+  return lerp(C.chaseCleanGap,C.chaseDangerGap,threat);
+}
 function addCleanDebt(amount){
   const D=Difficulty.profile(S.depth);
   S.cleanDebt=clamp((S.cleanDebt||0)+Math.max(0,amount||0)*D.hard,0,10);
@@ -609,7 +617,7 @@ function registerFlagMiss(baseFury,debtAdd,extraLungeChance){
   const streakBonus=([0,0.025,0.12,0.22,0.28][n]||0.28)*D.hard;
   const gain=addFury(baseFury+streakBonus,Math.min(0.98,(extraLungeChance||0)+0.13*Math.max(0,n-1)));
   if(Y.on&&D.hard>0.1){
-    const nudge=([0,1.2,3.0,5.0,6.0][n]||6.0)*D.hard;
+    const nudge=([0,2.0,4.5,7.0,8.0][n]||8.0)*D.hard;
     Y.d=Math.min(S.depth-1.25,Y.d+nudge);
     Y.surge=Math.max(Y.surge,([0,1.1,1.9,2.6,2.9][n]||2.9)*D.hard);
     Y.surgePower=Math.max(Y.surgePower,([0,4.0,8.5,12.5,14.0][n]||14.0)*D.hard+2.5*debtLevel());
@@ -653,6 +661,8 @@ function addFury(base,extraLungeChance){ // immediate fury; longer-term cleanlin
   const post500Mul=lerp(1,1.55,D.hard);
   const gain=base*D.pressure*chainMul*post500Mul;
   Y.fury=Math.min(1,Y.fury+gain);
+  // Calm is conditional: a fresh mistake immediately brings the predator back into the chase.
+  if(Y.lull>0&&D.hard>0.35){Y.lull=0;Y.lullBack=0;Y.next=Math.min(Y.next||Infinity,S.time+0.55);}
   // Past 500 m pressure is operational, not cosmetic: it wakes the yeti, advances the hunt clock,
   // and makes a close predator prepare its next strike immediately.
   if(Y.on){
@@ -712,6 +722,14 @@ function cleanFlag(g,px){
   const calm=C.furyCalm+Math.min(0.03,S.combo*0.003)+(milestone?0.04:0)+0.025*tight;
   S.yeti.fury=Math.max(0,S.yeti.fury-calm);
   S.yeti.surge=Math.max(0,S.yeti.surge-0.55);S.yeti.surgePower=Math.max(0,S.yeti.surgePower-2.5-2*tight);
+  // Past 500 m, every clean flag buys literal space. Tight passes and milestones buy more.
+  if(S.yeti.on&&S.depth>=C.chaseAfter){
+    const push=(1.15+1.45*tight+(milestone?0.85:0))*D.hard;
+    S.yeti.d-=push;S.buffer=S.depth-S.yeti.d;
+    if(milestone&&S.yeti.pass!==2&&Math.random()<(S.combo>=10?0.68:0.44)){
+      startYetiLull('clean',1.0,2.35,1.0+1.4*tight);
+    }
+  }
   // A clean flag immediately after a clean dodge can cancel one queued follow-up lunge.
   if(S.yeti.pass===2&&S.yeti.cleanWindow>0&&S.yeti.passLunges>0){
     S.yeti.passLunges--;S.yeti.cleanWindow=0;
@@ -800,14 +818,59 @@ function barge(n){
   bloodSmear(n.x,n.d,Math.sin(S.theta),Math.cos(S.theta),1.5);
   tone(220,90,0.18,'square',0.22); vib(30);
 }
-function passBreak(){ // a successful escape earns separation, though accumulated sloppiness keeps pressure alive
+function startYetiLull(reason,minT,maxT,back){
+  const Y=S.yeti;
+  if(!Y.on||S.depth<C.chaseAfter||Y.pass===2||Y.tele>0||Y.burst>0||Y.npcTarget)return false;
+  const dur=clamp((minT||C.lullMin)+Math.random()*Math.max(0,(maxT||C.lullMax)-(minT||C.lullMin)),C.lullMin,C.lullMax);
+  const nextBack=Math.max(Y.lullBack,back||1.5),extraBack=Math.max(0,nextBack-Y.lullBack);
+  Y.lull=Math.max(Y.lull,dur);Y.lullBack=nextBack;
+  Y.d-=extraBack;Y.pass=0;Y.tele=0;Y.burst=0;Y.passLunges=0;Y.passTotal=0;
+  Y.next=Math.max(Y.next||0,S.time+dur+0.8);
+  Y.passNext=Math.max(Y.passNext||0,S.time+dur+0.8);
+  Y.lullNext=S.time+16+Math.random()*16;
+  return true;
+}
+function consumeNpc(n){
+  const i=npcs.indexOf(n);if(i<0)return false;
+  const Y=S.yeti;npcs.splice(i,1);
+  burstAt(n.x,n.d,'#e03434',28,110);addMarker('eat',n.d,n.x);
+  bloodSmear(n.x,n.d,0,1,1.7,'110,10,14');
+  Y.x=n.x;Y.eat=C.feast;Y.npcTarget=null;Y.npcTele=0;Y.npcBurst=0;Y.pass=0;
+  Y.d-=1.0+Math.random()*0.8;
+  Y.lull=Math.max(Y.lull,0.45+Math.random()*0.55);Y.lullBack=0;
+  Y.next=S.time+Y.eat+Y.lull+0.8;Y.passNext=Y.next;
+  Y.npcNext=S.time+C.npcHuntCooldown+Math.random()*8;
+  Y.lullNext=S.time+14+Math.random()*16;
+  sfx.eat();return true;
+}
+function maybeStartNpcHunt(Y,P){
+  if(S.depth<C.chaseAfter||Y.pass!==0||Y.lull>0||Y.eat>0||Y.stag>0||Y.tele>0||Y.burst>0||S.time<(Y.npcNext||0))return false;
+  const candidates=npcs.filter(n=>n.down<=0&&n.d>Y.d+2&&n.d<S.depth-1&&n.d-Y.d<15&&Math.abs(n.x-Y.x)<250);
+  if(!candidates.length){Y.npcNext=S.time+3+Math.random()*4;return false;}
+  const chance=lerp(0.62,0.20,P);
+  if(Math.random()>chance){Y.npcNext=S.time+4+Math.random()*5;return false;}
+  candidates.sort((a,b)=>(a.d-Y.d)-(b.d-Y.d));
+  Y.npcTarget=candidates[0];Y.npcTele=0.52+Math.random()*0.22;Y.npcBurst=0;Y.pass=4;Y.aimX=Y.npcTarget.x;
+  Y.npcNext=S.time+C.npcHuntCooldown+Math.random()*7;
+  sfx.growl();S.shake=Math.max(S.shake,3);return true;
+}
+function passBreak(){ // a successful escape buys only modest space; clean flags create the real separation
   const Y=S.yeti,D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
-  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(3.0,1.8,Math.max(D.attack,debt)));Y.tele=0;Y.burst=0;
+  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(2.5,1.3,Math.max(D.attack,debt)));Y.tele=0;Y.burst=0;
   Y.passLunges=0;Y.passTotal=0;Y.cleanWindow=0;
-  const passK=Math.max(D.attack,D.hard*0.92,debt*0.95);
-  const lo=lerp(C.passMin,6.0,passK),span=lerp(C.passSpan,4.2,passK);
-  const delay=(lo+Math.random()*span)*(1-0.72*P)*(1-0.16*debt)*(1-0.14*D.overtime);
-  Y.passNext=S.time+Math.max(lerp(5.0,1.9,Math.max(D.hard,debt)),delay);
+  if(S.depth>=C.chaseAfter){
+    const delay=lerp(12.5,3.6,clamp(P*0.78+debt*0.22,0,1))*(0.88+Math.random()*0.24);
+    Y.passNext=S.time+Math.max(3.0,delay);
+    Y.next=Math.max(Y.next||0,S.time+Math.max(1.2,delay*0.45));
+    // Some completed hunts end with a short atmospheric drop-back, not a full reset.
+    const lullChance=lerp(0.34,0.10,P);
+    if(Math.random()<lullChance)startYetiLull('hunt',1.0,2.3,1.0+Math.random()*1.6);
+  }else{
+    const passK=Math.max(D.attack,D.hard*0.92,debt*0.95);
+    const lo=lerp(C.passMin,6.0,passK),span=lerp(C.passSpan,4.2,passK);
+    const delay=(lo+Math.random()*span)*(1-0.72*P)*(1-0.16*debt)*(1-0.14*D.overtime);
+    Y.passNext=S.time+Math.max(lerp(5.0,1.9,Math.max(D.hard,debt)),delay);
+  }
 }
 function whiff(){ // it swiped where you were; a clean dodge buys a brief recovery opportunity
   const Y=S.yeti;
@@ -1174,11 +1237,9 @@ function update(dt){
         if(S.speed>=0.6*C.speedMax)barge(n);else shove(n);}
     }
     n.trail.push({x:n.x,d:n.d});if(n.trail.length>34)n.trail.shift();
-    // eaten
-    if(Y.on&&n.d<=Y.d+1.5){
-      npcs.splice(i,1);burstAt(n.x,n.d,'#e03434',28,110);addMarker('eat',n.d,n.x);
-      bloodSmear(n.x,n.d,0,1,1.7,'110,10,14'); // the feast leaves a drag stain
-      Y.eat=C.feast;sfx.eat();continue;
+    // Eaten only when the yeti actually reaches the skier's lane. Targeted feeds are visible and spatial.
+    if(Y.on&&Y.eat<=0&&Y.npcTele<=0&&n.d<=Y.d+1.5&&Math.abs(n.x-Y.x)<44){
+      consumeNpc(n);continue;
     }
     if(n.d<S.depth-50)npcs.splice(i,1);
   }
@@ -1218,7 +1279,8 @@ function update(dt){
     return n;
   }
   if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
-    const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);}
+    const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);
+    Y.lullNext=S.time+14+Math.random()*12;Y.npcNext=S.time+5+Math.random()*7;}
   if(Y.on){
     const D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
     S.buffer=S.depth-Y.d;
@@ -1237,8 +1299,22 @@ function update(dt){
       if(Y.press>sprint){Y.tired=Math.max(1.5,lerp(4.5,2.2,D.attack)-C.restFury*P);Y.press=0;}}
     else Y.press=Math.max(0,Y.press-dt*0.5);
     if(P>0.55){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
+    // Persistent proximity has an audible cadence even between attacks.
+    if(S.depth>=C.chaseAfter){
+      const nearK=clamp((30-S.buffer)/22,0,1);
+      if(nearK>0.04&&Y.eat<=0){Y.breath-=dt;if(Y.breath<=0){Y.breath=lerp(1.75,0.48,nearK);tone(86,58,0.13+0.07*nearK,'sawtooth',0.055+0.055*nearK);}}
+      if(!Y.lullNext)Y.lullNext=S.time+12+Math.random()*12;
+      if(!Y.npcNext)Y.npcNext=S.time+4+Math.random()*6;
+      if(Y.pass===0&&Y.lull<=0&&Y.eat<=0&&Y.stag<=0&&Y.tele<=0&&Y.burst<=0){
+        if(S.time>Y.lullNext){
+          if(P<0.74&&Math.random()<lerp(0.56,0.16,P))startYetiLull('natural',1.0,2.6,1.0+Math.random()*1.8);
+          else Y.lullNext=S.time+7+Math.random()*10;
+        }
+        if(Y.lull<=0)maybeStartNpcHunt(Y,P);
+      }
+    }
     // hunting passes: it attacks on its own schedule, however far behind it fell
-    if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>lerp(18,10,Math.max(D.hard,debt))){
+    if(Y.pass===0&&Y.lull<=0&&Y.eat<=0&&Y.stag<=0&&!Y.npcTarget&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>lerp(18,10,Math.max(D.hard,debt))){
       Y.pass=1;vib(30);
       tone(55,150,1.3,'sawtooth',0.3);tone(110,300,1.3,'triangle',0.16);
     }
@@ -1248,7 +1324,26 @@ function update(dt){
       Y.stag-=dt;adv=0;
       if(Y.stag<=0&&(Y.pass===1||(Y.pass===2&&Y.passLunges<=0)))passBreak();
     }
-    else if(Y.eat>0){Y.eat-=dt;}
+    else if(Y.eat>0){
+      Y.eat-=dt;adv=Math.max(0,S.speed-2.3); // feeding creates only a few meters of relief
+      if(Y.eat<=0)Y.next=Math.max(Y.next||0,S.time+0.7);
+    }
+    else if(Y.lull>0){
+      Y.lull-=dt;adv=Math.max(0,S.speed-lerp(3.4,2.0,P));
+      if(Y.lull<=0){Y.lull=0;Y.lullBack=0;Y.next=Math.max(Y.next||0,S.time+0.8);Y.passNext=Math.max(Y.passNext||0,S.time+0.8);}
+    }
+    else if(Y.pass===4){ // visible lateral commitment toward a skier between the yeti and player
+      const n=Y.npcTarget;
+      if(!n||!npcs.includes(n)||n.down>0){Y.d=Math.min(Y.d,S.depth-2.5);Y.npcTarget=null;Y.npcTele=0;Y.npcBurst=0;Y.pass=0;Y.next=S.time+1.2;}
+      else if(Y.npcTele>0){
+        Y.npcTele-=dt;Y.aimX=n.x;adv=Math.max(0,n.spd+1.5);
+        if(Y.npcTele<=0){Y.npcBurst=0.52;sfx.roar();S.shake=Math.max(S.shake,6);}
+      }else if(Y.npcBurst>0){
+        Y.npcBurst-=dt;Y.aimX=n.x;adv=Math.max(S.speed+7,n.spd+17);
+        if((n.d-Y.d)<1.8&&Math.abs(n.x-Y.x)<46){consumeNpc(n);}
+        else if(Y.npcBurst<=0){Y.d=Math.min(Y.d,S.depth-2.5);Y.npcTarget=null;Y.pass=0;Y.next=S.time+1.0;}
+      }else{Y.d=Math.min(Y.d,S.depth-2.5);Y.npcTarget=null;Y.pass=0;Y.next=S.time+1.0;}
+    }
     else if(Y.pass===1){ // pressure determines how decisively it closes, while the warning remains intact
       Y.foot-=dt;if(Y.foot<=0){Y.foot=0.5;tone(72,50,0.09,'square',0.15);}
       adv=S.speed+Math.max(6,S.buffer/2.5)*(1+0.38*P*D.training)+(Y.surge>0?Y.surgePower:0);
@@ -1270,23 +1365,31 @@ function update(dt){
         }else if(Y.passLunges<=0&&Y.stag<=0)passBreak();}
       if(Y.passT<=0)passBreak();
     }
-    else if(Y.pass===3){ // retreat: debt limits how far the predator is willing to fall behind
-      adv=Math.max(0,S.speed-7);
-      const retreatTarget=lerp(C.SAFE+6,16,debt*D.hard);
+    else if(Y.pass===3){ // completed attacks retreat only to the active chase band
+      const retreatTarget=S.depth>=C.chaseAfter?clamp(chaseTargetGap(D,P)+lerp(3.0,1.2,P),11,27):lerp(C.SAFE+6,16,debt*D.hard);
+      adv=Math.max(0,S.speed-(S.depth>=C.chaseAfter?lerp(3.4,1.7,P):7));
       if(S.buffer>retreatTarget)Y.pass=0;
     }
-    else{ // capped running speed; attack sophistication carries the late-game escalation
-      // Once training ends, fury materially closes the gap. Clean skiing keeps this term near zero;
-      // coasting through flags at high fury lets the predator run in the mid-20s to mid-30s.
-      const pressureRun=18.5*P*D.hard+(Y.surge>0?Y.surgePower:0);
-      const ys=Math.min(36.5,(lerp(C.yetiBase,27.5,D.speed)+pressureRun)*C.yetiPressure*M.yeti)*(Y.tired>0?lerp(0.72,0.88,Math.max(D.attack,debt)):1);
+    else{
+      let ys;
+      if(S.depth>=C.chaseAfter){
+        // Persistent chase controller: quality determines the target gap, while the yeti matches pace.
+        const target=chaseTargetGap(D,P),err=S.buffer-target;
+        let correction=clamp(err*0.88,-5.8,10.0);
+        if(Y.tired>0&&correction>0)correction*=0.55;
+        ys=clamp(S.speed+correction+(Y.surge>0?Y.surgePower*0.55:0),0,C.speedMax+6);
+      }else{
+        const pressureRun=18.5*P*D.hard+(Y.surge>0?Y.surgePower:0);
+        ys=Math.min(36.5,(lerp(C.yetiBase,27.5,D.speed)+pressureRun)*C.yetiPressure*M.yeti)*(Y.tired>0?lerp(0.72,0.88,Math.max(D.attack,debt)):1);
+      }
       if(Y.tele>0){Y.tele-=dt;if(Y.tele<=0){Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}}
       else if(Y.burst>0){Y.burst-=dt;adv=ys+C.lungeBoost;
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=ys;
         if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
-          const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);
-          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-C.furyLunge*P)*(1-0.14*debt)*(1-0.10*D.overtime);}}
+          const lo=S.depth>=C.chaseAfter?lerp(8.8,3.1,P):lerp(C.lungeMin,3.4,D.attack);
+          const hi=S.depth>=C.chaseAfter?lerp(13.0,5.4,P):lerp(C.lungeMax,6.0,D.attack);
+          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-0.12*debt)*(1-0.10*D.overtime);}}
     }
     Y.d+=adv*dt;
     if(adv>0&&S.buffer<50){ // its passage marks the snow: footprints, and a furrow when it dives
@@ -1295,11 +1398,11 @@ function update(dt){
       if(Y.burst>0)DEF.gouge(Y.x,Y.d,6,0.25);
     }
     // committed lunges dive at where you WERE; staggering can't track
-    const tx=(Y.tele>0||Y.burst>0)?Y.aimX:S.x;
-    const xr=Y.stag>0?0.3:(Y.burst>0?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
+    const tx=(Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0)?Y.aimX:S.x;
+    const xr=Y.stag>0?0.3:((Y.burst>0||Y.npcBurst>0)?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
     Y.x+=(tx-Y.x)*Math.min(1,xr*dt);
     if(st===2){Y.foot-=dt;if(Y.foot<=0){Y.foot=0.45;S.shake=Math.max(S.shake,4);}}
-    if(S.buffer<=0){
+    if(S.buffer<=0&&Y.pass!==4&&Y.eat<=0){
       if(Math.abs(Y.x-S.x)<C.grabR){die('caught');return;}
       whiff();
     }
@@ -1750,16 +1853,24 @@ function drawYetiLayer(nightK){
     fr.addColorStop(0,'rgba(190,225,255,'+(0.55*prox)+')');fr.addColorStop(1,'rgba(190,225,255,0)');
     ctx.fillStyle=fr;ctx.fillRect(-30,-30,LW+60,LH*0.4+30);}
   if(S.mode==='dying'&&S.cause==='caught')return;
-  if(Y.tele>0){ // snow-ripple at the committed lunge aim: the dodge is readable
+  if(Y.tele>0){ // snow-ripple at the committed player lunge aim: the dodge is readable
     const k=1-Y.tele/(Y.teleMax||C.teleT),ap=projD(Y.aimX,0);
     for(let i=0;i<2;i++){const kk=(k+i*0.5)%1;
       ctx.strokeStyle='rgba(200,225,255,'+(0.35*(1-kk))+')';ctx.lineWidth=2.5;
       ctx.beginPath();ctx.arc(ap.x,ap.y,10+kk*44,0,6.283);ctx.stroke();}}
+  if(Y.npcTele>0&&Y.npcTarget){
+    const u=Y.npcTarget.d-S.depth;
+    if(u>=UTOP&&u<=UBOT){const ap=projD(Y.npcTarget.x,u),k=1-Y.npcTele/0.74;
+      ctx.strokeStyle='rgba(225,238,250,'+(0.28*(1-k))+')';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(ap.x,ap.y,12+k*28,0,6.283);ctx.stroke();}
+  }
   const yy=lerp(-58,PIN_Y-96,prox);
   const scale=[0.98,1.14,1.34][Y.st];
   let sy=1,oy=0,eyesRed=Y.st===2;
   if(Y.tele>0){sy=0.8;oy=6;eyesRed=true;}
   else if(Y.burst>0){sy=1.14;eyesRed=true;}
+  else if(Y.npcTele>0){sy=0.84;oy=5;eyesRed=true;}
+  else if(Y.npcBurst>0){sy=1.12;eyesRed=true;}
   else if(Y.eat>0){sy=0.9;oy=8;}
   if(Y.stag>0){sy*=0.85;oy+=4;} // stumbled
   if(Y.tired>0){sy*=0.88;oy+=6;} // spent: head down, heaving
