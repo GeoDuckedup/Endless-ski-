@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5e.4</title>
+<title>ENDLESS POWDER v5f.4</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -181,9 +181,49 @@
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #reconcileActions button.primary{background:#ffd76a;color:#191204;border-color:transparent}
 
+  /* Performance stabilization verification is hidden during normal play and opens only with ?perfcheck=1. */
+  #performanceDiag{position:absolute;z-index:24;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(134,226,218,.42);border-radius:14px;
+    background:rgba(5,9,15,.97);box-shadow:0 18px 60px rgba(0,0,0,.62);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  #performanceDiag.show{display:block}
+  #performanceDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #performanceDiag .performanceSub{opacity:.62;margin-bottom:14px}
+  .performanceRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .performanceRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .performanceRow b{font-weight:850;word-break:break-word}
+  #performanceOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(134,226,218,.08);white-space:pre-line;font-weight:800}
+  #performanceDetails{margin-top:10px;white-space:pre-line;opacity:.72;word-break:break-word}
+  #performanceActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #performanceActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #performanceActions button.primary{background:#86e2da;color:#071513;border-color:transparent}
+
+  /* Stable Shared Mountain release verification is hidden during normal play and opens only with ?sharedcheck=1. */
+  #sharedDiag{position:absolute;z-index:25;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(143,216,255,.48);border-radius:14px;
+    background:rgba(5,9,15,.98);box-shadow:0 18px 60px rgba(0,0,0,.66);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  #sharedDiag.show{display:block}
+  #sharedDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #sharedDiag .sharedSub{opacity:.62;margin-bottom:14px}
+  .sharedRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .sharedRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .sharedRow b{font-weight:850;word-break:break-word}
+  #sharedOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(143,216,255,.09);white-space:pre-line;font-weight:850}
+  #sharedDetails{margin-top:10px;white-space:pre-line;opacity:.74;word-break:break-word}
+  #sharedActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #sharedActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #sharedActions button.primary{background:#8fd8ff;color:#07121d;border-color:transparent}
+
   /* Phone diagnostics become full-viewport scroll surfaces. Normal gameplay keeps its locked canvas viewport. */
   @media (hover:none), (pointer:coarse), (max-width:699px){
-    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show{
+    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show{
       position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-height:none;
       margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:scroll;overflow-x:hidden;
       padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px)
@@ -216,7 +256,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5e.4</div>
+    <div class="version">v5f.4</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -248,7 +288,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5e.4 validates the complete local/shared reconciliation layer while preserving private history, public best-run bodies and offline play.</div>
+    <div class="authSub">v5f.4 stabilizes frame-time, bounded effect memory, repeated-run cleanup and shared-memorial rendering while preserving offline play.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -320,6 +360,44 @@
     <div id="reconcileDetails"></div>
     <div id="reconcileActions"><button class="primary" id="reconcileRetry" type="button">RUN CHECKS</button><button id="reconcileClose" type="button">CLOSE</button></div>
   </div>
+
+  <div id="performanceDiag" aria-live="polite">
+    <h2>PERFORMANCE AND MEMORY CHECK</h2>
+    <div class="performanceSub">Bounded in-memory stress tests for effect arrays, shared memorial rendering, repeated restarts and listener registration. Live Firebase records and the private death ledger are restored unchanged.</div>
+    <div class="performanceRow"><span>Quality budgets</span><b id="performanceBudgets" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Transient caps</span><b id="performanceCaps" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Restart cleanup</span><b id="performanceRestarts" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Persistent state</span><b id="performancePersistent" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Memorial caches</span><b id="performanceCaches" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Frame stability</span><b id="performanceFrames" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Input listeners</span><b id="performanceListeners" class="authNeutral">CHECKING</b></div>
+    <div class="performanceRow"><span>Mobile scrolling</span><b id="performanceScroll" class="authNeutral">READY</b></div>
+    <div class="performanceRow"><span>Legacy /scores</span><b id="performanceLegacy" class="authNeutral">CHECKING</b></div>
+    <div id="performanceOverall">Running validation…</div>
+    <div id="performanceDetails"></div>
+    <div id="performanceActions"><button class="primary" id="performanceRetry" type="button">RUN STRESS CHECK</button><button id="performanceClose" type="button">CLOSE</button></div>
+  </div>
+
+  <div id="sharedDiag" aria-live="polite">
+    <h2>SHARED MOUNTAIN RELEASE CHECK</h2>
+    <div class="sharedSub">Unified read-only validation for the complete v5 local history, anonymous identity, best-run leaderboard, shared memorial, reconciliation, recovery and performance stack.</div>
+    <div class="sharedRow"><span>Release config</span><b id="sharedBuild" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Local death ledger</span><b id="sharedLocal" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Anonymous identity</span><b id="sharedAuth" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Best-run ownership</span><b id="sharedBest" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Leaderboard ranking</span><b id="sharedRanking" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Shared memorials</span><b id="sharedMemorial" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Local reconciliation</span><b id="sharedReconcile" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Network lifecycle</span><b id="sharedNetwork" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Data recovery</span><b id="sharedRecovery" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Performance / memory</span><b id="sharedPerformance" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>World compatibility</span><b id="sharedWorld" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Legacy /scores</span><b id="sharedLegacy" class="authNeutral">CHECKING</b></div>
+    <div class="sharedRow"><span>Mobile scrolling</span><b id="sharedScroll" class="authNeutral">READY</b></div>
+    <div id="sharedOverall">Running complete release validation…</div>
+    <div id="sharedDetails"></div>
+    <div id="sharedActions"><button class="primary" id="sharedRetry" type="button">RUN FULL CHECK</button><button id="sharedClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -327,9 +405,124 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5e.4';
-const WORLD_VERSION='mountain-v4-course-1';
-const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
+/* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
+   v5f.4 is the stable Shared Mountain release. Deployment, schema, persistence,
+   diagnostics and performance policy derive from this one immutable block.
+   Runtime modules derive their constants from this one immutable block. */
+const APP_CONFIG=Object.freeze({
+  build:Object.freeze({version:'v5f.4',channel:'shared-mountain-stable'}),
+  world:Object.freeze({version:'mountain-v4-course-1'}),
+  firebase:Object.freeze({
+    projectId:'endless-powder',
+    databaseUrl:'https://endless-powder-default-rtdb.firebaseio.com',
+    apiKey:'AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI',
+    paths:Object.freeze({bestRuns:'/endless_powder/best_runs',legacyScores:'/endless_powder/scores'}),
+    auth:Object.freeze({
+      signUpEndpoint:'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
+      refreshEndpoint:'https://securetoken.googleapis.com/v1/token',
+      hostingInitPath:'/__/firebase/init.json'
+    })
+  }),
+  schemas:Object.freeze({
+    bestRun:Object.freeze({
+      version:'best-runs-v1',
+      fields:Object.freeze(['initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions','deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp']),
+      deathCauses:Object.freeze(['caught','edge','tree','boulder']),
+      limits:Object.freeze({score:9999999,distance:999999,cleanFlags:99999,attemptedFlags:99999,bestCombo:9999,collisions:9999,
+        deathDepthMax:999999.9,deathDepthDistanceTolerance:4,deathThetaMin:-1.2,deathThetaMax:1.2,
+        worldVersionMaxLength:64,timestampFloor:1735689600000,timestampFutureMs:60000})
+    }),
+    bestRunState:Object.freeze({version:'best-run-state-v1'}),
+    bestRunBoard:Object.freeze({version:'best-run-board-v1'}),
+    localDeath:Object.freeze({
+      version:'local-deaths-v1',
+      fields:Object.freeze(['deathId','depth','x','theta','cause','timestamp','worldVersion']),
+      causes:Object.freeze(['caught','edge','tree','boulder']),
+      limits:Object.freeze({depthMax:999999,xMin:EDGE,xMax:LW-EDGE,thetaMin:-1.2,thetaMax:1.2,timestampFutureMs:300000})
+    })
+  }),
+  storage:Object.freeze({
+    sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',
+    apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',bestRunState:'ep_best_run_submit_v5c2',
+    bestRunBoard:'ep_best_run_board_v5c3',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
+    retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a']),
+    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag'}),
+    probes:Object.freeze({bestReload:'ep_bestcheck_reload_v5c4',bestQueue:'ep_bestcheck_queue_probe_v5c4',
+      memorialCache:'ep_memorialcheck_cache_probe_v5d4',reconciliation:'ep_reconcilecheck_probe_v5e4'})
+  }),
+  diagnostics:Object.freeze({
+    query:Object.freeze({auth:'authcheck',best:'bestcheck',memorial:'memorialcheck',reconciliation:'reconcilecheck',performance:'perfcheck',shared:'sharedcheck'})
+  }),
+  performance:Object.freeze({
+    sampleEveryFrames:30,historySamples:120,memorialCacheEntries:64,
+    transientCaps:Object.freeze({floaters:24,sluff:32,smears:70}),
+    stress:Object.freeze({renderFramesPerQuality:36,restarts:24})
+  }),
+  network:Object.freeze({requestTimeoutMs:6500,authTimeoutMs:6000,refreshSkewMs:60000,
+    retryBaseMs:900,retryMaxMs:6000,maxAutomaticRetries:3}),
+  leaderboard:Object.freeze({visibleRows:10,fetchRecords:50,refreshMs:30000}),
+  localDeaths:Object.freeze({maxRecords:50}),
+  memorials:Object.freeze({
+    loadedRecords:50,labelRange:12.5,labelFullRange:6.5,groupX:24,groupDepth:3,
+    reconciliation:Object.freeze({depthTolerance:1.5,xTolerance:18}),
+    quality:Object.freeze({
+      low:Object.freeze({bodies:14,groupBodies:2,detailScale:0.90}),
+      medium:Object.freeze({bodies:28,groupBodies:3,detailScale:0.85}),
+      high:Object.freeze({bodies:50,groupBodies:4,detailScale:0.78})
+    })
+  })
+});
+const BUILD_VERSION=APP_CONFIG.build.version;
+const WORLD_VERSION=APP_CONFIG.world.version;
+const LOCAL_DEATH_KEY=APP_CONFIG.storage.localDeaths;
+const LOCAL_DEATH_SCHEMA_VERSION=APP_CONFIG.schemas.localDeath.version;
+const FIREBASE_PROJECT_ID=APP_CONFIG.firebase.projectId;
+const FIREBASE_API_KEY=APP_CONFIG.firebase.apiKey;
+const FIREBASE_AUTH=APP_CONFIG.firebase.auth;
+const AUTH_SESSION_KEY=APP_CONFIG.storage.authSession;
+const INSTALL_ID_KEY=APP_CONFIG.storage.installId;
+const API_KEY_OVERRIDE_KEY=APP_CONFIG.storage.apiKeyOverride;
+const AUTH_VERIFY_KEY=APP_CONFIG.storage.authVerify;
+const BEST_RUN_PATH=APP_CONFIG.firebase.paths.bestRuns;
+const LEGACY_SCORE_PATH=APP_CONFIG.firebase.paths.legacyScores;
+const BEST_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.bestRun.version;
+const BEST_RUN_STATE_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunState.version;
+const BEST_RUN_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunBoard.version;
+const BEST_RUN_FIELDS=APP_CONFIG.schemas.bestRun.fields;
+const BEST_RUN_DEATH_CAUSES=APP_CONFIG.schemas.bestRun.deathCauses;
+const BEST_RUN_LIMITS=APP_CONFIG.schemas.bestRun.limits;
+const LOCAL_DEATH_FIELDS=APP_CONFIG.schemas.localDeath.fields;
+const LOCAL_DEATH_CAUSES=APP_CONFIG.schemas.localDeath.causes;
+const LOCAL_DEATH_LIMITS=APP_CONFIG.schemas.localDeath.limits;
+const BEST_RUN_STATE_KEY=APP_CONFIG.storage.bestRunState;
+const BEST_RUN_BOARD_KEY=APP_CONFIG.storage.bestRunBoard;
+const SHARED_MEMORIAL_LIMIT=APP_CONFIG.memorials.loadedRecords;
+const LOCAL_SHARED_DEPTH_TOLERANCE=APP_CONFIG.memorials.reconciliation.depthTolerance;
+const LOCAL_SHARED_X_TOLERANCE=APP_CONFIG.memorials.reconciliation.xTolerance;
+const MEMORIAL_LABEL_RANGE=APP_CONFIG.memorials.labelRange;
+const MEMORIAL_LABEL_FULL=APP_CONFIG.memorials.labelFullRange;
+const MEMORIAL_GROUP_X=APP_CONFIG.memorials.groupX;
+const MEMORIAL_GROUP_D=APP_CONFIG.memorials.groupDepth;
+const MEMORIAL_QUALITY=APP_CONFIG.memorials.quality;
+const PERFORMANCE_CONFIG=APP_CONFIG.performance;
+let FIREBASE_DB_URL=APP_CONFIG.firebase.databaseUrl; // mutable only for isolated test harnesses
+const LB_PATH=BEST_RUN_PATH,LB_SIZE=APP_CONFIG.leaderboard.visibleRows,
+  LB_FETCH=APP_CONFIG.leaderboard.fetchRecords,LB_REFRESH=APP_CONFIG.leaderboard.refreshMs;
+const Configuration=Object.freeze({
+  values:APP_CONFIG,
+  audit:()=>Object.freeze({
+    buildVersion:BUILD_VERSION,worldVersion:WORLD_VERSION,databaseUrl:FIREBASE_DB_URL,
+    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,bestRunPath:BEST_RUN_PATH,legacyScorePath:LEGACY_SCORE_PATH,
+    bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
+    bestRunBoardSchemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
+    localDeathKey:LOCAL_DEATH_KEY,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_FETCH,
+    memorialLimit:SHARED_MEMORIAL_LIMIT,matchDepth:LOCAL_SHARED_DEPTH_TOLERANCE,matchX:LOCAL_SHARED_X_TOLERANCE,
+    groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
+    maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
+    memorialCacheEntries:PERFORMANCE_CONFIG.memorialCacheEntries,transientCaps:Object.assign({},PERFORMANCE_CONFIG.transientCaps),
+    frozen:Object.isFrozen(APP_CONFIG)
+  })
+});
 const C={
   thetaMax:62*D2R, turnRate:240*D2R, returnRate:170*D2R,
   touchDZ:12, touchFull:155, steerLerp:28,
@@ -352,20 +545,20 @@ const C={
   chaseAfter:500, chaseCleanGap:25, chaseDangerGap:9,
   lullMin:1.0, lullMax:3.0, npcHuntCooldown:10,
   phaseMin:230, phaseMax:320,
-  localDeathCap:50, SEED:1337
+  localDeathCap:APP_CONFIG.localDeaths.maxRecords, SEED:1337
 };
 /* ==================== MODULE: PERFORMANCE BUDGETS ==================== */
 const PerfBudget=(()=>{
   const profiles=[
     {name:'LOW',dpr:1.15,fx:0.48,snow:120,spray:260,parts:120,rings:28,defStrips:12,groundStep:2,treeStep:2,glints:2,lights:false,
       npcTrailEmitters:2,npcTrailStep:0.95,rockBeds:1,rockBedInterval:2.20,boulderTrails:1,boulderTrailStep:1.20,
-      memorialBodies:14,memorialGroupBodies:2,memorialDetailScale:0.90},
+      memorialBodies:MEMORIAL_QUALITY.low.bodies,memorialGroupBodies:MEMORIAL_QUALITY.low.groupBodies,memorialDetailScale:MEMORIAL_QUALITY.low.detailScale},
     {name:'MED',dpr:1.5,fx:0.72,snow:210,spray:430,parts:190,rings:40,defStrips:18,groundStep:1,treeStep:1,glints:3,lights:true,
       npcTrailEmitters:4,npcTrailStep:0.62,rockBeds:2,rockBedInterval:1.60,boulderTrails:2,boulderTrailStep:0.85,
-      memorialBodies:28,memorialGroupBodies:3,memorialDetailScale:0.85},
+      memorialBodies:MEMORIAL_QUALITY.medium.bodies,memorialGroupBodies:MEMORIAL_QUALITY.medium.groupBodies,memorialDetailScale:MEMORIAL_QUALITY.medium.detailScale},
     {name:'HIGH',dpr:2,fx:1,snow:320,spray:650,parts:280,rings:56,defStrips:24,groundStep:1,treeStep:1,glints:4,lights:true,
       npcTrailEmitters:7,npcTrailStep:0.42,rockBeds:4,rockBedInterval:1.15,boulderTrails:3,boulderTrailStep:0.60,
-      memorialBodies:50,memorialGroupBodies:4,memorialDetailScale:0.78}
+      memorialBodies:MEMORIAL_QUALITY.high.bodies,memorialGroupBodies:MEMORIAL_QUALITY.high.groupBodies,memorialDetailScale:MEMORIAL_QUALITY.high.detailScale}
   ];
   let level=1,avg=12,slowFrames=0,fastFrames=0,lastChange=0;
   function initial(){
@@ -437,10 +630,34 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 const Persistence=(()=>{
   const store=(()=>{try{const k='__ep_t',s=window.localStorage;s.setItem(k,'1');s.removeItem(k);return s;}
     catch(e){const m={};return{getItem:k=>(k in m?m[k]:null),setItem:(k,v)=>{m[k]=String(v);},removeItem:k=>{delete m[k];}};}})();
-  const getJSON=(key,fallback)=>{try{const v=JSON.parse(store.getItem(key)||'null');return v===null?fallback:v;}catch(e){return fallback;}};
+  const inspectJSON=key=>{
+    let raw=null;try{raw=store.getItem(key);}catch(e){return{exists:false,ok:false,value:null,error:String((e&&e.message)||e)};}
+    if(raw===null)return{exists:false,ok:true,value:null,error:''};
+    try{return{exists:true,ok:true,value:JSON.parse(raw),error:''};}
+    catch(e){return{exists:true,ok:false,value:null,error:String((e&&e.message)||e)};}
+  };
+  const getJSON=(key,fallback)=>{const r=inspectJSON(key);return r.ok&&r.value!==null?r.value:fallback;};
   const setJSON=(key,value)=>{try{store.setItem(key,JSON.stringify(value));return true;}catch(e){return false;}};
-  return Object.freeze({store,getJSON,setJSON});
+  const remove=key=>{try{store.removeItem(key);return true;}catch(e){return false;}};
+  return Object.freeze({store,getJSON,setJSON,inspectJSON,remove});
 })();
+/* ====================== MODULE: DATA RECOVERY ======================
+   v5f.4 records non-fatal sanitation and migration decisions. It contains no
+   player-facing identity or score payloads; it exists so compatibility behavior
+   can be inspected and release-tested without turning bad cache data into crashes. */
+const DataRecovery=(()=>{
+  const counters=Object.create(null),events=[];const startedAt=Date.now();
+  function note(code,count,detail){
+    code=String(code||'unknown');count=Math.max(1,Math.floor(+count||1));
+    counters[code]=(counters[code]||0)+count;
+    events.push(Object.freeze({code,count,detail:String(detail||'').slice(0,160),at:Date.now()}));
+    if(events.length>40)events.splice(0,events.length-40);
+    return counters[code];
+  }
+  function snapshot(){return{startedAt,updatedAt:Date.now(),counters:Object.assign({},counters),events:events.map(e=>Object.assign({},e))};}
+  return Object.freeze({note,snapshot});
+})();
+let identityOwnerChanged=()=>null;
 const store=Persistence.store;
 const vib=ms=>{try{if(navigator&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -451,7 +668,7 @@ const el={depth:$('hDepth'),score:$('hScore'),combo:$('hCombo'),
   intro:$('ovIntro'),results:$('ovResults'),leaderboard:$('ovLeaderboard'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),
   tune:$('tunePanel')};
 /* ============================ AUDIO ============================ */
-let AC=null, sndOn=store.getItem('ep_snd')!=='0';
+let AC=null, sndOn=store.getItem(APP_CONFIG.storage.sound)!=='0';
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
   if(AC&&AC.state==='suspended'){try{const p=AC.resume();if(p&&p.catch)p.catch(()=>{});}catch(e){}} return AC;}
 function tone(f0,f1,dur,type,gain){const a=sndOn&&ac();if(!a)return;
@@ -495,7 +712,7 @@ const sfx={
 };
 const Audio=Object.freeze({ac,tone,ensureHiss,crunch,sfx,
   get enabled(){return sndOn;},
-  toggle(){sndOn=!sndOn;store.setItem('ep_snd',sndOn?'1':'0');if(!sndOn&&hiss){hiss.g.gain.value=0;hiss.g2.gain.value=0;}return sndOn;}
+  toggle(){sndOn=!sndOn;store.setItem(APP_CONFIG.storage.sound,sndOn?'1':'0');if(!sndOn&&hiss){hiss.g.gain.value=0;hiss.g2.gain.value=0;}return sndOn;}
 });
 /* ============================ PHASES ============================ */
 function baseM(){return{bleed:1,fuel:1,obs:1,yeti:1,npc:1,turn:1,alt:false,snow:false};}
@@ -513,18 +730,14 @@ const PHASES=[
    key can be supplied in FIREBASE_API_KEY, window.ENDLESS_POWDER_FIREBASE_API_KEY,
    or localStorage key ep_firebase_api_key. Firebase Hosting config is also probed.
    When auth is unavailable, play remains fully functional under a stable local ID. */
-const FIREBASE_PROJECT_ID='endless-powder';
-let FIREBASE_API_KEY='AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI'; // Public Firebase Web API key.
-const AUTH_SESSION_KEY='ep_firebase_auth_v5b';
-const INSTALL_ID_KEY='ep_install_id_v5b';
-const API_KEY_OVERRIDE_KEY='ep_firebase_api_key';
-const AUTH_VERIFY_KEY='ep_auth_verify_v5c0';
 const Identity=(()=>{
   let state={mode:'starting',uid:'',idToken:'',refreshToken:'',expiresAt:0,apiKey:'',error:'',restoredUid:''};
   let check={phase:'checking',stable:null,tokenValid:false,subjectMatch:false,previousUid:'',checkedAt:0};
   let boot=null,refreshing=null;
   const now=()=>Date.now();
   const safeString=v=>typeof v==='string'?v:'';
+  const uidValid=v=>/^[A-Za-z0-9_-]{1,128}$/.test(safeString(v));
+  const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
   function makeInstallId(){
     let id=safeString(store.getItem(INSTALL_ID_KEY));
     if(id)return id;
@@ -534,26 +747,37 @@ const Identity=(()=>{
     return id;
   }
   const localUid=()=>('local-'+makeInstallId()).replace(/[^A-Za-z0-9_-]/g,'').slice(0,128);
+  function clearStoredSession(){try{store.removeItem(AUTH_SESSION_KEY);}catch(e){}}
   function loadSession(){
-    const s=Persistence.getJSON(AUTH_SESSION_KEY,null);
-    if(!s||typeof s!=='object'||!safeString(s.uid))return null;
+    const read=Persistence.inspectJSON(AUTH_SESSION_KEY),s=read.value;
+    if(!read.ok){DataRecovery.note('auth-cache-corrupt',1,read.error);clearStoredSession();return null;}
+    if(!s||typeof s!=='object'||Array.isArray(s)||!uidValid(s.uid)||!safeString(s.refreshToken)){
+      if(read.exists){DataRecovery.note('auth-cache-invalid');clearStoredSession();}
+      return null;
+    }
     return{uid:safeString(s.uid),idToken:safeString(s.idToken),refreshToken:safeString(s.refreshToken),
-      expiresAt:Number.isFinite(+s.expiresAt)?+s.expiresAt:0,apiKey:safeString(s.apiKey)};
+      expiresAt:Number.isFinite(+s.expiresAt)&&+s.expiresAt>0?+s.expiresAt:0,apiKey:safeString(s.apiKey)};
   }
   function saveSession(){
-    if(!state.uid||!state.refreshToken)return;
+    if(!uidValid(state.uid)||!state.refreshToken)return;
     Persistence.setJSON(AUTH_SESSION_KEY,{uid:state.uid,idToken:state.idToken,refreshToken:state.refreshToken,
       expiresAt:state.expiresAt,apiKey:state.apiKey});
   }
   function applySession(s,mode){
-    state.uid=safeString(s.uid)||localUid();
-    state.idToken=safeString(s.idToken);
-    state.refreshToken=safeString(s.refreshToken);
-    state.expiresAt=Number.isFinite(+s.expiresAt)?+s.expiresAt:0;
-    state.apiKey=safeString(s.apiKey)||state.apiKey;
+    const previousUid=state.uid;
+    state.uid=uidValid(s&&s.uid)?safeString(s.uid):localUid();
+    state.idToken=safeString(s&&s.idToken);
+    state.refreshToken=safeString(s&&s.refreshToken);
+    state.expiresAt=Number.isFinite(+(s&&s.expiresAt))?+(s&&s.expiresAt):0;
+    state.apiKey=safeString(s&&s.apiKey)||state.apiKey;
     state.mode=mode||'authenticated';state.error='';saveSession();
     verifySession();
+    if(previousUid&&previousUid!==state.uid)identityOwnerChanged(state.uid,previousUid);
     return state;
+  }
+  function requestError(message,status,code){
+    const e=new Error(String(message||'request failed'));e.status=Number.isFinite(+status)?+status:0;
+    e.code=safeString(code);e.network=!e.status;return e;
   }
   async function requestJSON(url,options,timeout){
     let timer=0,controller=null;
@@ -561,23 +785,27 @@ const Identity=(()=>{
       if(typeof AbortController!=='undefined'){
         controller=new AbortController();
         options=Object.assign({},options||{},{signal:controller.signal});
-        timer=setTimeout(()=>controller.abort(),timeout||5000);
+        timer=setTimeout(()=>controller.abort(),timeout||APP_CONFIG.network.authTimeoutMs);
       }
-      const r=await fetch(url,options||{});
+      let r;
+      try{r=await fetch(url,options||{});}catch(e){throw requestError((e&&e.message)||e,0,e&&e.name);}
       let body=null;try{body=await r.json();}catch(e){}
       if(!r.ok){
-        const msg=body&&body.error&&(body.error.message||body.error)||('HTTP '+r.status);
-        throw new Error(String(msg));
+        const payload=body&&body.error;
+        const msg=payload&&(payload.message||payload)||('HTTP '+r.status);
+        const code=payload&&payload.errors&&payload.errors[0]&&payload.errors[0].reason||'';
+        throw requestError(msg,r.status,code);
       }
       return body||{};
     }finally{if(timer)clearTimeout(timer);}
   }
+  const rejectedCredentials=e=>!!e&&[400,401,403].includes(+e.status);
   async function discoverApiKey(saved){
     const direct=safeString(window.ENDLESS_POWDER_FIREBASE_API_KEY)||safeString(FIREBASE_API_KEY)||
       safeString(store.getItem(API_KEY_OVERRIDE_KEY))||safeString(saved&&saved.apiKey);
     if(direct)return direct.trim();
     if(typeof fetch!=='function')return'';
-    const urls=['/__/firebase/init.json','https://'+FIREBASE_PROJECT_ID+'.firebaseapp.com/__/firebase/init.json'];
+    const urls=[FIREBASE_AUTH.hostingInitPath,'https://'+FIREBASE_PROJECT_ID+'.firebaseapp.com'+FIREBASE_AUTH.hostingInitPath];
     for(const url of urls){
       try{const cfg=await requestJSON(url,{cache:'force-cache',credentials:'omit'},1600);
         if(cfg&&typeof cfg.apiKey==='string'&&cfg.apiKey){
@@ -588,15 +816,15 @@ const Identity=(()=>{
     return'';
   }
   async function createAnonymous(key){
-    const data=await requestJSON('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(key),{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})},6000);
+    const data=await requestJSON(FIREBASE_AUTH.signUpEndpoint+'?key='+encodeURIComponent(key),{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})},APP_CONFIG.network.authTimeoutMs);
     return{uid:safeString(data.localId),idToken:safeString(data.idToken),refreshToken:safeString(data.refreshToken),
       expiresAt:now()+Math.max(60,parseInt(data.expiresIn||'3600',10)-45)*1000,apiKey:key};
   }
   async function refreshAnonymous(key,token){
     const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(token);
-    const data=await requestJSON('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(key),{
-      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body},6000);
+    const data=await requestJSON(FIREBASE_AUTH.refreshEndpoint+'?key='+encodeURIComponent(key),{
+      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body},APP_CONFIG.network.authTimeoutMs);
     return{uid:safeString(data.user_id),idToken:safeString(data.id_token),refreshToken:safeString(data.refresh_token)||token,
       expiresAt:now()+Math.max(60,parseInt(data.expires_in||'3600',10)-45)*1000,apiKey:key};
   }
@@ -627,6 +855,19 @@ const Identity=(()=>{
     if(authenticated&&tokenValid&&subjectMatch&&stable!==false){try{store.setItem(AUTH_VERIFY_KEY,current);}catch(e){}}
     return verification();
   }
+  async function authenticate(key,saved){
+    if(saved&&saved.uid&&saved.idToken&&saved.expiresAt>now()+APP_CONFIG.network.refreshSkewMs)
+      return applySession(Object.assign({},saved,{apiKey:key}),'authenticated-cached');
+    if(saved&&saved.refreshToken){
+      try{return applySession(await refreshAnonymous(key,saved.refreshToken),'authenticated-refreshed');}
+      catch(e){
+        if(!rejectedCredentials(e))throw e;
+        clearStoredSession();
+        return applySession(await createAnonymous(key),'authenticated-recovered');
+      }
+    }
+    return applySession(await createAnonymous(key),'authenticated-new');
+  }
   async function start(){
     if(boot)return boot;
     boot=(async()=>{
@@ -637,13 +878,8 @@ const Identity=(()=>{
       if(saved){state.idToken=saved.idToken;state.refreshToken=saved.refreshToken;state.expiresAt=saved.expiresAt;state.apiKey=saved.apiKey;}
       const key=await discoverApiKey(saved);state.apiKey=key;
       if(!key){state.mode=state.restoredUid?'cached-id':'local';verifySession();return state;}
-      try{
-        if(saved&&saved.uid&&saved.idToken&&saved.expiresAt>now()+60000)
-          return applySession(Object.assign({},saved,{apiKey:key}),'authenticated-cached');
-        if(saved&&saved.refreshToken)
-          return applySession(await refreshAnonymous(key,saved.refreshToken),'authenticated-refreshed');
-        return applySession(await createAnonymous(key),'authenticated-new');
-      }catch(e){
+      try{return await authenticate(key,saved);}
+      catch(e){
         state.error=(e&&e.message)||String(e);
         state.mode=state.restoredUid?'offline-cached':'local';
         state.idToken=saved&&saved.expiresAt>now()?saved.idToken:'';
@@ -652,60 +888,68 @@ const Identity=(()=>{
     })();
     return boot;
   }
-  async function ensure(){
+  async function ensure(force){
     await start();
-    if(!state.apiKey||!state.refreshToken||state.expiresAt>now()+60000){verifySession();return state;}
-    if(!refreshing)refreshing=refreshAnonymous(state.apiKey,state.refreshToken)
-      .then(s=>applySession(s,'authenticated-refreshed'))
-      .catch(e=>{state.error=(e&&e.message)||String(e);state.idToken='';state.mode='offline-cached';verifySession();return state;})
-      .finally(()=>{refreshing=null;});
+    if(!state.apiKey){verifySession();return state;}
+    if(!force&&state.idToken&&state.expiresAt>now()+APP_CONFIG.network.refreshSkewMs){verifySession();return state;}
+    if(!refreshing)refreshing=(async()=>{
+      try{
+        if(state.refreshToken)return applySession(await refreshAnonymous(state.apiKey,state.refreshToken),'authenticated-refreshed');
+        return applySession(await createAnonymous(state.apiKey),'authenticated-recovered');
+      }catch(e){
+        if(rejectedCredentials(e)){
+          clearStoredSession();state.refreshToken='';state.idToken='';
+          try{return applySession(await createAnonymous(state.apiKey),'authenticated-recovered');}
+          catch(freshError){e=freshError;}
+        }
+        state.error=(e&&e.message)||String(e);
+        if(state.expiresAt<=now())state.idToken='';
+        state.mode=state.uid&&state.uid.indexOf('local-')!==0?'offline-cached':'local';
+        verifySession();return state;
+      }
+    })().finally(()=>{refreshing=null;});
     return refreshing;
   }
+  async function forceRefresh(){state.expiresAt=0;return ensure(true);}
   async function retry(){
-    if(state.mode.indexOf('authenticated')===0){await ensure();verifySession();return state;}
+    if(state.mode.indexOf('authenticated')===0)return ensure(false);
     boot=null;return start();
   }
-  async function token(){await ensure();return state.idToken||'';}
+  async function token(){await ensure(false);return state.idToken||'';}
   async function url(raw){const t=await token();if(!t)return raw;
     return raw+(raw.includes('?')?'&':'?')+'auth='+encodeURIComponent(t);}
   function uid(){return state.uid||localUid();}
   function verification(){return Object.assign({},check,{passed:check.phase==='verified',uid:uid()});}
   function status(){return{mode:state.mode,uid:uid(),authenticated:state.mode.indexOf('authenticated')===0,
     tokenReady:!!state.idToken,expiresAt:state.expiresAt,error:state.error,configured:!!state.apiKey,
-    verification:verification()};}
-  return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
-})();;
+    online:online(),verification:verification()};}
+  return Object.freeze({start,ensure,forceRefresh,retry,token,url,uid,status,verification,verify:verifySession});
+})();
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5e.4 retains the canonical /best_runs/{uid} record for authenticated
+   v5f.4 retains the canonical configured best-run record for authenticated
    personal-best submissions and the public leaderboard. */
-const BEST_RUN_PATH='/endless_powder/best_runs';
-const BEST_RUN_SCHEMA_VERSION='best-runs-v1';
-const BEST_RUN_FIELDS=Object.freeze([
-  'initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions',
-  'deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp'
-]);
 const INITIALS_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
 function sanitizeInitials(v){
   const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   return(c||'AAA').slice(0,3).padEnd(3,'A');
 }
 const BestRuns=(()=>{
-  const causes=new Set(['caught','edge','tree','boulder']);
+  const causes=new Set(BEST_RUN_DEATH_CAUSES);
   const int=(v,max)=>Math.max(0,Math.min(max,Math.floor(+v||0)));
   const round=(v,p)=>Math.round((+v||0)*p)/p;
   function build(initials,run){
     run=run&&typeof run==='object'?run:{};
     return{
       initials:sanitizeInitials(initials),
-      score:int(run.score,9999999),
-      distance:int(run.distance,999999),
-      cleanFlags:int(run.cleanFlags,99999),
-      attemptedFlags:int(run.attemptedFlags,99999),
-      bestCombo:int(run.bestCombo,9999),
-      collisions:int(run.collisions,9999),
+      score:int(run.score,BEST_RUN_LIMITS.score),
+      distance:int(run.distance,BEST_RUN_LIMITS.distance),
+      cleanFlags:int(run.cleanFlags,BEST_RUN_LIMITS.cleanFlags),
+      attemptedFlags:int(run.attemptedFlags,BEST_RUN_LIMITS.attemptedFlags),
+      bestCombo:int(run.bestCombo,BEST_RUN_LIMITS.bestCombo),
+      collisions:int(run.collisions,BEST_RUN_LIMITS.collisions),
       deathX:round(clamp(Number.isFinite(+run.deathX)?+run.deathX:LW/2,EDGE,LW-EDGE),10),
-      deathDepth:round(clamp(Number.isFinite(+run.deathDepth)?+run.deathDepth:+run.distance||0,0,999999),10),
-      deathTheta:round(clamp(Number.isFinite(+run.deathTheta)?+run.deathTheta:0,-1.2,1.2),1000),
+      deathDepth:round(clamp(Number.isFinite(+run.deathDepth)?+run.deathDepth:+run.distance||0,0,Math.floor(BEST_RUN_LIMITS.deathDepthMax)),10),
+      deathTheta:round(clamp(Number.isFinite(+run.deathTheta)?+run.deathTheta:0,BEST_RUN_LIMITS.deathThetaMin,BEST_RUN_LIMITS.deathThetaMax),1000),
       deathCause:causes.has(run.deathCause)?run.deathCause:'caught',
       worldVersion:typeof run.worldVersion==='string'&&run.worldVersion?run.worldVersion:WORLD_VERSION,
       timestamp:Math.floor(Number.isFinite(+run.timestamp)?+run.timestamp:Date.now())
@@ -716,16 +960,16 @@ const BestRuns=(()=>{
     const keys=Object.keys(e).sort(),expected=BEST_RUN_FIELDS.slice().sort();
     if(keys.length!==expected.length||keys.some((k,i)=>k!==expected[i]))return false;
     if(!/^[A-Z0-9]{3}$/.test(e.initials)||INITIALS_BAD.test(e.initials))return false;
-    const ints=[['score',9999999],['distance',999999],['cleanFlags',99999],['attemptedFlags',99999],['bestCombo',9999],['collisions',9999]];
+    const ints=[['score',BEST_RUN_LIMITS.score],['distance',BEST_RUN_LIMITS.distance],['cleanFlags',BEST_RUN_LIMITS.cleanFlags],['attemptedFlags',BEST_RUN_LIMITS.attemptedFlags],['bestCombo',BEST_RUN_LIMITS.bestCombo],['collisions',BEST_RUN_LIMITS.collisions]];
     if(ints.some(([k,max])=>!Number.isInteger(e[k])||e[k]<0||e[k]>max))return false;
     if(e.cleanFlags>e.attemptedFlags||e.bestCombo>e.cleanFlags)return false;
     if(!Number.isFinite(e.deathX)||e.deathX<EDGE||e.deathX>LW-EDGE)return false;
-    if(!Number.isFinite(e.deathDepth)||e.deathDepth<0||e.deathDepth>999999.9||e.deathDepth<e.distance-4||e.deathDepth>e.distance+4)return false;
-    if(!Number.isFinite(e.deathTheta)||e.deathTheta<-1.2||e.deathTheta>1.2)return false;
+    if(!Number.isFinite(e.deathDepth)||e.deathDepth<0||e.deathDepth>BEST_RUN_LIMITS.deathDepthMax||e.deathDepth<e.distance-BEST_RUN_LIMITS.deathDepthDistanceTolerance||e.deathDepth>e.distance+BEST_RUN_LIMITS.deathDepthDistanceTolerance)return false;
+    if(!Number.isFinite(e.deathTheta)||e.deathTheta<BEST_RUN_LIMITS.deathThetaMin||e.deathTheta>BEST_RUN_LIMITS.deathThetaMax)return false;
     if(!causes.has(e.deathCause))return false;
-    if(typeof e.worldVersion!=='string'||!/^[A-Za-z0-9._-]{1,64}$/.test(e.worldVersion))return false;
+    if(typeof e.worldVersion!=='string'||e.worldVersion.length>BEST_RUN_LIMITS.worldVersionMaxLength||!/^[A-Za-z0-9._-]+$/.test(e.worldVersion))return false;
     const now=Number.isFinite(+clock)?+clock:Date.now();
-    return Number.isInteger(e.timestamp)&&e.timestamp>1735689600000&&e.timestamp<=now+60000;
+    return Number.isInteger(e.timestamp)&&e.timestamp>BEST_RUN_LIMITS.timestampFloor&&e.timestamp<=now+BEST_RUN_LIMITS.timestampFutureMs;
   }
   function canReplace(stored,incoming){
     return valid(incoming)&&(!stored||(valid(stored,Math.max(Date.now(),+stored.timestamp||0))&&incoming.score>stored.score));
@@ -737,13 +981,13 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
-   v5e.4 keeps the read-only bridge between the validated top-50 best-run records
+   v5f.4 keeps the read-only bridge between the validated top-50 best-run records
    and the world-space memorial renderer. It performs no network request; compatible
    records become projected bodies with deterministic outfits, stable overlap groups
    and one proximity-gated label; LocalSharedMatch coordinates private-stain suppression
    and visual attenuation without another network path. */
-const SHARED_MEMORIAL_LIMIT=50;
-// v5e.4 late-bound hooks: SharedMemorials may initialize before local death history is loaded,
+
+// v5f.4 late-bound hooks: SharedMemorials may initialize before local death history is loaded,
 // while an accepted server write may need to reconcile the public body after all modules exist.
 let reconcileRefresh=()=>null;
 let acceptedBestRefresh=()=>null;
@@ -763,7 +1007,7 @@ const SharedMemorials=(()=>{
     worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
   const cleanOwner=uid=>uidOK(uid)&&String(uid).indexOf('local-')!==0?String(uid):'';
   function rebuild(source){
-    source=Array.isArray(source)?source.slice(0,SHARED_MEMORIAL_LIMIT):[];
+    source=Array.isArray(source)?source:[];
     const next=[],seen=new Set();let invalid=0,worldMismatch=0,duplicateUid=0;
     for(let i=0;i<source.length;i++){
       const e=source[i],uid=e&&String(e.uid||''),record=recordOf(e);
@@ -771,6 +1015,7 @@ const SharedMemorials=(()=>{
       if(seen.has(uid)){duplicateUid++;continue;}
       seen.add(uid);
       if(record.worldVersion!==WORLD_VERSION){worldMismatch++;continue;}
+      if(next.length>=SHARED_MEMORIAL_LIMIT)continue;
       next.push(Object.freeze({
         uid,rank:i+1,isCurrentUser:!!ownerUid&&uid===ownerUid,
         initials:record.initials,score:record.score,distance:record.distance,
@@ -796,6 +1041,7 @@ const SharedMemorials=(()=>{
   }
   function records(){return rows.slice();}
   function compatible(){return records();}
+  function view(){return rows;}
   function stats(){return Object.assign({},report);}
   function byUid(uid){uid=String(uid||'');return rows.find(e=>e.uid===uid)||null;}
   function current(){return ownerUid?byUid(ownerUid):null;}
@@ -824,41 +1070,58 @@ const SharedMemorials=(()=>{
     detailFull:lastRender.detailFull,detailReduced:lastRender.detailReduced,detailMinimal:lastRender.detailMinimal,labeled:lastRender.labeled,
     labelUid:lastRender.labelUid,labelDistance:lastRender.labelDistance,labelGroupSize:lastRender.labelGroupSize,
     samples:lastRender.samples.map(e=>Object.assign({},e))};}
-  return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,stats,byUid,current,noteRender,renderStats});
+  return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,view,stats,byUid,current,noteRender,renderStats});
 })();
 /* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5e.4 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
+   v5f.4 reads and writes only the configured best-run path during normal gameplay. Firebase returns the highest score
    records; the client then applies the full ranking order: score, distance,
    clean flags, fewer collisions. The legacy /scores collection is isolated. */
-let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
-const LB_PATH=BEST_RUN_PATH, LB_SIZE=10, LB_FETCH=50, LB_REFRESH=30000;
-// Keep the v5c.2 submission key so an offline queued best survives this upgrade.
-const BEST_RUN_STATE_KEY='ep_best_run_submit_v5c2';
-const BEST_RUN_BOARD_KEY='ep_best_run_board_v5c3';
+// Current best-run state and cached board keys are defined in APP_CONFIG.storage.
 const LB_BAD=INITIALS_BAD;
 const LB=(()=>{
-  let cache={initials:'AAA',top:[],records:[],pending:null,remoteBest:null,remoteUid:''};
-  let retiredLegacyPending=0;
-  try{
-    const c=JSON.parse(store.getItem('ep_lb_v3a')||'{}');
-    if(c&&typeof c==='object'){
-      if(typeof c.initials==='string')cache.initials=sanitizeInitials(c.initials);
-      if(Array.isArray(c.pending))retiredLegacyPending=c.pending.length;
-    }
-  }catch(e){}
-  try{
-    const s=Persistence.getJSON(BEST_RUN_STATE_KEY,null);
-    if(s&&typeof s==='object'){
-      if(typeof s.initials==='string')cache.initials=sanitizeInitials(s.initials);
-      if(s.pending&&typeof s.pending==='object'&&s.pending.record&&
-         BestRuns.valid(s.pending.record,Math.max(Date.now(),+s.pending.record.timestamp||0)))
-        cache.pending={uid:typeof s.pending.uid==='string'?s.pending.uid:'',record:s.pending.record};
-      if(s.remoteBest&&BestRuns.valid(s.remoteBest,Math.max(Date.now(),+s.remoteBest.timestamp||0))){
-        cache.remoteBest=s.remoteBest;cache.remoteUid=typeof s.remoteUid==='string'?s.remoteUid:'';
+  const PHASES=Object.freeze({NOT_SUBMITTED:'not-submitted',QUEUED_OFFLINE:'queued-offline',SUBMITTING:'submitting',
+    ACCEPTED:'accepted-personal-best',NOT_PERSONAL_BEST:'not-personal-best',FAILED_RETAINED:'failed-retained'});
+  const phaseSet=new Set(Object.values(PHASES));
+  const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
+  let queueSerial=0;
+  const pendingId=record=>'pb-'+Math.floor(+(record&&record.timestamp)||Date.now()).toString(36)+'-'+Math.floor(+(record&&record.score)||0).toString(36)+'-'+(++queueSerial).toString(36);
+  const normalizePending=raw=>{
+    if(!raw||typeof raw!=='object'||!raw.record||!BestRuns.valid(raw.record,Math.max(Date.now(),+raw.record.timestamp||0)))return null;
+    return{id:typeof raw.id==='string'&&raw.id?raw.id:pendingId(raw.record),uid:typeof raw.uid==='string'?raw.uid:'',record:raw.record,
+      queuedAt:Number.isFinite(+raw.queuedAt)?+raw.queuedAt:Date.now(),attempts:Math.max(0,Math.floor(+raw.attempts||0)),
+      lastAttemptAt:Number.isFinite(+raw.lastAttemptAt)?+raw.lastAttemptAt:0,lastError:typeof raw.lastError==='string'?raw.lastError:''};
+  };
+  const normalizeLifecycle=(raw,pending)=>{
+    let phase=raw&&phaseSet.has(raw.phase)?raw.phase:PHASES.NOT_SUBMITTED;
+    if(pending&&phase===PHASES.SUBMITTING)phase=PHASES.FAILED_RETAINED;
+    if(pending&&![PHASES.SUBMITTING,PHASES.QUEUED_OFFLINE,PHASES.FAILED_RETAINED].includes(phase))
+      phase=online()?PHASES.FAILED_RETAINED:PHASES.QUEUED_OFFLINE;
+    if(!pending&&(phase===PHASES.SUBMITTING||phase===PHASES.QUEUED_OFFLINE||phase===PHASES.FAILED_RETAINED))phase=PHASES.NOT_SUBMITTED;
+    const updatedAt=raw&&Number.isFinite(+raw.updatedAt)?+raw.updatedAt:Date.now();
+    return{phase,detail:raw&&typeof raw.detail==='string'?raw.detail:'',score:Math.max(0,Math.floor(+(raw&&raw.score)||0)),
+      uid:raw&&typeof raw.uid==='string'?raw.uid:'',updatedAt,
+      attempts:Math.max(0,Math.floor(+(raw&&raw.attempts)||0)),error:raw&&typeof raw.error==='string'?raw.error:''};
+  };
+  let cache={initials:'AAA',top:[],records:[],pending:null,remoteBest:null,remoteUid:'',submission:null};
+  {
+    const read=Persistence.inspectJSON(BEST_RUN_STATE_KEY),s=read.value;
+    if(!read.ok){DataRecovery.note('best-state-cache-corrupt',1,read.error);Persistence.remove(BEST_RUN_STATE_KEY);}
+    else if(read.exists){
+      if(!s||typeof s!=='object'||Array.isArray(s)){DataRecovery.note('best-state-cache-invalid');Persistence.remove(BEST_RUN_STATE_KEY);}
+      else{
+        if(s.schemaVersion!==BEST_RUN_STATE_SCHEMA_VERSION)DataRecovery.note('best-state-cache-migrated');
+        if(typeof s.initials==='string')cache.initials=sanitizeInitials(s.initials);
+        cache.pending=normalizePending(s.pending);
+        if(s.pending&&!cache.pending)DataRecovery.note('best-state-pending-dropped');
+        if(s.remoteBest&&BestRuns.valid(s.remoteBest,Math.max(Date.now(),+s.remoteBest.timestamp||0))){
+          cache.remoteBest=s.remoteBest;cache.remoteUid=typeof s.remoteUid==='string'?s.remoteUid:'';
+        }else if(s.remoteBest)DataRecovery.note('best-state-remote-best-dropped');
+        cache.submission=normalizeLifecycle(s.submission,cache.pending);
       }
     }
-  }catch(e){}
-  let lastRefresh=0,busy=false,lastSub=null,lastNotice='',refreshSeq=0,appliedRefreshSeq=0;
+  }
+  if(!cache.submission)cache.submission=normalizeLifecycle(null,cache.pending);
+  let lastRefresh=0,drainPromise=null,lastSub=null,lastNotice='',refreshSeq=0,appliedRefreshSeq=0,retryTimer=0;
   // Session-only authoritative overlay. A successful PUT is applied immediately and
   // cannot be reverted by an older in-flight top-50 response. It is intentionally
   // not persisted: the server and normal cached board remain authoritative on reload.
@@ -891,38 +1154,72 @@ const LB=(()=>{
   function acknowledgeAcceptedOverlay(remoteRows){
     if(!acceptedLive||!Array.isArray(remoteRows))return;
     const server=remoteRows.find(e=>e.uid===acceptedLive.uid);
-    // Only a fresh collection response may retire the session overlay. Cache rows
-    // also pass through syncTop, so clearing it there would re-open the stale-response race.
     if(server&&server.score>=acceptedLive.record.score)acceptedLive=null;
+    else if(remoteRows.length<LB_FETCH){DataRecovery.note('accepted-overlay-cleared-authoritative-absence');acceptedLive=null;}
   }
-  const syncTop=()=>{
-    cache.records=applyAcceptedOverlay(cache.records);
-    cache.records.sort(cmp);cache.records=cache.records.slice(0,LB_FETCH);cache.top=cache.records.slice(0,LB_SIZE);
-    SharedMemorials.ingest(cache.records,Identity.status().uid);
-  };
-  const norm=p=>{
-    if(!p||typeof p!=='object'||Array.isArray(p))return[];
-    const rows=[];
-    for(const [uid,e] of Object.entries(p)){const item=itemOf(uid,e);if(item)rows.push(item);}
-    return rows.sort(cmp).slice(0,LB_FETCH);
-  };
-  try{
-    const b=Persistence.getJSON(BEST_RUN_BOARD_KEY,null);
-    if(b&&Array.isArray(b.records)){
-      cache.records=b.records.map(e=>itemOf(e&&e.uid,recordOf(e))).filter(Boolean);
-      syncTop();
+  function normalizeRows(source,origin){
+    source=Array.isArray(source)?source:[];
+    const byUid=new Map();let invalid=0,duplicateUid=0;
+    for(const raw of source){
+      const item=itemOf(raw&&raw.uid,recordOf(raw));
+      if(!item){invalid++;continue;}
+      const previous=byUid.get(item.uid);
+      if(previous){duplicateUid++;if(cmp(item,previous)<0)byUid.set(item.uid,item);}
+      else byUid.set(item.uid,item);
     }
-  }catch(e){}
-  const save=()=>{
-    try{store.setItem('ep_lb_v3a',JSON.stringify({initials:cache.initials,top:[],pending:[]}));}catch(e){}
-    Persistence.setJSON(BEST_RUN_STATE_KEY,{initials:cache.initials,pending:cache.pending,remoteBest:cache.remoteBest,remoteUid:cache.remoteUid});
-    Persistence.setJSON(BEST_RUN_BOARD_KEY,{records:cache.records});
+    if(invalid)DataRecovery.note((origin||'records')+'-invalid-records',invalid);
+    if(duplicateUid)DataRecovery.note((origin||'records')+'-duplicate-uids',duplicateUid);
+    return Array.from(byUid.values()).sort(cmp).slice(0,LB_FETCH);
+  }
+  const syncTop=ownerOverride=>{
+    cache.records=normalizeRows(applyAcceptedOverlay(cache.records),'runtime-board');
+    cache.top=cache.records.slice(0,LB_SIZE);
+    SharedMemorials.ingest(cache.records,ownerOverride===undefined?Identity.status().uid:ownerOverride);
   };
+  const normPayload=p=>{
+    if(p===null)return{ok:true,rows:[],empty:true};
+    if(!p||typeof p!=='object'||Array.isArray(p))return{ok:false,rows:[],empty:false};
+    const rows=[];
+    for(const [uid,e] of Object.entries(p)){const item=itemOf(uid,e);if(item)rows.push(item);else DataRecovery.note('firebase-invalid-record');}
+    return{ok:true,rows:normalizeRows(rows,'firebase-board'),empty:Object.keys(p).length===0};
+  };
+  {
+    const read=Persistence.inspectJSON(BEST_RUN_BOARD_KEY),b=read.value;
+    if(!read.ok){DataRecovery.note('board-cache-corrupt',1,read.error);Persistence.remove(BEST_RUN_BOARD_KEY);}
+    else if(read.exists){
+      if(!b||typeof b!=='object'||Array.isArray(b)||!Array.isArray(b.records)){
+        DataRecovery.note('board-cache-invalid');Persistence.remove(BEST_RUN_BOARD_KEY);
+      }else{
+        if(b.schemaVersion!==BEST_RUN_BOARD_SCHEMA_VERSION)DataRecovery.note('board-cache-migrated');
+        cache.records=normalizeRows(b.records,'board-cache');syncTop();
+      }
+    }
+  }
+  const save=()=>{
+    Persistence.setJSON(BEST_RUN_STATE_KEY,{schemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,initials:cache.initials,pending:cache.pending,remoteBest:cache.remoteBest,remoteUid:cache.remoteUid,submission:cache.submission});
+    Persistence.setJSON(BEST_RUN_BOARD_KEY,{schemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,records:cache.records});
+  };
+  // Persist the sanitized canonical envelopes immediately after startup recovery.
+  save();
   const setNotice=msg=>{lastNotice=msg||'';lbStatus(lastNotice);};
+  function transition(phase,detail,pending,error){
+    const p=pending||cache.pending;
+    cache.submission={phase:phaseSet.has(phase)?phase:PHASES.NOT_SUBMITTED,detail:String(detail||''),
+      score:p&&p.record?Math.floor(+p.record.score||0):Math.floor(+(lastSub&&lastSub.record&&lastSub.record.score)||0),
+      uid:p&&typeof p.uid==='string'?p.uid:'',updatedAt:Date.now(),attempts:p?Math.max(0,p.attempts|0):0,error:String(error||'')};
+    setNotice(detail);save();return cache.submission.phase;
+  }
   const ownerHint=()=>{
     const s=Identity.status(),uid=String(s.uid||'');
     return uid&&uid.indexOf('local-')!==0?uid:'';
   };
+  const currentPending=p=>!!p&&!!cache.pending&&p.id===cache.pending.id;
+  function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}}
+  function scheduleRetry(p){
+    clearRetry();if(!currentPending(p)||!online()||p.attempts>=APP_CONFIG.network.maxAutomaticRetries)return;
+    const delay=Math.min(APP_CONFIG.network.retryMaxMs,APP_CONFIG.network.retryBaseMs*Math.pow(2,Math.max(0,p.attempts-1)));
+    retryTimer=setTimeout(()=>{retryTimer=0;drain();},delay);
+  }
   function mergeRecord(uid,record,paint=true){
     const item=itemOf(uid,record);if(!item)return false;
     cache.records=cache.records.filter(e=>e.uid!==item.uid);cache.records.push(item);syncTop();
@@ -942,12 +1239,19 @@ const LB=(()=>{
     try{
       if(typeof AbortController!=='undefined'){
         controller=new AbortController();options=Object.assign({},options||{},{signal:controller.signal});
-        timer=setTimeout(()=>controller.abort(),timeout||6500);
+        timer=setTimeout(()=>controller.abort(),timeout||APP_CONFIG.network.requestTimeoutMs);
       }
       return await fetch(url,options||{});
     }finally{if(timer)clearTimeout(timer);}
   }
-  async function readJSON(response){try{return await response.json();}catch(e){return null;}}
+  async function authenticatedFetch(rawUrl,options){
+    let url=await Identity.url(rawUrl),r=await fetchTimed(url,options);
+    if(r.status!==401)return r;
+    await Identity.forceRefresh();
+    const auth=Identity.status();if(!auth.authenticated||!auth.tokenReady)return r;
+    url=await Identity.url(rawUrl);return fetchTimed(url,options);
+  }
+  async function readJSONResult(response){try{return{ok:true,value:await response.json()};}catch(e){return{ok:false,value:null,error:String((e&&e.message)||e)};}}
   async function refresh(force){
     if(!on())return;
     if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
@@ -956,77 +1260,115 @@ const LB=(()=>{
       const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
       const r=await fetchTimed(url,{cache:'no-store'});
       if(r.ok){
-        const remoteRows=norm(await readJSON(r));
-        // A later refresh may finish first after a successful write. Never allow an
-        // older response to roll the leaderboard or public body backward.
+        const parsed=await readJSONResult(r);
+        if(!parsed.ok){DataRecovery.note('firebase-board-json-invalid',1,parsed.error);if(!lastNotice)lbStatus('board response invalid — showing cached best runs');return;}
+        const normalized=normPayload(parsed.value);
+        if(!normalized.ok){DataRecovery.note('firebase-board-shape-invalid');if(!lastNotice)lbStatus('board response invalid — showing cached best runs');return;}
+        const remoteRows=normalized.rows;
         if(seq<appliedRefreshSeq)return;
         appliedRefreshSeq=seq;acknowledgeAcceptedOverlay(remoteRows);
         cache.records=remoteRows;syncTop();
         const uid=ownerHint(),own=uid&&cache.records.find(e=>e.uid===uid);
         if(own){cache.remoteBest=recordOf(own);cache.remoteUid=uid;}
+        else if(uid&&cache.remoteUid===uid&&remoteRows.length<LB_FETCH){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-authoritative-absence');}
+        if(cache.remoteUid&&cache.remoteUid!==uid){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-identity-change');}
         save();renderBoard();if(!lastNotice)lbStatus('');
-      }else if(!lastNotice)lbStatus('board unreachable ('+r.status+') — check database rules');
+      }else if(!lastNotice)lbStatus('board unreachable ('+r.status+') — showing cached best runs');
     }catch(e){if(!lastNotice)lbStatus(cache.top.length?'board offline — showing cached best runs':'board offline');}
+  }
+  function retainFailure(p,message,error){
+    if(!currentPending(p))return false;
+    p.lastError=String(error||message||'submission failed');save();
+    transition(online()?PHASES.FAILED_RETAINED:PHASES.QUEUED_OFFLINE,message,p,p.lastError);
+    scheduleRetry(p);return true;
   }
   async function confirmServerBest(rawUrl,pending,uid){
     try{
-      const url=await Identity.url(rawUrl),r=await fetchTimed(url,{cache:'no-store'});
+      const r=await authenticatedFetch(rawUrl,{cache:'no-store'});
       if(!r.ok)return false;
-      const stored=await readJSON(r);
+      const parsed=await readJSONResult(r);if(!parsed.ok){DataRecovery.note('server-confirm-json-invalid');return false;}
+      const stored=parsed.value;
       if(stored!==null&&validStored(stored)&&stored.score>=pending.record.score){
         cache.remoteBest=stored;cache.remoteUid=uid;
-        // A matching score can represent an accepted write whose response was lost;
-        // a higher score is simply the newer authoritative record from another tab.
         if(stored.score===pending.record.score)commitAccepted(uid,stored,'server-confirmed');
         else mergeRecord(uid,stored);
-        const completed=cache.pending===pending;if(completed)cache.pending=null;save();
-        setNotice(stored.score===pending.record.score?'personal best confirmed — memorial updated':'personal best unchanged');
+        const completed=currentPending(pending);if(completed)cache.pending=null;save();clearRetry();
+        transition(stored.score===pending.record.score?PHASES.ACCEPTED:PHASES.NOT_PERSONAL_BEST,
+          stored.score===pending.record.score?'personal best confirmed — memorial updated':'personal best unchanged',pending,'');
         return completed?'complete':'newer';
       }
     }catch(e){}
     return false;
   }
-  async function drain(){
-    if(!on()||busy||!cache.pending)return;
-    let rerun=false;busy=true;
-    try{
-      await Identity.ensure();
-      const auth=Identity.status();
-      if(!auth.authenticated||!auth.tokenReady){setNotice('best run queued — authentication offline; local play is unaffected');return;}
-      const pending=cache.pending;
-      if(pending.uid&&pending.uid!==auth.uid){
-        cache.pending=null;save();setNotice('queued run cleared — anonymous identity changed');return;
-      }
-      if(!pending.uid){pending.uid=auth.uid;save();}
-      const path=BestRuns.recordPath(auth.uid);
-      if(!path){setNotice('best run queued — invalid anonymous identity');return;}
-      const rawUrl=FIREBASE_DB_URL+path+'.json';
-      const readUrl=await Identity.url(rawUrl);
-      const read=await fetchTimed(readUrl,{cache:'no-store'});
-      if(!read.ok){setNotice('best run queued — record check failed ('+read.status+')');return;}
-      const stored=await readJSON(read);
-      if(stored!==null&&!validStored(stored)){setNotice('best-run record is malformed — submission paused');return;}
-      cache.remoteBest=stored;cache.remoteUid=auth.uid;if(stored)mergeRecord(auth.uid,stored);else save();
-      if(stored&&pending.record.score<=stored.score){
-        if(cache.pending===pending)cache.pending=null;else rerun=true;
-        save();setNotice('personal best unchanged');return;
-      }
-      const created=!stored;
-      const writeUrl=await Identity.url(rawUrl);
-      const write=await fetchTimed(writeUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending.record)});
-      if(write.ok){
-        cache.remoteBest=pending.record;cache.remoteUid=auth.uid;
-        const reconciliation=commitAccepted(auth.uid,pending.record,created?'server-create':'server-replace');
-        if(cache.pending===pending)cache.pending=null;else rerun=true;save();
-        const live=reconciliation&&reconciliation.visible?' — memorial updated':'';
-        setNotice((created?'personal best created':'new personal best saved')+live);
-        setTimeout(()=>refresh(true),0);return;
-      }
-      if(write.status===403){const confirmed=await confirmServerBest(rawUrl,pending,auth.uid);
-        if(confirmed){rerun=confirmed==='newer';return;}}
-      setNotice('best-run write blocked ('+write.status+') — confirm the v5c.1 Firebase rules are published');
-    }catch(e){setNotice('best run queued — offline, will retry; local play is unaffected');}
-    finally{busy=false;if(rerun&&cache.pending)setTimeout(()=>drain(),0);}
+  async function drainOnce(){
+    if(!on()||!cache.pending)return'empty';
+    if(!online()){transition(PHASES.QUEUED_OFFLINE,'best run queued — offline; local play is unaffected',cache.pending,'offline');return'offline';}
+    await Identity.ensure(false);
+    const auth=Identity.status();
+    if(!auth.authenticated||!auth.tokenReady){transition(PHASES.QUEUED_OFFLINE,'best run queued — authentication offline; local play is unaffected',cache.pending,auth.error||'authentication offline');return'auth-offline';}
+    const pending=cache.pending;
+    if(pending.uid&&pending.uid!==auth.uid){
+      cache.pending=null;clearRetry();transition(PHASES.NOT_SUBMITTED,'queued run cleared — anonymous identity changed',null,'identity changed');return'identity-changed';
+    }
+    if(!pending.uid){pending.uid=auth.uid;save();}
+    pending.attempts=Math.max(0,pending.attempts|0)+1;pending.lastAttemptAt=Date.now();pending.lastError='';
+    transition(PHASES.SUBMITTING,'submitting personal best…',pending,'');
+    const path=BestRuns.recordPath(auth.uid);
+    if(!path){retainFailure(pending,'best run retained — invalid anonymous identity','invalid uid');return'invalid-uid';}
+    const rawUrl=FIREBASE_DB_URL+path+'.json';
+    let read;
+    try{read=await authenticatedFetch(rawUrl,{cache:'no-store'});}catch(e){retainFailure(pending,'best run retained — network check failed; retrying later',e&&e.message);return'network-read';}
+    const afterReadAuth=Identity.status();
+    if(afterReadAuth.uid!==auth.uid){
+      if(currentPending(pending)){cache.pending=null;clearRetry();transition(PHASES.NOT_SUBMITTED,'queued run cleared — anonymous identity changed',null,'identity changed');}
+      return'identity-changed';
+    }
+    if(!read.ok){retainFailure(pending,'best run retained — record check failed ('+read.status+')','HTTP '+read.status);return'read-failed';}
+    const parsedStored=await readJSONResult(read);
+    if(!parsedStored.ok){DataRecovery.note('server-record-json-invalid');retainFailure(pending,'best-run record response is invalid — submission retained','invalid server JSON');return'malformed-json';}
+    const stored=parsedStored.value;
+    if(stored!==null&&!validStored(stored)){DataRecovery.note('server-record-malformed');retainFailure(pending,'best-run record is malformed — submission retained','malformed server record');return'malformed';}
+    cache.remoteBest=stored;cache.remoteUid=auth.uid;if(stored)mergeRecord(auth.uid,stored);else save();
+    if(!currentPending(pending))return'superseded';
+    if(stored&&pending.record.score<=stored.score){
+      cache.pending=null;clearRetry();save();transition(PHASES.NOT_PERSONAL_BEST,'personal best unchanged',pending,'');return'not-pb';
+    }
+    const created=!stored;
+    let write;
+    try{write=await authenticatedFetch(rawUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending.record)});}
+    catch(e){retainFailure(pending,'best run retained — offline, will retry; local play is unaffected',e&&e.message);return'network-write';}
+    const afterWriteAuth=Identity.status();
+    if(afterWriteAuth.uid!==auth.uid){
+      if(currentPending(pending)){cache.pending=null;clearRetry();transition(PHASES.NOT_SUBMITTED,'queued run cleared — anonymous identity changed',null,'identity changed');}
+      return'identity-changed';
+    }
+    if(write.ok){
+      cache.remoteBest=pending.record;cache.remoteUid=auth.uid;
+      const reconciliation=commitAccepted(auth.uid,pending.record,created?'server-create':'server-replace');
+      if(currentPending(pending))cache.pending=null;save();clearRetry();
+      const live=reconciliation&&reconciliation.visible?' — memorial updated':'';
+      transition(PHASES.ACCEPTED,(created?'personal best created':'new personal best saved')+live,pending,'');
+      setTimeout(()=>refresh(true),0);return'accepted';
+    }
+    if(write.status===403){
+      const confirmed=await confirmServerBest(rawUrl,pending,auth.uid);
+      if(confirmed)return confirmed;
+    }
+    retainFailure(pending,'best-run write retained ('+write.status+') — will retry','HTTP '+write.status);return'write-failed';
+  }
+  function drain(){
+    if(!on()||!cache.pending)return Promise.resolve('empty');
+    if(drainPromise)return drainPromise;
+    clearRetry();
+    const startingId=cache.pending.id;
+    drainPromise=drainOnce().catch(e=>{
+      const p=cache.pending;if(p&&p.id===startingId)retainFailure(p,'best run retained — offline, will retry; local play is unaffected',(e&&e.message)||String(e));
+      return'error';
+    }).finally(()=>{
+      drainPromise=null;
+      if(cache.pending&&cache.pending.id!==startingId)setTimeout(()=>drain(),0);
+    });
+    return drainPromise;
   }
   const qualifies=run=>on()&&Math.floor(+(run&&run.score)||0)>0;
   function submit(initials,run){
@@ -1036,22 +1378,46 @@ const LB=(()=>{
     if(!BestRuns.valid(record))return false;
     cache.initials=initials;const uid=ownerHint();lastSub={uid,record};
     if(cache.remoteBest&&cache.remoteUid&&uid&&cache.remoteUid===uid&&record.score<=cache.remoteBest.score){
-      save();setNotice('personal best unchanged');return true;
+      transition(PHASES.NOT_PERSONAL_BEST,'personal best unchanged',null,'');return true;
     }
     if(cache.pending){
       if(cache.pending.uid&&uid&&cache.pending.uid!==uid)cache.pending=null;
       else if(record.score<=cache.pending.record.score){
-        save();setNotice('higher queued personal best retained');return true;
+        setNotice('higher queued personal best retained');save();return true;
       }
     }
-    cache.pending={uid,record};save();setNotice('checking personal best…');drain();return true;
+    const replacing=!!cache.pending;
+    cache.pending={id:pendingId(record),uid,record,queuedAt:Date.now(),attempts:0,lastAttemptAt:0,lastError:''};
+    clearRetry();
+    transition(online()?PHASES.SUBMITTING:PHASES.QUEUED_OFFLINE,
+      online()?(replacing?'higher personal best queued — replacing pending run':'checking personal best…'):'best run queued — offline; local play is unaffected',cache.pending,online()?'':'offline');
+    drain();return true;
   }
-  if(retiredLegacyPending)save();
+  function submission(){return Object.assign({},cache.submission,{pending:!!cache.pending,pendingScore:cache.pending?cache.pending.record.score:0,
+    pendingId:cache.pending?cache.pending.id:'',busy:!!drainPromise,online:online()});}
+  function onOnline(){
+    if(cache.pending){transition(PHASES.SUBMITTING,'connection restored — retrying personal best…',cache.pending,'');
+      Identity.retry().finally(()=>drain());}
+    refresh(true);
+  }
+  function onOffline(){if(cache.pending&&!drainPromise)transition(PHASES.QUEUED_OFFLINE,'best run queued — offline; local play is unaffected',cache.pending,'offline');}
+  function identityChanged(nextUid,previousUid){
+    nextUid=String(nextUid||'');previousUid=String(previousUid||'');clearRetry();
+    if(cache.pending&&cache.pending.uid&&cache.pending.uid!==nextUid){cache.pending=null;transition(PHASES.NOT_SUBMITTED,'queued run cleared — anonymous identity changed',null,'identity changed');}
+    if(cache.remoteUid&&cache.remoteUid!==nextUid){cache.remoteBest=null;cache.remoteUid='';}
+    if(acceptedLive&&acceptedLive.uid!==nextUid)acceptedLive=null;
+    syncTop(nextUid);save();
+    DataRecovery.note('anonymous-uid-changed',1,previousUid?'stored owner replaced':'owner initialized');
+    return true;
+  }
+  if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);}
   return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,records:()=>cache.records.slice(),
-    compare:cmp,notice:()=>lastNotice,acceptedLive:()=>acceptedLive?{uid:acceptedLive.uid,record:Object.assign({},acceptedLive.record),source:acceptedLive.source,acceptedAt:acceptedLive.acceptedAt}:null,
-    retiredLegacyPending:()=>retiredLegacyPending,_setUrl:u=>{FIREBASE_DB_URL=u;}};
+    compare:cmp,notice:()=>lastNotice,submission,phases:PHASES,identityChanged,
+    acceptedLive:()=>acceptedLive?{uid:acceptedLive.uid,record:Object.assign({},acceptedLive.record),source:acceptedLive.source,acceptedAt:acceptedLive.acceptedAt}:null,
+    _setUrl:u=>{FIREBASE_DB_URL=u;},_clearRetry:clearRetry};
 })();
 const Leaderboard=LB;
+identityOwnerChanged=(nextUid,previousUid)=>Leaderboard.identityChanged(nextUid,previousUid);
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList');if(!list)return;
@@ -1063,29 +1429,68 @@ function renderBoard(){
   }).join('');
 }
 /* ============================ PERSISTENCE ============================ */
-function validLocalDeath(m){
-  return !!m&&m.worldVersion===WORLD_VERSION&&Number.isFinite(m.depth)&&m.depth>=0&&
-    Number.isFinite(m.x)&&m.x>=EDGE&&m.x<=LW-EDGE&&Number.isFinite(m.theta)&&
-    typeof m.cause==='string'&&Number.isFinite(m.timestamp)&&m.timestamp>0;
+const LOCAL_CAUSE_SET=new Set(LOCAL_DEATH_CAUSES);
+function localDeathId(m){
+  const raw=String((m&&m.deathId)||'');if(/^[A-Za-z0-9_-]{1,128}$/.test(raw))return raw;
+  const t=Math.max(1,Math.floor(+(m&&m.timestamp)||1)),d=Math.round(+(m&&m.depth)||0),x=Math.round(+(m&&m.x)||0);
+  return('local-migrated-'+t.toString(36)+'-'+d.toString(36)+'-'+x.toString(36)).slice(0,128);
 }
-let localDeaths=Persistence.getJSON(LOCAL_DEATH_KEY,[]);
-if(!Array.isArray(localDeaths))localDeaths=[];
-localDeaths=localDeaths.filter(validLocalDeath).sort((a,b)=>a.timestamp-b.timestamp).slice(-C.localDeathCap);
+function normalizeLocalDeath(m){
+  if(!m||typeof m!=='object'||Array.isArray(m))return null;
+  if(m.worldVersion!==WORLD_VERSION)return null;
+  const depth=+m.depth,x=+m.x,theta=+m.theta,timestamp=+m.timestamp,cause=String(m.cause||'');
+  if(!Number.isFinite(depth)||depth<0||depth>LOCAL_DEATH_LIMITS.depthMax)return null;
+  if(!Number.isFinite(x)||x<LOCAL_DEATH_LIMITS.xMin||x>LOCAL_DEATH_LIMITS.xMax)return null;
+  if(!Number.isFinite(theta)||theta<LOCAL_DEATH_LIMITS.thetaMin||theta>LOCAL_DEATH_LIMITS.thetaMax)return null;
+  if(!LOCAL_CAUSE_SET.has(cause))return null;
+  if(!Number.isFinite(timestamp)||timestamp<=0||timestamp>Date.now()+LOCAL_DEATH_LIMITS.timestampFutureMs)return null;
+  return{deathId:localDeathId(m),depth:Math.round(depth*10)/10,x:Math.round(x*10)/10,theta:Math.round(theta*1000)/1000,
+    cause,timestamp:Math.floor(timestamp),worldVersion:WORLD_VERSION};
+}
+function validLocalDeath(m){
+  if(!m||typeof m!=='object'||Array.isArray(m))return false;
+  const keys=Object.keys(m).sort(),expected=LOCAL_DEATH_FIELDS.slice().sort();
+  if(keys.length!==expected.length||keys.some((k,i)=>k!==expected[i]))return false;
+  const n=normalizeLocalDeath(m);return !!n&&n.deathId===m.deathId&&n.depth===m.depth&&n.x===m.x&&n.theta===m.theta&&n.timestamp===m.timestamp;
+}
+function recoverLocalDeaths(){
+  const read=Persistence.inspectJSON(LOCAL_DEATH_KEY);
+  if(!read.ok){DataRecovery.note('local-death-cache-corrupt',1,read.error);Persistence.remove(LOCAL_DEATH_KEY);return[];}
+  if(!read.exists)return[];
+  if(!Array.isArray(read.value)){DataRecovery.note('local-death-format-unsupported');Persistence.remove(LOCAL_DEATH_KEY);return[];}
+  const byId=new Map(),bySignature=new Set();let invalid=0,migrated=0,duplicates=0,worldMismatch=0;
+  for(const raw of read.value){
+    if(raw&&raw.worldVersion&&raw.worldVersion!==WORLD_VERSION){worldMismatch++;continue;}
+    const rec=normalizeLocalDeath(raw);if(!rec){invalid++;continue;}
+    if(!validLocalDeath(raw))migrated++;
+    const sig=[rec.timestamp,rec.depth,rec.x,rec.theta,rec.cause,rec.worldVersion].join('|');
+    if(byId.has(rec.deathId)||bySignature.has(sig)){duplicates++;continue;}
+    byId.set(rec.deathId,rec);bySignature.add(sig);
+  }
+  if(invalid)DataRecovery.note('local-death-invalid-records',invalid);
+  if(worldMismatch)DataRecovery.note('local-death-world-mismatch',worldMismatch);
+  if(migrated)DataRecovery.note('local-death-records-migrated',migrated);
+  if(duplicates)DataRecovery.note('local-death-duplicates-removed',duplicates);
+  const rows=Array.from(byId.values()).sort((a,b)=>a.timestamp-b.timestamp).slice(-C.localDeathCap);
+  if(read.value.length>rows.length&&read.value.length>C.localDeathCap)DataRecovery.note('local-death-cap-enforced',read.value.length-rows.length);
+  return rows;
+}
+let localDeaths=recoverLocalDeaths();
 Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
-// Pre-v5 markers mixed NPC deaths, nonfatal crashes, and duplicate player writes, so they are intentionally retired.
-try{store.removeItem('ep_markers');}catch(e){}
-let longestDistance=parseFloat(store.getItem('ep_best')||'0')||0;
-let bestScore=parseFloat(store.getItem('ep_best_score_v2')||'0')||0;
+// Unsupported pre-v5 markers and append-only queues are retired without touching current v5 records.
+for(const key of APP_CONFIG.storage.retiredKeys){if(store.getItem(key)!==null){Persistence.remove(key);DataRecovery.note('retired-storage-cleared',1,key);}}
+let longestDistance=parseFloat(store.getItem(APP_CONFIG.storage.bestDistance)||'0')||0;
+let bestScore=parseFloat(store.getItem(APP_CONFIG.storage.bestScore)||'0')||0;
 let lastDeathReal=0;
 function recordLocalDeath(){
   if(!S)return false;
   const timestamp=Date.now();
   const rec={
     deathId:'local-'+timestamp.toString(36)+'-'+Math.floor(Math.random()*0xffffff).toString(36),
-    depth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
+    depth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,LOCAL_DEATH_LIMITS.depthMax)*10)/10,
     x:Math.round(clamp(Number.isFinite(S.deathX)?S.deathX:S.x,EDGE,LW-EDGE)*10)/10,
-    theta:Math.round((Number.isFinite(S.deathTheta)?S.deathTheta:S.theta)*1000)/1000,
-    cause:String(S.cause||'caught'),timestamp,worldVersion:WORLD_VERSION
+    theta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,LOCAL_DEATH_LIMITS.thetaMin,LOCAL_DEATH_LIMITS.thetaMax)*1000)/1000,
+    cause:LOCAL_CAUSE_SET.has(S.cause)?S.cause:'caught',timestamp,worldVersion:WORLD_VERSION
   };
   localDeaths.push(rec);
   if(localDeaths.length>C.localDeathCap)localDeaths.splice(0,localDeaths.length-C.localDeathCap);
@@ -1094,12 +1499,10 @@ function recordLocalDeath(){
   return true;
 }
 /* ================= MODULE: LOCAL / SHARED RECONCILIATION =================
-   v5e.4 identifies the current user's local stain that corresponds to their
+   v5f.4 identifies the current user's local stain that corresponds to their
    compatible public best-run memorial and suppresses exactly that one stain at
    render time. Other private stains remain stored and visible; stains beneath dense
    public groups are only visually attenuated to prevent cumulative blood clutter. */
-const LOCAL_SHARED_DEPTH_TOLERANCE=1.5;
-const LOCAL_SHARED_X_TOLERANCE=18;
 const LocalSharedMatch=(()=>{
   let state=Object.freeze({matched:false,reason:'not-evaluated',ownerUid:'',memorialUid:'',
     memorialDepth:null,memorialX:null,totalLocal:0,compatibleLocal:0,candidates:0,
@@ -1168,7 +1571,7 @@ const LocalSharedMatch=(()=>{
     refresh,current,stats:()=>Object.assign({},state),matchedLocal,isMatchedDeath,noteRender,renderStats});
 })();
 /* ============== MODULE: IMMEDIATE PERSONAL-BEST RECONCILIATION ==============
-   v5e.4 treats a successful authenticated best-run write as an atomic local
+   v5f.4 treats a successful authenticated best-run write as an atomic local
    presentation update: the old UID body is replaced, the newly matching private
    stain becomes suppressible immediately, and an older in-flight collection
    response cannot move the body backward. No optimistic body is shown before the
@@ -1217,7 +1620,39 @@ let R=mulberry32(C.SEED), S=null;
 let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[],carveSegs=[];
 let debugOn=false;
 const PUBLIC_BUILD=true;
+let performanceCacheProbe=()=>({styles:0,approaches:0,limit:PERFORMANCE_CONFIG.memorialCacheEntries});
+const PerformanceStability=(()=>{
+  const history=[];let sampledFrames=0,totalFrames=0,resets=0,trimmed=0,inputBinds=0,duplicateBindAttempts=0;
+  let lastReset=Object.freeze({number:0,cleared:true,before:{},after:{}}),lastHeap=null;
+  const highWater={gates:0,obs:0,npcs:0,edgeT:0,balls:0,parts:0,spray:0,sluff:0,floaters:0,snow:0,rings:0,smears:0,carveSegs:0};
+  function counts(){return {gates:gates.length,obs:obs.length,npcs:npcs.length,edgeT:edgeT.length,balls:balls.length,
+    parts:parts.length,spray:spray.length,sluff:sluff.length,floaters:floaters.length,snow:snow.length,rings:rings.length,
+    smears:smears.length,carveSegs:carveSegs.length,localDeaths:typeof localDeaths==='undefined'?0:localDeaths.length,
+    shared:typeof SharedMemorials==='undefined'?0:SharedMemorials.stats().accepted};}
+  function trimFront(a,max){max=Math.max(0,max|0);if(a.length<=max)return 0;const n=a.length-max;a.splice(0,n);trimmed+=n;return n;}
+  function enforceCaps(Q){Q=Q||PerfBudget.profile();let n=0;
+    n+=trimFront(parts,Q.parts);n+=trimFront(spray,Q.spray);n+=trimFront(rings,Q.rings);n+=trimFront(snow,Q.snow);
+    n+=trimFront(floaters,PERFORMANCE_CONFIG.transientCaps.floaters);
+    n+=trimFront(sluff,PERFORMANCE_CONFIG.transientCaps.sluff);
+    n+=trimFront(smears,PERFORMANCE_CONFIG.transientCaps.smears);
+    return n;
+  }
+  function noteFrame(ms){totalFrames++;if(totalFrames%PERFORMANCE_CONFIG.sampleEveryFrames)return;
+    sampledFrames++;const c=counts();for(const k of Object.keys(highWater))highWater[k]=Math.max(highWater[k],c[k]||0);
+    const sample={frame:totalFrames,ms:+(+ms||0).toFixed(3),counts:c};history.push(sample);
+    if(history.length>PERFORMANCE_CONFIG.historySamples)history.shift();
+    try{if(performance.memory)lastHeap={used:performance.memory.usedJSHeapSize,total:performance.memory.totalJSHeapSize,limit:performance.memory.jsHeapSizeLimit};}catch(e){}
+  }
+  function noteReset(before){resets++;const after=counts();const cleared=after.parts===0&&after.spray===0&&after.sluff===0&&after.floaters===0&&after.snow===0&&after.rings===0&&after.smears===0&&after.balls===0;
+    lastReset=Object.freeze({number:resets,cleared,before:Object.freeze(Object.assign({},before||{})),after:Object.freeze(after)});return cleared;}
+  function noteInputBind(duplicate){if(duplicate)duplicateBindAttempts++;else inputBinds++;}
+  function snapshot(){const cache=performanceCacheProbe();return {frames:totalFrames,sampledFrames,resets,trimmed,inputBinds,duplicateBindAttempts,
+    counts:counts(),highWater:Object.assign({},highWater),lastReset:{number:lastReset.number,cleared:lastReset.cleared,before:Object.assign({},lastReset.before),after:Object.assign({},lastReset.after)},
+    cache:Object.assign({},cache),history:history.slice(-12).map(e=>({frame:e.frame,ms:e.ms,counts:Object.assign({},e.counts)})),heap:lastHeap&&Object.assign({},lastHeap)};}
+  return Object.freeze({counts,enforceCaps,noteFrame,noteReset,noteInputBind,snapshot});
+})();
 function fresh(){
+  const before=PerformanceStability.counts();
   R=mulberry32(C.SEED);
   gates.length=0;obs.length=0;npcs.length=0;edgeT.length=0;balls.length=0;
   parts.length=0;spray.length=0;sluff.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;carveSegs.length=0;
@@ -1236,6 +1671,7 @@ function fresh(){
     buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
   DEF.reset();
+  PerformanceStability.noteReset(before);
 }
 function corridorWidth(d){
   const early=Difficulty.profile(d).layout;
@@ -1479,7 +1915,7 @@ function genTo(){while(S.gen<S.depth+C.ahead)genChunk();
   if(edgeT.length>380)edgeT.splice(0,edgeT.length-380);}
 const Generation=Object.freeze({fresh,corridorWidth,genChunk,genTo});
 /* ====================== MODULE: EFFECTS ====================== */
-function floater(txt,x,d,col,size,screen){if(floaters.length>=24)floaters.shift();floaters.push({txt,x,y:screen?d:0,d:screen?0:d,col,size:size||26,t:1,screen:!!screen});}
+function floater(txt,x,d,col,size,screen){if(floaters.length>=PERFORMANCE_CONFIG.transientCaps.floaters)floaters.shift();floaters.push({txt,x,y:screen?d:0,d:screen?0:d,col,size:size||26,t:1,screen:!!screen});}
 function burstAt(x,d,col,n,spd){const q=PerfBudget.profile(),count=Math.max(1,Math.round(n*q.fx));
   for(let i=0;i<count&&parts.length<q.parts;i++){const a=Math.random()*6.283,v=(0.3+Math.random())*(spd||90);
   parts.push({x,d,vx:Math.cos(a)*v,vy:Math.sin(a)*v/PXM,t:0.5+Math.random()*0.4,col,r:1.5+Math.random()*2.5});}}
@@ -1487,7 +1923,7 @@ function bloodSmear(x,d,dirX,dirD,scale,col){
   const drops=[];const n=3+Math.floor(Math.random()*3);
   for(let i=0;i<n;i++)drops.push({ox:(Math.random()*2-1)*16*scale,od:(Math.random()*2-1)*0.9*scale,r:(1.4+Math.random()*2.4)*scale});
   smears.push({x,d,dx:dirX,dd:dirD,len:(20+Math.random()*18)*scale,w:(6+Math.random()*4)*scale,drops,col:col||'150,18,24'});
-  if(smears.length>70)smears.shift();
+  if(smears.length>PERFORMANCE_CONFIG.transientCaps.smears)smears.shift();
 }
 function ringAt(x,d,col,big){const cap=PerfBudget.profile().rings;if(rings.length>=cap)rings.shift();rings.push({x,d,t:0.45,col,big:big||0});}
 function pushSpray(p){
@@ -1500,7 +1936,7 @@ function pushSpray(p){
   spray.push(p);return true;
 }
 function pushSluff(p){
-  const cap=32;
+  const cap=PERFORMANCE_CONFIG.transientCaps.sluff;
   if(sluff.length>=cap)sluff.shift();
   p.t=p.t||0.55;
   p.maxT=p.maxT||p.t;
@@ -1885,14 +2321,14 @@ function finalizePlayerDeath(){
   const dPts=dist*2,score=Math.max(0,dPts+S.scoreFlag+S.scoreCombo-S.scorePenalty);
   const oldScore=bestScore,oldDistance=longestDistance;
   const newScore=score>oldScore,newDistance=dist>oldDistance;
-  if(newScore){bestScore=score;store.setItem('ep_best_score_v2',String(bestScore));}
-  if(newDistance){longestDistance=dist;store.setItem('ep_best',String(longestDistance));}
+  if(newScore){bestScore=score;store.setItem(APP_CONFIG.storage.bestScore,String(bestScore));}
+  if(newDistance){longestDistance=dist;store.setItem(APP_CONFIG.storage.bestDistance,String(longestDistance));}
   const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions,
     deathX:Math.round(clamp(Number.isFinite(S.deathX)?S.deathX:S.x,EDGE,LW-EDGE)*10)/10,
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5e.4 best-run submission and immediate memorial reconciliation
+  lastFinishedRun=run; // complete death-aware payload used by the v5f.4 best-run submission and immediate memorial reconciliation
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -2530,9 +2966,7 @@ function update(dt){
   for(let i=rings.length-1;i>=0;i--){rings[i].t-=dt;if(rings[i].t<=0)rings.splice(i,1);}
   for(let i=floaters.length-1;i>=0;i--){const f=floaters[i];f.t-=dt;
     if(f.screen)f.y-=55*dt;else f.d-=55/PXM*dt;if(f.t<=0)floaters.splice(i,1);}
-  if(spray.length>Q.spray)spray.splice(0,spray.length-Q.spray);
-  if(parts.length>Q.parts)parts.splice(0,parts.length-Q.parts);
-  if(rings.length>Q.rings)rings.splice(0,rings.length-Q.rings);
+  PerformanceStability.enforceCaps(Q);
 }
 function spawnBall(){const x=EDGE+30+Math.random()*(LW-2*EDGE-60),d=S.depth-PIN_Y/PXM-3;
   balls.push({x,d,prevX:x,prevD:d,r:18+Math.random()*17,vx:(Math.random()*2-1)*45,
@@ -2731,15 +3165,18 @@ function drawCarvePlume(pal,front){
 }
 
 /* ====================== SHARED MEMORIAL RENDERING ======================
-   v5e.4 renders compatible best-run records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
+   v5f.4 renders compatible best-run records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
    UID-derived outfits, deterministic overlap groups, distance-based detail and
    performance budgets require no added Firebase fields. The matching current-user
    local stain is suppressed in the private-history layer immediately below. */
-const MEMORIAL_LABEL_RANGE=12.5;
-const MEMORIAL_LABEL_FULL=6.5;
-const MEMORIAL_GROUP_X=24;
-const MEMORIAL_GROUP_D=3;
 let pendingMemorialLabel=null;
+const memorialFrameScratch={visible:[],labelCandidates:[],samples:[]};
+const memorialStyleCache=new Map(),memorialApproachCache=new Map();
+function boundedMemorialCacheSet(cache,key,value){
+  if(cache.has(key))cache.delete(key);cache.set(key,value);
+  while(cache.size>PERFORMANCE_CONFIG.memorialCacheEntries)cache.delete(cache.keys().next().value);
+  return value;
+}
 const MEMORIAL_PALETTES=Object.freeze([
   Object.freeze({jacket:'#a63d40',jacketShade:'#7d2e32',pants:'#293b50',helmet:'#2f669c',skis:'#243345',accent:'#f3d06a'}),
   Object.freeze({jacket:'#356b8c',jacketShade:'#264e69',pants:'#2f3543',helmet:'#d27a36',skis:'#26394a',accent:'#e9edf2'}),
@@ -2756,24 +3193,27 @@ function memorialHash(uid){
   return h>>>0;
 }
 function memorialStyle(uid){
+  uid=String(uid||'');const cached=memorialStyleCache.get(uid);if(cached)return cached;
   const hash=memorialHash(uid),index=hash%MEMORIAL_PALETTES.length,pal=MEMORIAL_PALETTES[index];
-  return Object.freeze({hash,index,jacket:pal.jacket,jacketShade:pal.jacketShade,pants:pal.pants,
+  return boundedMemorialCacheSet(memorialStyleCache,uid,Object.freeze({hash,index,jacket:pal.jacket,jacketShade:pal.jacketShade,pants:pal.pants,
     helmet:pal.helmet,skis:pal.skis,accent:pal.accent,helmetType:(hash>>>4)%3,
-    stripe:(hash>>>7)%3,poseLean:(((hash>>>11)%9)-4)*0.018,armShift:(((hash>>>15)%7)-3)*0.55});
+    stripe:(hash>>>7)%3,poseLean:(((hash>>>11)%9)-4)*0.018,armShift:(((hash>>>15)%7)-3)*0.55}));
 }
 function memorialApproach(m){
   const th=Number.isFinite(m.deathTheta)?m.deathTheta:0;
+  const key=[m.uid,m.timestamp,m.deathX,m.deathDepth,th,m.deathCause].join('|'),cached=memorialApproachCache.get(key);if(cached)return cached;
   const len=m.deathCause==='caught'?2.7:m.deathCause==='edge'?2.0:2.35;
   const dx=Math.sin(th)*PXM,dd=Math.cos(th);
   const sideX=Math.cos(th)*5.2,sideD=-Math.sin(th)*5.2/PXM;
   const endA={x:m.deathX+sideX,d:m.deathDepth+sideD};
   const endB={x:m.deathX-sideX,d:m.deathDepth-sideD};
-  return {
+  return boundedMemorialCacheSet(memorialApproachCache,key,Object.freeze({
     th,dx,dd,len,
-    a0:{x:endA.x-dx*len,d:endA.d-dd*len},a1:endA,
-    b0:{x:endB.x-dx*len,d:endB.d-dd*len},b1:endB
-  };
+    a0:Object.freeze({x:endA.x-dx*len,d:endA.d-dd*len}),a1:Object.freeze(endA),
+    b0:Object.freeze({x:endB.x-dx*len,d:endB.d-dd*len}),b1:Object.freeze(endB)
+  }));
 }
+performanceCacheProbe=()=>({styles:memorialStyleCache.size,approaches:memorialApproachCache.size,limit:PERFORMANCE_CONFIG.memorialCacheEntries});
 function memorialPose(cause,th){
   const side=Math.sign(Math.sin(th))||1;
   if(cause==='tree')return {fall:1.06*side,spread:1.15,blood:1.10,bodyY:1};
@@ -2961,8 +3401,8 @@ function drawSharedMemorialLabel(){
   ctx.restore();
 }
 function drawSharedMemorials(nightK){
-  const source=SharedMemorials.compatible(),visible=[],Q=PerfBudget.profile();
-  pendingMemorialLabel=null;
+  const source=SharedMemorials.view(),visible=memorialFrameScratch.visible,Q=PerfBudget.profile();
+  visible.length=0;pendingMemorialLabel=null;
   for(const m of source){
     const u=m.deathDepth-S.depth;
     if(u<UTOP-2.5||u>UBOT+2.5)continue;
@@ -2970,7 +3410,9 @@ function drawSharedMemorials(nightK){
     if(p.x<-70||p.x>LW+70||p.y<-90||p.y>LH+110)continue;
     visible.push({m,u,p});
   }
-  const prepared=prepareMemorialGroups(visible,Q),samples=[],labelCandidates=[];
+  const samples=memorialFrameScratch.samples,labelCandidates=memorialFrameScratch.labelCandidates;
+  samples.length=0;labelCandidates.length=0;
+  const prepared=prepareMemorialGroups(visible,Q);
   let drawn=0,overlapGroups=0,overlapBodies=0,ownerDrawn=0,anchorsDrawn=0,secondaryDrawn=0,ownerSecondary=0;
   let detailFull=0,detailReduced=0,detailMinimal=0,labelGroupSize=0;
   for(const group of prepared.groups){
@@ -3682,11 +4124,14 @@ function showLeaderboard(){
   renderBoard();LB.refresh(true);LB.drain();
 }
 function showResults(){el.leaderboard.classList.add('hide');el.results.classList.remove('hide');}
+let inputBound=false;
 function bindInput(){
+  if(inputBound){PerformanceStability.noteInputBind(true);return false;}
+  inputBound=true;PerformanceStability.noteInputBind(false);
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
   document.addEventListener('touchmove',e=>{
-    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show'):null;
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
@@ -3703,10 +4148,11 @@ function bindInput(){
   $('bTune').addEventListener('click',e=>{e.stopPropagation();el.tune.classList.toggle('show');});
   $('bDebug').addEventListener('click',e=>{e.stopPropagation();if(!PUBLIC_BUILD)debugOn=!debugOn;});
   $('bSound').addEventListener('click',function(e){e.stopPropagation();this.style.opacity=Audio.toggle()?'1':'0.4';});
+  return true;
 }
 const Input=Object.freeze({bind:bindInput,beginRun,pdown,pmove,pup,kb});
 function authDiagRequested(){
-  try{return new URLSearchParams(location.search).get('authcheck')==='1'||store.getItem('ep_auth_diag')==='1';}
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.auth)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.auth)==='1';}
   catch(e){return false;}
 }
 function authClass(id,name){const e=$(id);if(e)e.className=name;}
@@ -3722,7 +4168,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5e.4 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. '+BUILD_VERSION+' uses the signed-in UID-owned record at '+BEST_RUN_PATH+'/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
@@ -3743,22 +4189,30 @@ function initAuthDiag(){
 }
 
 function bestCheckRequested(){
-  try{return new URLSearchParams(location.search).get('bestcheck')==='1'||store.getItem('ep_best_diag')==='1';}
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.best)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.best)==='1';}
   catch(e){return false;}
 }
 function memorialCheckRequested(){
-  try{return new URLSearchParams(location.search).get('memorialcheck')==='1'||store.getItem('ep_memorial_diag')==='1';}
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.memorial)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.memorial)==='1';}
   catch(e){return false;}
 }
 function reconcileCheckRequested(){
-  try{return new URLSearchParams(location.search).get('reconcilecheck')==='1'||store.getItem('ep_reconcile_diag')==='1';}
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.reconciliation)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.reconciliation)==='1';}
   catch(e){return false;}
 }
-function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested();}
+function performanceCheckRequested(){
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.performance)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.performance)==='1';}
+  catch(e){return false;}
+}
+function sharedCheckRequested(){
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.shared)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.shared)==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested()||performanceCheckRequested()||sharedCheckRequested();}
 const BestCheck=(()=>{
-  const RELOAD_KEY='ep_bestcheck_reload_v5c4';
-  const PROBE_KEY='ep_bestcheck_queue_probe_v5c4';
-  const LEGACY_PATH='/endless_powder/scores';
+  const RELOAD_KEY=APP_CONFIG.storage.probes.bestReload;
+  const PROBE_KEY=APP_CONFIG.storage.probes.bestQueue;
+  const LEGACY_PATH=LEGACY_SCORE_PATH;
   let running=false,lastReport=null;
   const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
   const pass=(id,text)=>row(id,text||'PASS','authGood');
@@ -3844,7 +4298,7 @@ const BestCheck=(()=>{
       const ownRes=await timed(ownUrl,{cache:'no-store'});
       if(ownRes.ok){const own=await json(ownRes);out.own=own===null?'NONE':BestRuns.valid(own,Math.max(Date.now(),+(own&&own.timestamp)||0))?'VALID':'MALFORMED';out.ownOK=own===null||out.own==='VALID';}
       else{out.own='HTTP '+ownRes.status;}
-      const boardUrl=await Identity.url(FIREBASE_DB_URL+BEST_RUN_PATH+'.json?orderBy=%22score%22&limitToLast=50');
+      const boardUrl=await Identity.url(FIREBASE_DB_URL+BEST_RUN_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
       const boardRes=await timed(boardUrl,{cache:'no-store'});
       if(boardRes.ok){
         const raw=await json(boardRes),entries=raw&&typeof raw==='object'&&!Array.isArray(raw)?Object.entries(raw):[];
@@ -3909,11 +4363,11 @@ const BestCheck=(()=>{
   return Object.freeze({init,run,last:()=>lastReport,requested:bestCheckRequested});
 })();
 /* ================== MODULE: SHARED MEMORIAL RELEASE CHECK ==================
-   v5e.4 validates the read-only bridge and renderer with temporary in-memory
+   v5f.4 validates the read-only bridge and renderer with temporary in-memory
    records. It never submits, replaces or deletes a Firebase best-run record. */
 const MemorialCheck=(()=>{
-  const PROBE_KEY='ep_memorialcheck_cache_probe_v5d4';
-  const LEGACY_PATH='/endless_powder/scores';
+  const PROBE_KEY=APP_CONFIG.storage.probes.memorialCache;
+  const LEGACY_PATH=LEGACY_SCORE_PATH;
   let running=false,lastReport=null;
   const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
   const pass=(id,text)=>row(id,text||'PASS','authGood');
@@ -4046,7 +4500,7 @@ const MemorialCheck=(()=>{
       details.push('Live world mismatches: '+liveBefore.worldMismatch);
       details.push('Live invalid records: '+liveBefore.invalid);
       details.push('Current UID memorial: '+(liveAfter.ownerPresent?'YES':'NO'));
-      details.push('Best-run collection requests: '+requestCount('/endless_powder/best_runs'));
+      details.push('Best-run collection requests: '+requestCount(BEST_RUN_PATH));
       details.push('Synthetic Firebase writes: NONE');
       if(d.error)details.push('Local test error: '+d.error);
       const overall=$('memorialOverall');
@@ -4072,12 +4526,12 @@ const MemorialCheck=(()=>{
   return Object.freeze({init,run,last:()=>lastReport,requested:memorialCheckRequested});
 })();
 /* ================ MODULE: RECONCILIATION RELEASE CHECK ================
-   v5e.4 validates private local stains and public best-run bodies together.
+   v5f.4 validates private local stains and public best-run bodies together.
    All test records live only in memory or an isolated probe key. The live local
    death ledger and Firebase best-run records are restored without mutation. */
 const ReconciliationCheck=(()=>{
-  const PROBE_KEY='ep_reconcilecheck_probe_v5e4';
-  const LEGACY_PATH='/endless_powder/scores';
+  const PROBE_KEY=APP_CONFIG.storage.probes.reconciliation;
+  const LEGACY_PATH=LEGACY_SCORE_PATH;
   let running=false,lastReport=null;
   const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
   const pass=(id,text)=>row(id,text||'PASS','authGood');
@@ -4228,7 +4682,7 @@ const ReconciliationCheck=(()=>{
       details.push('Live local/shared match: '+(liveAfter.match.matched?'MATCHED':'NONE — '+liveAfter.match.reason));
       details.push('Live local records: '+liveAfter.match.totalLocal);
       details.push('Live compatible shared records: '+liveAfter.shared.accepted);
-      details.push('Best-run collection requests: '+requestCount('/endless_powder/best_runs'));
+      details.push('Best-run collection requests: '+requestCount(BEST_RUN_PATH));
       details.push('Diagnostic Firebase writes: NONE');
       details.push('Diagnostic local-ledger writes: NONE');
       if(d.error)details.push('Local test error: '+d.error);
@@ -4255,16 +4709,196 @@ const ReconciliationCheck=(()=>{
   }
   return Object.freeze({init,run,last:()=>lastReport,requested:reconcileCheckRequested});
 })();
+const PerformanceCheck=(()=>{
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood'),warn=(id,text)=>row(id,text||'WARN','authWarn'),fail=(id,text)=>row(id,text||'FAIL','authBad');
+  const canonicalShared=()=>SharedMemorials.records().map(e=>{const out={uid:e.uid};for(const k of BEST_RUN_FIELDS)out[k]=e[k];return out;});
+  const copyArrays=()=>({gates:gates.slice(),obs:obs.slice(),npcs:npcs.slice(),edgeT:edgeT.slice(),balls:balls.slice(),parts:parts.slice(),spray:spray.slice(),sluff:sluff.slice(),floaters:floaters.slice(),snow:snow.slice(),rings:rings.slice(),corDbg:corDbg.slice(),smears:smears.slice(),carveSegs:carveSegs.slice(),localDeaths:localDeaths.slice()});
+  const restoreArray=(target,source)=>target.splice(0,target.length,...source);
+  function makeRecord(i,depth){return {uid:'perf-'+String(i).padStart(3,'0'),initials:String(i%1000).padStart(3,'0'),score:900000-i,
+    distance:Math.floor(depth),cleanFlags:20,attemptedFlags:24,bestCombo:12,collisions:i%3,
+    deathX:80+(i%10)*60,deathDepth:depth,deathTheta:((i%7)-3)*0.12,deathCause:BEST_RUN_DEATH_CAUSES[i%BEST_RUN_DEATH_CAUSES.length],
+    worldVersion:WORLD_VERSION,timestamp:Date.now()-i};}
+  function p95(values){if(!values.length)return 0;const a=values.slice().sort((a,b)=>a-b);return a[Math.min(a.length-1,Math.floor(a.length*0.95))];}
+  function legacyRequests(){try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(LEGACY_SCORE_PATH)).length;}catch(e){return 0;}}
+  async function deterministic(){
+    const arrays=copyArrays(),savedS=S,savedM=M,savedR=R,savedQuality=PerfBudget.level,savedOwner=SharedMemorials.stats().ownerUid,
+      savedShared=canonicalShared(),savedLedger=store.getItem(LOCAL_DEATH_KEY);
+    const out={budgets:false,caps:false,restarts:false,persistent:false,caches:false,frames:false,listeners:false,times:{},error:''};
+    try{
+      S=Object.assign({},savedS||{}, {mode:'play',depth:1000,x:LW/2,camZ:220,camLead:0,shake:0,flash:0,dying:0,phase:PHASES[0],yeti:Object.assign({},savedS&&savedS.yeti||{}, {on:false})});
+      M=baseM();
+      const records=[],stressLocals=[];for(let i=0;i<50;i++){const depth=1004+Math.floor(i/10)*4;records.push(makeRecord(i,depth));stressLocals.push({deathId:'perf-local-'+i,depth,x:82+(i%10)*60,theta:((i%7)-3)*0.12,cause:LOCAL_DEATH_CAUSES[i%LOCAL_DEATH_CAUSES.length],timestamp:Date.now()-i,worldVersion:WORLD_VERSION});}
+      localDeaths.splice(0,localDeaths.length,...stressLocals);SharedMemorials.ingest(records,records[0].uid);
+      const expected=[MEMORIAL_QUALITY.low.bodies,MEMORIAL_QUALITY.medium.bodies,MEMORIAL_QUALITY.high.bodies],budgetResults=[],frameTimes=[];
+      for(let q=0;q<3;q++){
+        PerfBudget.setLevel(q);const times=[];
+        for(let f=0;f<PERFORMANCE_CONFIG.stress.renderFramesPerQuality;f++){
+          const t0=performance.now();Rendering.render();const elapsed=performance.now()-t0;times.push(elapsed);frameTimes.push(elapsed);PerformanceStability.noteFrame(elapsed);
+        }
+        const st=SharedMemorials.renderStats();budgetResults.push(st.drawn<=expected[q]&&st.loaded===50);
+        out.times[PerfBudget.profile().name]={avg:+(times.reduce((a,b)=>a+b,0)/times.length).toFixed(2),p95:+p95(times).toFixed(2),drawn:st.drawn,budget:expected[q]};
+      }
+      out.budgets=budgetResults.every(Boolean);
+
+      const Q=PerfBudget.profile();
+      for(let i=0;i<Q.parts+70;i++)parts.push({t:1});
+      for(let i=0;i<Q.spray+70;i++)spray.push({t:1});
+      for(let i=0;i<Q.rings+20;i++)rings.push({t:1});
+      for(let i=0;i<Q.snow+40;i++)snow.push({});
+      for(let i=0;i<PERFORMANCE_CONFIG.transientCaps.floaters+12;i++)floaters.push({t:1});
+      for(let i=0;i<PERFORMANCE_CONFIG.transientCaps.sluff+12;i++)sluff.push({t:1});
+      for(let i=0;i<PERFORMANCE_CONFIG.transientCaps.smears+12;i++)smears.push({});
+      PerformanceStability.enforceCaps(Q);const c=PerformanceStability.counts();
+      out.caps=c.parts<=Q.parts&&c.spray<=Q.spray&&c.rings<=Q.rings&&c.snow<=Q.snow&&
+        c.floaters<=PERFORMANCE_CONFIG.transientCaps.floaters&&c.sluff<=PERFORMANCE_CONFIG.transientCaps.sluff&&c.smears<=PERFORMANCE_CONFIG.transientCaps.smears;
+
+      const localBefore=localDeaths.slice(),sharedBefore=canonicalShared();let restartOK=true;
+      for(let i=0;i<PERFORMANCE_CONFIG.stress.restarts;i++){
+        parts.push({t:1});spray.push({t:1});sluff.push({t:1});floaters.push({t:1});snow.push({});rings.push({t:1});smears.push({});balls.push({});
+        Generation.fresh();const rc=PerformanceStability.counts();
+        if(rc.parts||rc.spray||rc.sluff||rc.floaters||rc.snow||rc.rings||rc.smears||rc.balls)restartOK=false;
+      }
+      out.restarts=restartOK&&PerformanceStability.snapshot().lastReset.cleared;
+      out.persistent=JSON.stringify(localDeaths)===JSON.stringify(localBefore)&&JSON.stringify(canonicalShared())===JSON.stringify(sharedBefore)&&store.getItem(LOCAL_DEATH_KEY)===savedLedger;
+      const cache=PerformanceStability.snapshot().cache;out.caches=cache.styles<=cache.limit&&cache.approaches<=cache.limit;
+      const first=frameTimes.slice(0,Math.max(1,Math.floor(frameTimes.length/3))),last=frameTimes.slice(-Math.max(1,Math.floor(frameTimes.length/3)));
+      const firstAvg=first.reduce((a,b)=>a+b,0)/first.length,lastAvg=last.reduce((a,b)=>a+b,0)/last.length;
+      out.frames=Number.isFinite(firstAvg)&&Number.isFinite(lastAvg)&&lastAvg<=firstAvg*2.75+6;
+      const bindBefore=PerformanceStability.snapshot();Input.bind();Input.bind();const bindAfter=PerformanceStability.snapshot();
+      out.listeners=bindAfter.inputBinds===1&&bindAfter.duplicateBindAttempts>=bindBefore.duplicateBindAttempts+2;
+    }catch(e){out.error=(e&&e.message)||String(e);}
+    finally{
+      restoreArray(gates,arrays.gates);restoreArray(obs,arrays.obs);restoreArray(npcs,arrays.npcs);restoreArray(edgeT,arrays.edgeT);restoreArray(balls,arrays.balls);
+      restoreArray(parts,arrays.parts);restoreArray(spray,arrays.spray);restoreArray(sluff,arrays.sluff);restoreArray(floaters,arrays.floaters);restoreArray(snow,arrays.snow);
+      restoreArray(rings,arrays.rings);restoreArray(corDbg,arrays.corDbg);restoreArray(smears,arrays.smears);restoreArray(carveSegs,arrays.carveSegs);restoreArray(localDeaths,arrays.localDeaths);
+      S=savedS;M=savedM;R=savedR;PerfBudget.setLevel(savedQuality);SharedMemorials.ingest(savedShared,savedOwner);
+      let currentLedger=null;try{currentLedger=store.getItem(LOCAL_DEATH_KEY);}catch(e){}
+      if(currentLedger!==savedLedger){if(savedLedger===null)Persistence.remove(LOCAL_DEATH_KEY);else try{store.setItem(LOCAL_DEATH_KEY,savedLedger);}catch(e){}}
+    }
+    return out;
+  }
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('performanceRetry');if(btn)btn.textContent='STRESSING…';
+    ['performanceBudgets','performanceCaps','performanceRestarts','performancePersistent','performanceCaches','performanceFrames','performanceListeners','performanceLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    try{
+      const d=await deterministic(),legacy=legacyRequests(),snap=PerformanceStability.snapshot();
+      d.budgets?pass('performanceBudgets','PASS — 14 / 28 / 50'):fail('performanceBudgets','FAIL');
+      d.caps?pass('performanceCaps','PASS — BOUNDED'):fail('performanceCaps','FAIL');
+      d.restarts?pass('performanceRestarts','PASS — TEMPORARY STATE CLEARED'):fail('performanceRestarts','FAIL');
+      d.persistent?pass('performancePersistent','PASS — LOCAL + SHARED KEPT'):fail('performancePersistent','FAIL');
+      d.caches?pass('performanceCaches','PASS — ≤ '+PERFORMANCE_CONFIG.memorialCacheEntries):fail('performanceCaches','FAIL');
+      d.frames?pass('performanceFrames','PASS — NO RUNAWAY SLOWDOWN'):fail('performanceFrames','FAIL');
+      d.listeners?pass('performanceListeners','PASS — SINGLE BIND'):fail('performanceListeners','FAIL');
+      pass('performanceScroll','READY — SWIPE TO REVIEW');
+      legacy===0?pass('performanceLegacy','ISOLATED — 0 REQUESTS'):fail('performanceLegacy',legacy+' REQUEST(S)');
+      const ok=d.budgets&&d.caps&&d.restarts&&d.persistent&&d.caches&&d.frames&&d.listeners&&legacy===0;
+      const overall=$('performanceOverall');if(overall){overall.textContent=ok?'VERIFIED — v5f.4 PERFORMANCE STABILIZATION PASSED':'VALIDATION NEEDS ATTENTION';overall.className=ok?'authGood':'authBad';}
+      const lines=['Build: '+BUILD_VERSION,'Quality timings: '+JSON.stringify(d.times),'Runtime frames sampled: '+snap.sampledFrames,
+        'Runtime resets observed: '+snap.resets,'Trimmed overflow objects: '+snap.trimmed,'Memorial cache: '+JSON.stringify(snap.cache),
+        'Input binds: '+snap.inputBinds+'; duplicate attempts blocked: '+snap.duplicateBindAttempts,
+        'Current counts: '+JSON.stringify(snap.counts),'Diagnostic Firebase writes: NONE','Diagnostic local-ledger writes: NONE'];
+      if(snap.heap)lines.push('JS heap used: '+Math.round(snap.heap.used/1048576)+' MB');if(d.error)lines.push('Error: '+d.error);
+      const details=$('performanceDetails');if(details)details.textContent=lines.join('\n');lastReport={passed:ok,deterministic:d,legacyRequests:legacy,telemetry:snap};
+    }catch(e){const overall=$('performanceOverall');if(overall){overall.textContent='VALIDATION ERROR';overall.className='authBad';}
+      const details=$('performanceDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN STRESS CHECK';}
+    return lastReport;
+  }
+  function init(){const box=$('performanceDiag');if(!box||!performanceCheckRequested())return;box.classList.add('show');
+    $('performanceRetry').addEventListener('click',e=>{e.stopPropagation();run();});$('performanceClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
+  return Object.freeze({init,run,last:()=>lastReport,requested:performanceCheckRequested});
+})();
+/* =================== MODULE: STABLE SHARED MOUNTAIN RELEASE CHECK ===================
+   v5f.4 composes the existing read-only subsystem diagnostics into one release gate.
+   Synthetic state is restored by each subsystem; this module performs no Firebase
+   writes and does not drain or mutate a pending best-run submission. */
+const ReleaseCheck=(()=>{
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood');
+  const warn=(id,text)=>row(id,text||'CHECK','authWarn');
+  const fail=(id,text)=>row(id,text||'FAIL','authBad');
+  function legacyRequests(){try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(LEGACY_SCORE_PATH)).length;}catch(e){return 0;}}
+  function localLedgerOK(){return localDeaths.length<=APP_CONFIG.localDeaths.maxRecords&&localDeaths.every(validLocalDeath);}
+  function configOK(){const a=Configuration.audit();return a.frozen&&a.buildVersion===BUILD_VERSION&&a.worldVersion===WORLD_VERSION&&a.bestRunPath===BEST_RUN_PATH&&a.legacyScorePath===LEGACY_SCORE_PATH&&BEST_RUN_FIELDS.length===13&&BEST_RUN_SCHEMA_VERSION==='best-runs-v1'&&BEST_RUN_PATH!=='/'&&LEGACY_SCORE_PATH!==BEST_RUN_PATH;}
+  function networkOK(){const sub=Leaderboard.submission(),allowed=new Set(Object.values(Leaderboard.phases));return allowed.has(sub.phase)&&(!sub.pending||sub.pendingScore>0)&&!(sub.busy&&sub.phase==='not-submitted');}
+  function recoveryOK(){const state=Persistence.inspectJSON(BEST_RUN_STATE_KEY),board=Persistence.inspectJSON(BEST_RUN_BOARD_KEY),ledger=Persistence.inspectJSON(LOCAL_DEATH_KEY);return state.ok&&board.ok&&ledger.ok&&!!DataRecovery.snapshot();}
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('sharedRetry');if(btn)btn.textContent='RUNNING…';
+    ['sharedBuild','sharedLocal','sharedAuth','sharedBest','sharedRanking','sharedMemorial','sharedReconcile','sharedNetwork','sharedRecovery','sharedPerformance','sharedWorld','sharedLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    try{
+      const ledgerBefore=store.getItem(LOCAL_DEATH_KEY),pendingBefore=JSON.stringify(Leaderboard.cache().pending||null);
+      const build=configOK(),local=localLedgerOK(),auth=Identity.status();
+      const best=await BestCheck.run();
+      const memorial=await MemorialCheck.run();
+      const reconciliation=await ReconciliationCheck.run();
+      const performanceReport=await PerformanceCheck.run();
+      const network=networkOK(),recovery=recoveryOK(),legacy=legacyRequests();
+      const ledgerAfter=store.getItem(LOCAL_DEATH_KEY),pendingAfter=JSON.stringify(Leaderboard.cache().pending||null);
+      const stateSafe=ledgerBefore===ledgerAfter&&pendingBefore===pendingAfter;
+      const authOK=auth.authenticated&&auth.tokenReady&&auth.verification&&auth.verification.phase==='verified';
+      const authWaiting=auth.authenticated&&auth.tokenReady&&auth.verification&&auth.verification.phase==='reload-needed';
+      const ranking=!!(best&&best.deterministic&&best.deterministic.ranking);
+      const world=!!(memorial&&memorial.deterministic&&memorial.deterministic.world&&reconciliation&&reconciliation.deterministic&&reconciliation.deterministic.world);
+      build?pass('sharedBuild',BUILD_VERSION+' — CENTRALIZED'):fail('sharedBuild','FAIL');
+      local&&stateSafe?pass('sharedLocal','PASS — '+localDeaths.length+' / '+APP_CONFIG.localDeaths.maxRecords):fail('sharedLocal','FAIL');
+      authOK?pass('sharedAuth','VERIFIED — UID STABLE'):authWaiting?warn('sharedAuth','RELOAD REQUIRED'):fail('sharedAuth','OFFLINE / FAILED');
+      best&&best.passed?pass('sharedBest','PASS — OWNER + HIGHER ONLY'):authWaiting?warn('sharedBest','LIVE CHECKS PASSED — RELOAD'):fail('sharedBest','FAIL');
+      ranking?pass('sharedRanking','PASS — 4 TIEBREAKERS'):fail('sharedRanking','FAIL');
+      memorial&&memorial.passed?pass('sharedMemorial','PASS — TOP 50 PHYSICAL'):fail('sharedMemorial','FAIL');
+      reconciliation&&reconciliation.passed?pass('sharedReconcile','PASS — NO DUPLICATE STAIN'):fail('sharedReconcile','FAIL');
+      network&&stateSafe?pass('sharedNetwork','PASS — QUEUE STATE SAFE'):fail('sharedNetwork','FAIL');
+      recovery?pass('sharedRecovery','PASS — CANONICAL CACHES'):fail('sharedRecovery','FAIL');
+      performanceReport&&performanceReport.passed?pass('sharedPerformance','PASS — 14 / 28 / 50'):fail('sharedPerformance','FAIL');
+      world?pass('sharedWorld',WORLD_VERSION+' — FILTERED'):fail('sharedWorld','FAIL');
+      legacy===0?pass('sharedLegacy','ISOLATED — 0 REQUESTS'):fail('sharedLegacy',legacy+' REQUEST(S)');
+      pass('sharedScroll','READY — SWIPE TO REVIEW');
+      const deterministicOK=build&&local&&stateSafe&&ranking&&network&&recovery&&world&&legacy===0&&!!(performanceReport&&performanceReport.passed);
+      const onlineOK=authOK&&!!(best&&best.passed)&&!!(memorial&&memorial.passed)&&!!(reconciliation&&reconciliation.passed);
+      const overall=$('sharedOverall');
+      if(overall){
+        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v5 SHARED MOUNTAIN RELEASE PASSED';overall.className='authGood';}
+        else if(deterministicOK&&authWaiting){overall.textContent='LIVE CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
+        else if(deterministicOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else{overall.textContent='RELEASE VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const shared=SharedMemorials.stats(),perf=PerformanceStability.snapshot(),sub=Leaderboard.submission(),recoverySnap=DataRecovery.snapshot();
+      const lines=['Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,'Best-run schema: '+BEST_RUN_SCHEMA_VERSION,
+        'Firebase path: '+BEST_RUN_PATH+'/{uid}','UID: '+(auth.uid||'—'),'Leaderboard records: '+Leaderboard.records().length,
+        'Compatible memorials: '+shared.accepted+' / source '+shared.source,'Local deaths: '+localDeaths.length+' / '+APP_CONFIG.localDeaths.maxRecords,
+        'Submission state: '+sub.phase+(sub.pending?' — pending '+sub.pendingScore:' — no pending run'),'Performance samples: '+perf.sampledFrames+'; resets: '+perf.resets,
+        'Recovery events this session: '+recoverySnap.events.length,'Legacy /scores requests: '+legacy,'Diagnostic Firebase writes: NONE',
+        'Private ledger unchanged: '+(ledgerBefore===ledgerAfter?'YES':'NO'),'Pending submission unchanged: '+(pendingBefore===pendingAfter?'YES':'NO')];
+      const details=$('sharedDetails');if(details)details.textContent=lines.join('\n');
+      lastReport={passed:deterministicOK&&onlineOK,waiting:deterministicOK&&authWaiting,offline:deterministicOK&&!auth.authenticated,
+        build,local,auth:authOK,best,memorial,reconciliation,performance:performanceReport,network,recovery,world,legacyRequests:legacy,stateSafe};
+    }catch(e){const overall=$('sharedOverall');if(overall){overall.textContent='RELEASE VALIDATION ERROR';overall.className='authBad';}
+      const details=$('sharedDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN FULL CHECK';}
+    return lastReport;
+  }
+  function init(){const box=$('sharedDiag');if(!box||!sharedCheckRequested())return;box.classList.add('show');
+    $('sharedRetry').addEventListener('click',e=>{e.stopPropagation();run();});$('sharedClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
+  return Object.freeze({init,run,last:()=>lastReport,requested:sharedCheckRequested});
+})();
 Input.bind();
 initAuthDiag();
 BestCheck.init();
 MemorialCheck.init();
 ReconciliationCheck.init();
+PerformanceCheck.init();
+ReleaseCheck.init();
 Identity.start().finally(async()=>{
   Identity.verify();SharedMemorials.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
   if(bestCheckRequested())await BestCheck.run();
   if(memorialCheckRequested())await MemorialCheck.run();
   if(reconcileCheckRequested())await ReconciliationCheck.run();
+  if(performanceCheckRequested())await PerformanceCheck.run();
+  if(sharedCheckRequested())await ReleaseCheck.run();
   if(!diagnosticRequested())Leaderboard.drain();
 });
 /* tune sliders */
@@ -4301,7 +4935,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -4313,7 +4947,7 @@ function frame(now){
   const workStart=performance.now();
   try{Modules.simulation.update(dt);Modules.rendering.render();}
   catch(err){reportErr((err&&err.message)+' | '+(((err&&err.stack)||'').split('\n')[1]||'').trim());}
-  Modules.performance.noteFrame(performance.now()-workStart);
+  const workMs=performance.now()-workStart;Modules.performance.noteFrame(workMs);PerformanceStability.noteFrame(workMs);
 }
 PerfBudget.init();
 Generation.fresh();
@@ -4321,9 +4955,9 @@ resize();
 requestAnimationFrame(frame);
 /* ============================ TEST HOOK ============================ */
 window.__EP={
-  modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
-  arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  config:Configuration,recovery:DataRecovery,modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
+  arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
