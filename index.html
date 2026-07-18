@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5d.1</title>
+<title>ENDLESS POWDER v5d.4</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -140,6 +140,25 @@
   #bestActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #bestActions button.primary{background:#99efc0;color:#07150e;border-color:transparent}
+
+  /* Shared-memorial release verification is hidden during normal play and opens only with ?memorialcheck=1. */
+  #memorialDiag{position:absolute;z-index:22;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow:auto;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(216,205,255,.42);border-radius:14px;
+    background:rgba(5,9,15,.97);box-shadow:0 18px 60px rgba(0,0,0,.62);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y}
+  #memorialDiag.show{display:block}
+  #memorialDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #memorialDiag .memorialSub{opacity:.62;margin-bottom:14px}
+  .memorialRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .memorialRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .memorialRow b{font-weight:850;word-break:break-word}
+  #memorialOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(216,205,255,.08);white-space:pre-line;font-weight:800}
+  #memorialDetails{margin-top:10px;white-space:pre-line;opacity:.72;word-break:break-word}
+  #memorialActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #memorialActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #memorialActions button.primary{background:#d8cdff;color:#120d22;border-color:transparent}
 </style>
 </head>
 <body>
@@ -165,7 +184,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5d.1</div>
+    <div class="version">v5d.4</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -197,7 +216,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5d.1 projects compatible best-run memorials into mountain space and renders restrained downed-skier bodies without labels or overlap reconciliation yet.</div>
+    <div class="authSub">v5d.4 adds the read-only shared-memorial release check while preserving the v5d.3 renderer, performance budgets and deferred local-stain reconciliation.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -226,6 +245,28 @@
     <div id="bestDetails"></div>
     <div id="bestActions"><button class="primary" id="bestRetry" type="button">RUN CHECKS</button><button id="bestClose" type="button">CLOSE</button></div>
   </div>
+
+
+  <div id="memorialDiag" aria-live="polite">
+    <h2>SHARED MEMORIAL RELEASE CHECK</h2>
+    <div class="memorialSub">Read-only Firebase status plus deterministic in-memory rendering tests. Synthetic records are restored immediately and never written to the database.</div>
+    <div class="memorialRow"><span>Authentication</span><b id="memorialAuth" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Data bridge</span><b id="memorialBridge" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>World filtering</span><b id="memorialWorld" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Projection</span><b id="memorialProjection" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Death variants</span><b id="memorialCauses" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Camera culling</span><b id="memorialCulling" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Overlap groups</span><b id="memorialOverlap" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Quality budgets</span><b id="memorialBudgets" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Stable appearance</span><b id="memorialStyle" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Nearby label</span><b id="memorialLabel" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Current UID</span><b id="memorialOwner" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Offline cache</span><b id="memorialOffline" class="authNeutral">CHECKING</b></div>
+    <div class="memorialRow"><span>Legacy /scores</span><b id="memorialLegacy" class="authNeutral">CHECKING</b></div>
+    <div id="memorialOverall">Running validation…</div>
+    <div id="memorialDetails"></div>
+    <div id="memorialActions"><button class="primary" id="memorialRetry" type="button">RUN CHECKS</button><button id="memorialClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -233,7 +274,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5d.1';
+const BUILD_VERSION='v5d.4';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -264,11 +305,14 @@ const C={
 const PerfBudget=(()=>{
   const profiles=[
     {name:'LOW',dpr:1.15,fx:0.48,snow:120,spray:260,parts:120,rings:28,defStrips:12,groundStep:2,treeStep:2,glints:2,lights:false,
-      npcTrailEmitters:2,npcTrailStep:0.95,rockBeds:1,rockBedInterval:2.20,boulderTrails:1,boulderTrailStep:1.20},
+      npcTrailEmitters:2,npcTrailStep:0.95,rockBeds:1,rockBedInterval:2.20,boulderTrails:1,boulderTrailStep:1.20,
+      memorialBodies:14,memorialGroupBodies:2,memorialDetailScale:0.90},
     {name:'MED',dpr:1.5,fx:0.72,snow:210,spray:430,parts:190,rings:40,defStrips:18,groundStep:1,treeStep:1,glints:3,lights:true,
-      npcTrailEmitters:4,npcTrailStep:0.62,rockBeds:2,rockBedInterval:1.60,boulderTrails:2,boulderTrailStep:0.85},
+      npcTrailEmitters:4,npcTrailStep:0.62,rockBeds:2,rockBedInterval:1.60,boulderTrails:2,boulderTrailStep:0.85,
+      memorialBodies:28,memorialGroupBodies:3,memorialDetailScale:0.85},
     {name:'HIGH',dpr:2,fx:1,snow:320,spray:650,parts:280,rings:56,defStrips:24,groundStep:1,treeStep:1,glints:4,lights:true,
-      npcTrailEmitters:7,npcTrailStep:0.42,rockBeds:4,rockBedInterval:1.15,boulderTrails:3,boulderTrailStep:0.60}
+      npcTrailEmitters:7,npcTrailStep:0.42,rockBeds:4,rockBedInterval:1.15,boulderTrails:3,boulderTrailStep:0.60,
+      memorialBodies:50,memorialGroupBodies:4,memorialDetailScale:0.78}
   ];
   let level=1,avg=12,slowFrames=0,fastFrames=0,lastChange=0;
   function initial(){
@@ -579,7 +623,7 @@ const Identity=(()=>{
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5d.1 retains the canonical /best_runs/{uid} record for authenticated
+   v5d.4 retains the canonical /best_runs/{uid} record for authenticated
    personal-best submissions and the public leaderboard. */
 const BEST_RUN_PATH='/endless_powder/best_runs';
 const BEST_RUN_SCHEMA_VERSION='best-runs-v1';
@@ -640,9 +684,9 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
-   v5d.1 keeps the read-only bridge between the validated top-50 best-run records
+   v5d.4 keeps the read-only bridge between the validated top-50 best-run records
    and the world-space memorial renderer. It performs no network request; compatible
-   records now become nearby projected bodies while labels and reconciliation remain deferred. */
+   records now become projected bodies with deterministic outfits and one proximity-gated label; local reconciliation remains deferred. */
 const SHARED_MEMORIAL_LIMIT=50;
 const SharedMemorials=(()=>{
   let ownerUid='',rows=[];
@@ -694,20 +738,30 @@ const SharedMemorials=(()=>{
   function stats(){return Object.assign({},report);}
   function byUid(uid){uid=String(uid||'');return rows.find(e=>e.uid===uid)||null;}
   function current(){return ownerUid?byUid(ownerUid):null;}
-  let lastRender=Object.freeze({frame:0,loaded:0,nearby:0,drawn:0,culled:0,samples:[]});
+  let lastRender=Object.freeze({frame:0,loaded:0,nearby:0,drawn:0,culled:0,groups:0,overlapGroups:0,
+    overlapBodies:0,budgetSkipped:0,ownerDrawn:0,detailFull:0,detailReduced:0,detailMinimal:0,labeled:0,labelUid:'',labelDistance:null,samples:[]});
   function noteRender(next){
     const samples=Array.isArray(next&&next.samples)?next.samples.slice(0,8).map(e=>Object.freeze(Object.assign({},e))):[];
+    const labelUid=next&&typeof next.labelUid==='string'?next.labelUid:'';
+    const labelDistance=next&&Number.isFinite(next.labelDistance)?+next.labelDistance:null;
     lastRender=Object.freeze({frame:(lastRender.frame||0)+1,loaded:Math.max(0,(next&&next.loaded)|0),
       nearby:Math.max(0,(next&&next.nearby)|0),drawn:Math.max(0,(next&&next.drawn)|0),
-      culled:Math.max(0,(next&&next.culled)|0),samples:Object.freeze(samples)});
+      culled:Math.max(0,(next&&next.culled)|0),groups:Math.max(0,(next&&next.groups)|0),
+      overlapGroups:Math.max(0,(next&&next.overlapGroups)|0),overlapBodies:Math.max(0,(next&&next.overlapBodies)|0),
+      budgetSkipped:Math.max(0,(next&&next.budgetSkipped)|0),ownerDrawn:Math.max(0,(next&&next.ownerDrawn)|0),detailFull:Math.max(0,(next&&next.detailFull)|0),
+      detailReduced:Math.max(0,(next&&next.detailReduced)|0),detailMinimal:Math.max(0,(next&&next.detailMinimal)|0),
+      labeled:labelUid?1:0,labelUid,labelDistance,samples:Object.freeze(samples)});
     return lastRender.drawn;
   }
   function renderStats(){return {frame:lastRender.frame,loaded:lastRender.loaded,nearby:lastRender.nearby,
-    drawn:lastRender.drawn,culled:lastRender.culled,samples:lastRender.samples.map(e=>Object.assign({},e))};}
+    drawn:lastRender.drawn,culled:lastRender.culled,groups:lastRender.groups,overlapGroups:lastRender.overlapGroups,
+    overlapBodies:lastRender.overlapBodies,budgetSkipped:lastRender.budgetSkipped,ownerDrawn:lastRender.ownerDrawn,detailFull:lastRender.detailFull,
+    detailReduced:lastRender.detailReduced,detailMinimal:lastRender.detailMinimal,labeled:lastRender.labeled,
+    labelUid:lastRender.labelUid,labelDistance:lastRender.labelDistance,samples:lastRender.samples.map(e=>Object.assign({},e))};}
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,stats,byUid,current,noteRender,renderStats});
 })();
 /* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5d.1 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
+   v5d.4 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
    records; the client then applies the full ranking order: score, distance,
    clean flags, fewer collisions. The legacy /scores collection is isolated. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
@@ -1611,7 +1665,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5d.1 best-run submission, leaderboard and memorial bridge
+  lastFinishedRun=run; // complete death-aware payload used by the v5d.4 best-run submission, leaderboard and memorial bridge
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -2450,8 +2504,35 @@ function drawCarvePlume(pal,front){
 }
 
 /* ====================== SHARED MEMORIAL RENDERING ======================
-   v5d.1 renders only compatible best-run records already held by SharedMemorials.
-   No labels, UID-derived outfits, overlap grouping or local-stain suppression occur yet. */
+   v5d.4 renders compatible best-run records already held by SharedMemorials.
+   UID-derived outfits, deterministic overlap groups, distance-based detail and
+   performance budgets require no added Firebase fields. Local-stain suppression remains deferred. */
+const MEMORIAL_LABEL_RANGE=12.5;
+const MEMORIAL_LABEL_FULL=6.5;
+const MEMORIAL_GROUP_X=24;
+const MEMORIAL_GROUP_D=3;
+let pendingMemorialLabel=null;
+const MEMORIAL_PALETTES=Object.freeze([
+  Object.freeze({jacket:'#a63d40',jacketShade:'#7d2e32',pants:'#293b50',helmet:'#2f669c',skis:'#243345',accent:'#f3d06a'}),
+  Object.freeze({jacket:'#356b8c',jacketShade:'#264e69',pants:'#2f3543',helmet:'#d27a36',skis:'#26394a',accent:'#e9edf2'}),
+  Object.freeze({jacket:'#557a46',jacketShade:'#3c5a33',pants:'#343d48',helmet:'#b84b4f',skis:'#283b43',accent:'#e1c46a'}),
+  Object.freeze({jacket:'#76548f',jacketShade:'#563c6b',pants:'#273746',helmet:'#d3a33c',skis:'#2b3442',accent:'#d8e3ee'}),
+  Object.freeze({jacket:'#b45f32',jacketShade:'#864523',pants:'#304052',helmet:'#3f7698',skis:'#233746',accent:'#f0dd9a'}),
+  Object.freeze({jacket:'#397b78',jacketShade:'#285b59',pants:'#3b3548',helmet:'#aa4f6c',skis:'#273a48',accent:'#dce6ec'}),
+  Object.freeze({jacket:'#8a4b3d',jacketShade:'#65362d',pants:'#2f4351',helmet:'#d0b24d',skis:'#263744',accent:'#e7edf2'}),
+  Object.freeze({jacket:'#4e6795',jacketShade:'#394c70',pants:'#3a3f47',helmet:'#b94d42',skis:'#243340',accent:'#e0bd6a'})
+]);
+function memorialHash(uid){
+  uid=String(uid||'');let h=2166136261>>>0;
+  for(let i=0;i<uid.length;i++){h^=uid.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  return h>>>0;
+}
+function memorialStyle(uid){
+  const hash=memorialHash(uid),index=hash%MEMORIAL_PALETTES.length,pal=MEMORIAL_PALETTES[index];
+  return Object.freeze({hash,index,jacket:pal.jacket,jacketShade:pal.jacketShade,pants:pal.pants,
+    helmet:pal.helmet,skis:pal.skis,accent:pal.accent,helmetType:(hash>>>4)%3,
+    stripe:(hash>>>7)%3,poseLean:(((hash>>>11)%9)-4)*0.018,armShift:(((hash>>>15)%7)-3)*0.55});
+}
 function memorialApproach(m){
   const th=Number.isFinite(m.deathTheta)?m.deathTheta:0;
   const len=m.deathCause==='caught'?2.7:m.deathCause==='edge'?2.0:2.35;
@@ -2472,69 +2553,195 @@ function memorialPose(cause,th){
   if(cause==='edge')return {fall:0.62*side,spread:1.05,blood:0.84,bodyY:0};
   return {fall:0.18*side,spread:0.90,blood:0.72,bodyY:-1};
 }
-function drawMemorialGround(m,p,approach,pose,nightK){
-  const a0=projD(approach.a0.x,approach.a0.d-S.depth),a1=projD(approach.a1.x,approach.a1.d-S.depth);
-  const b0=projD(approach.b0.x,approach.b0.d-S.depth),b1=projD(approach.b1.x,approach.b1.d-S.depth);
-  ctx.save();ctx.lineCap='round';
-  ctx.strokeStyle='rgba(74,92,112,'+(0.16+0.08*nightK).toFixed(3)+')';
-  ctx.lineWidth=Math.max(0.75,1.55*p.s);
-  ctx.beginPath();ctx.moveTo(a0.x,a0.y);ctx.lineTo(a1.x,a1.y);ctx.moveTo(b0.x,b0.y);ctx.lineTo(b1.x,b1.y);ctx.stroke();
+function memorialDetailLevel(p,Q){
+  if(p.s>=0.96)return 2;
+  return p.s>=Q.memorialDetailScale?1:0;
+}
+function drawMemorialGround(m,p,approach,pose,nightK,detail,alpha){
+  ctx.save();ctx.globalAlpha=alpha;ctx.lineCap='round';
+  if(detail>0){
+    const a0=projD(approach.a0.x,approach.a0.d-S.depth),a1=projD(approach.a1.x,approach.a1.d-S.depth);
+    ctx.strokeStyle='rgba(74,92,112,'+(0.14+0.07*nightK).toFixed(3)+')';
+    ctx.lineWidth=Math.max(0.7,1.45*p.s);
+    ctx.beginPath();ctx.moveTo(a0.x,a0.y);ctx.lineTo(a1.x,a1.y);
+    if(detail>1){const b0=projD(approach.b0.x,approach.b0.d-S.depth),b1=projD(approach.b1.x,approach.b1.d-S.depth);
+      ctx.moveTo(b0.x,b0.y);ctx.lineTo(b1.x,b1.y);}
+    ctx.stroke();
+  }
   ctx.translate(p.x,p.y);
-  ctx.fillStyle='rgba(65,83,104,'+(0.10+0.06*nightK).toFixed(3)+')';
-  ctx.beginPath();ctx.ellipse(0,4*p.s,20*p.s,7*p.s,pose.fall*0.18,0,6.283);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,'+(0.11+0.04*(1-nightK)).toFixed(3)+')';
-  ctx.beginPath();ctx.ellipse(-4*p.s,1*p.s,15*p.s,4.5*p.s,pose.fall*0.12,0,6.283);ctx.fill();
-  const bloodA=(0.22+0.08*nightK)*pose.blood;
+  ctx.fillStyle='rgba(65,83,104,'+(0.09+0.05*nightK).toFixed(3)+')';
+  ctx.beginPath();ctx.ellipse(0,4*p.s,(detail?20:15)*p.s,(detail?7:5.5)*p.s,pose.fall*0.18,0,6.283);ctx.fill();
+  if(detail>1){ctx.fillStyle='rgba(255,255,255,'+(0.10+0.04*(1-nightK)).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(-4*p.s,1*p.s,15*p.s,4.5*p.s,pose.fall*0.12,0,6.283);ctx.fill();}
+  const bloodA=(0.20+0.08*nightK)*pose.blood;
   ctx.fillStyle='rgba(112,25,24,'+bloodA.toFixed(3)+')';
-  ctx.beginPath();ctx.ellipse(7*p.s,5*p.s,10.5*p.s*pose.blood,4.6*p.s,pose.fall*0.32,0,6.283);ctx.fill();
-  ctx.fillStyle='rgba(78,18,20,'+(bloodA*0.62).toFixed(3)+')';
-  ctx.beginPath();ctx.arc((11+3*pose.blood)*p.s,5*p.s,2.5*p.s,0,6.283);ctx.fill();
+  ctx.beginPath();ctx.ellipse(7*p.s,5*p.s,(detail?10.5:8.0)*p.s*pose.blood,(detail?4.6:3.7)*p.s,pose.fall*0.32,0,6.283);ctx.fill();
+  if(detail>0){ctx.fillStyle='rgba(78,18,20,'+(bloodA*0.62).toFixed(3)+')';
+    ctx.beginPath();ctx.arc((11+3*pose.blood)*p.s,5*p.s,2.5*p.s,0,6.283);ctx.fill();}
   ctx.restore();
 }
-function drawSharedMemorialBody(m,p,approach,pose,nightK){
+function drawMemorialHelmet(style,detail){
+  ctx.fillStyle=style.helmet;
+  if(detail<2){ctx.beginPath();ctx.arc(0,-13.6,4.1,Math.PI,0);ctx.fill();return;}
+  if(style.helmetType===0){ctx.beginPath();ctx.arc(0,-14,4.2,Math.PI,0);ctx.fill();}
+  else if(style.helmetType===1){
+    ctx.beginPath();ctx.arc(0,-13.6,4.5,Math.PI*0.92,Math.PI*2.05);ctx.fill();
+    ctx.fillRect(-4.4,-14.2,8.8,1.8);
+  }else{
+    ctx.beginPath();ctx.moveTo(-4.6,-13.2);ctx.quadraticCurveTo(0,-18.2,4.6,-13.2);ctx.lineTo(3.4,-11.8);ctx.lineTo(-3.8,-11.8);ctx.closePath();ctx.fill();
+  }
+}
+function drawSharedMemorialBody(m,p,approach,pose,nightK,style,detail,alpha){
   const ahead=projD(m.deathX+approach.dx*0.55,m.deathDepth-S.depth+approach.dd*0.55);
   const travelAngle=Math.atan2(ahead.y-p.y,ahead.x-p.x);
-  const bodyAngle=travelAngle-Math.PI/2+pose.fall;
+  const bodyAngle=travelAngle-Math.PI/2+pose.fall+style.poseLean;
   ctx.save();ctx.translate(p.x,p.y+pose.bodyY*p.s);ctx.rotate(bodyAngle);ctx.scale(p.s*1.12,p.s*1.12);
-  ctx.globalAlpha=0.92;
-  ctx.fillStyle='rgba(10,15,22,0.22)';ctx.beginPath();ctx.ellipse(1,5,18,6,0,0,6.283);ctx.fill();
+  ctx.globalAlpha=0.92*alpha;
+  ctx.fillStyle='rgba(10,15,22,0.22)';ctx.beginPath();ctx.ellipse(1,5,detail?18:14,detail?6:4.8,0,0,6.283);ctx.fill();
   ctx.lineCap='round';
-  // Skis and poles are displaced by the impact but remain restrained at distance.
-  ctx.strokeStyle='#243345';ctx.lineWidth=3.2;
+  ctx.strokeStyle=style.skis;ctx.lineWidth=detail?3.2:2.7;
   ctx.beginPath();ctx.moveTo(-7,-3);ctx.lineTo(-12,18*pose.spread);ctx.moveTo(6,-2);ctx.lineTo(14,16*pose.spread);ctx.stroke();
-  ctx.strokeStyle='rgba(48,61,76,0.75)';ctx.lineWidth=1.6;
-  ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-18,10);ctx.moveTo(5,1);ctx.lineTo(17,8);ctx.stroke();
-  ctx.strokeStyle='#293b50';ctx.lineWidth=5.2;
+  ctx.strokeStyle=style.pants;ctx.lineWidth=detail?5.2:4.4;
   ctx.beginPath();ctx.moveTo(-4,3);ctx.lineTo(-10,12);ctx.moveTo(4,3);ctx.lineTo(11,11);ctx.stroke();
-  ctx.strokeStyle='#9f3437';ctx.lineWidth=7.2;
+  ctx.strokeStyle=style.jacket;ctx.lineWidth=detail?7.2:6.2;
   ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(0,5);ctx.stroke();
-  ctx.strokeStyle='#8e2e32';ctx.lineWidth=4.2;
-  ctx.beginPath();ctx.moveTo(-1,-4);ctx.lineTo(-11,1);ctx.moveTo(1,-3);ctx.lineTo(10,-9);ctx.stroke();
-  ctx.fillStyle='#ead3b9';ctx.beginPath();ctx.arc(0,-12,3.8,0,6.283);ctx.fill();
-  ctx.fillStyle='#2f669c';ctx.beginPath();ctx.arc(0,-14,4.2,Math.PI,0);ctx.fill();
-  if(m.deathCause==='caught'){
+  if(detail>0){
+    ctx.strokeStyle='rgba(48,61,76,0.75)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-18,10);ctx.moveTo(5,1);ctx.lineTo(17,8);ctx.stroke();
+    if(detail>1&&style.stripe){ctx.strokeStyle=style.accent;ctx.lineWidth=style.stripe===1?1.8:2.3;
+      ctx.beginPath();ctx.moveTo(-3.1,-3.5);ctx.lineTo(3.1,-3.5);ctx.stroke();}
+    ctx.strokeStyle=style.jacketShade;ctx.lineWidth=4.2;
+    ctx.beginPath();ctx.moveTo(-1,-4);ctx.lineTo(-11,1+style.armShift);ctx.moveTo(1,-3);ctx.lineTo(10,-9-style.armShift);ctx.stroke();
+  }
+  ctx.fillStyle='#ead3b9';ctx.beginPath();ctx.arc(0,-12,detail?3.8:3.3,0,6.283);ctx.fill();
+  drawMemorialHelmet(style,detail);
+  if(detail>1&&m.deathCause==='caught'){
     ctx.strokeStyle='rgba(165,205,225,0.36)';ctx.lineWidth=2.2;
     ctx.beginPath();ctx.arc(0,0,17,-2.5,-0.45);ctx.stroke();
+  }
+  if(detail>1&&m.isCurrentUser){
+    ctx.strokeStyle='rgba(235,246,255,'+(0.26+0.12*(1-nightK)).toFixed(3)+')';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.ellipse(0,1,15,19,0,0,6.283);ctx.stroke();
   }
   ctx.globalAlpha=1;ctx.restore();
   return {angle:bodyAngle};
 }
+function memorialDistance(m,u){return Math.hypot((m.deathX-S.x)/PXM,u);}
+function memorialGroups(items){
+  const n=items.length,parent=Array.from({length:n},(_,i)=>i);
+  const find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+  const unite=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[b]=a;};
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    if(Math.abs(items[i].m.deathX-items[j].m.deathX)<=MEMORIAL_GROUP_X&&
+       Math.abs(items[i].m.deathDepth-items[j].m.deathDepth)<=MEMORIAL_GROUP_D)unite(i,j);
+  }
+  const map=new Map();
+  for(let i=0;i<n;i++){const root=find(i);if(!map.has(root))map.set(root,[]);map.get(root).push(items[i]);}
+  const groups=[];
+  for(const members of map.values()){
+    members.sort((a,b)=>a.m.rank-b.m.rank||a.m.uid.localeCompare(b.m.uid));
+    const representative=members[0],own=members.find(e=>e.m.isCurrentUser)||null;
+    groups.push({members,representative,own,minDistance:Math.min(...members.map(e=>memorialDistance(e.m,e.u)))});
+  }
+  return groups;
+}
+function memorialOffset(item,index){
+  if(index===0)return {x:0,d:0};
+  const h=memorialHash(item.m.uid),side=(h&1)?1:-1;
+  return {x:side*(5+(h>>>2)%5),d:(((h>>>6)%5)-2)*0.18};
+}
+function prepareMemorialGroups(items,Q){
+  const groups=memorialGroups(items),priority=groups.slice().sort((a,b)=>(b.own?1:0)-(a.own?1:0)||a.minDistance-b.minDistance||a.representative.m.rank-b.representative.m.rank);
+  let budget=Math.max(1,Q.memorialBodies|0),budgetSkipped=0;
+  for(const group of priority){
+    if(budget<=0){group.render=[];budgetSkipped+=group.members.length;continue;}
+    const ordered=[group.representative];
+    if(group.own&&group.own!==group.representative)ordered.push(group.own);
+    for(const item of group.members)if(!ordered.includes(item))ordered.push(item);
+    const cap=Math.min(ordered.length,Math.max(1,Q.memorialGroupBodies|0),budget);
+    group.render=ordered.slice(0,cap).map((item,i)=>({item,index:i,offset:memorialOffset(item,i),alpha:i===0?1:Math.max(0.30,0.58-(i-1)*0.10)}));
+    budget-=cap;budgetSkipped+=ordered.length-cap;
+  }
+  return {groups:priority.filter(g=>g.render&&g.render.length).sort((a,b)=>a.representative.u-b.representative.u||a.representative.m.rank-b.representative.m.rank),budgetSkipped};
+}
+function chooseMemorialLabel(visible){
+  if(S.mode!=='play'&&!String(S.mode).startsWith('dying'))return null;
+  const eligible=[];
+  for(const item of visible){
+    const d=memorialDistance(item.m,item.u);
+    if(d>=MEMORIAL_LABEL_RANGE||item.p.y<36||item.p.y>LH-58)continue;
+    eligible.push(Object.assign({},item,{distance:d}));
+  }
+  eligible.sort((a,b)=>a.distance-b.distance||a.m.rank-b.m.rank||a.m.uid.localeCompare(b.m.uid));
+  if(!eligible.length)return null;
+  const nearest=eligible[0],own=eligible.find(e=>e.m.isCurrentUser);
+  return own&&own.distance<=nearest.distance+0.75?own:nearest;
+}
+function memorialRoundRectPath(x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function drawSharedMemorialLabel(){
+  const item=pendingMemorialLabel;if(!item)return;
+  const m=item.m,p=item.p,d=item.distance;
+  const fade=clamp((MEMORIAL_LABEL_RANGE-d)/(MEMORIAL_LABEL_RANGE-MEMORIAL_LABEL_FULL),0,1);
+  if(fade<=0.01)return;
+  const score=fmtNum(m.score)+' pts',initials=m.initials;
+  ctx.save();ctx.globalAlpha=fade;
+  ctx.font='900 22px system-ui,sans-serif';
+  const iw=ctx.measureText(initials).width;
+  ctx.font='700 16px system-ui,sans-serif';
+  const sw=ctx.measureText(score).width;
+  const w=Math.max(98,Math.ceil(Math.max(iw,sw)+28)),h=51;
+  const x=clamp(p.x-w/2,10,LW-w-10),y=clamp(p.y-69-p.s*12,12,LH-h-20);
+  const cx=clamp(p.x,x+12,x+w-12);
+  ctx.strokeStyle='rgba(225,238,248,0.62)';ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(cx,y+h);ctx.lineTo(p.x,p.y-11*p.s);ctx.stroke();
+  ctx.fillStyle='rgba(13,20,30,0.78)';ctx.beginPath();memorialRoundRectPath(x,y,w,h,10);ctx.fill();
+  ctx.strokeStyle=m.isCurrentUser?'rgba(220,243,255,0.86)':'rgba(190,211,226,0.52)';ctx.lineWidth=m.isCurrentUser?1.8:1.1;
+  ctx.beginPath();memorialRoundRectPath(x,y,w,h,10);ctx.stroke();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#f5f9fc';ctx.font='900 22px system-ui,sans-serif';ctx.fillText(initials,x+w/2,y+17);
+  ctx.fillStyle=m.isCurrentUser?'#dff4ff':'#c8d5df';ctx.font='700 16px system-ui,sans-serif';ctx.fillText(score,x+w/2,y+38);
+  ctx.restore();
+}
 function drawSharedMemorials(nightK){
-  const source=SharedMemorials.compatible(),visible=[];
+  const source=SharedMemorials.compatible(),visible=[],Q=PerfBudget.profile();
+  pendingMemorialLabel=null;
   for(const m of source){
     const u=m.deathDepth-S.depth;
-    if(u<UTOP-3||u>UBOT+3)continue;
-    visible.push({m,u});
+    if(u<UTOP-2.5||u>UBOT+2.5)continue;
+    const p=projD(m.deathX,u);
+    if(p.x<-70||p.x>LW+70||p.y<-90||p.y>LH+110)continue;
+    visible.push({m,u,p});
   }
-  visible.sort((a,b)=>a.u-b.u||a.m.rank-b.m.rank);
-  const samples=[];
-  for(const item of visible){
-    const m=item.m,p=projD(m.deathX,item.u),approach=memorialApproach(m),pose=memorialPose(m.deathCause,approach.th);
-    drawMemorialGround(m,p,approach,pose,nightK);
-    const out=drawSharedMemorialBody(m,p,approach,pose,nightK);
-    if(samples.length<8)samples.push({uid:m.uid,x:+p.x.toFixed(2),y:+p.y.toFixed(2),s:+p.s.toFixed(4),angle:+out.angle.toFixed(4),cause:m.deathCause});
+  const prepared=prepareMemorialGroups(visible,Q),samples=[],labelCandidates=[];
+  let drawn=0,overlapGroups=0,overlapBodies=0,ownerDrawn=0,detailFull=0,detailReduced=0,detailMinimal=0;
+  for(const group of prepared.groups){
+    if(group.members.length>1){overlapGroups++;overlapBodies+=group.members.length-1;}
+    let ownRendered=null,representativeRendered=null;
+    for(const entry of group.render){
+      const base=entry.item,m=base.m,off=entry.offset;
+      const rendered=off.x||off.d?Object.assign({},m,{deathX:m.deathX+off.x,deathDepth:m.deathDepth+off.d}):m;
+      const u=rendered.deathDepth-S.depth,p=projD(rendered.deathX,u),approach=memorialApproach(rendered),pose=memorialPose(rendered.deathCause,approach.th),style=memorialStyle(rendered.uid);
+      const detail=memorialDetailLevel(p,Q);
+      drawMemorialGround(rendered,p,approach,pose,nightK,detail,entry.alpha);
+      const out=drawSharedMemorialBody(rendered,p,approach,pose,nightK,style,detail,entry.alpha);
+      const labelItem={m:base.m,u:base.u,p};
+      if(base===group.representative)representativeRendered=labelItem;
+      if(base.m.isCurrentUser)ownRendered=labelItem;
+      drawn++;if(m.isCurrentUser)ownerDrawn++;if(detail===2)detailFull++;else if(detail===1)detailReduced++;else detailMinimal++;
+      if(samples.length<8)samples.push({uid:m.uid,x:+p.x.toFixed(2),y:+p.y.toFixed(2),s:+p.s.toFixed(4),angle:+out.angle.toFixed(4),cause:m.deathCause,
+        style:style.index,current:!!m.isCurrentUser,groupSize:group.members.length,groupIndex:entry.index,alpha:+entry.alpha.toFixed(2),detail});
+    }
+    if(ownRendered||representativeRendered)labelCandidates.push(ownRendered||representativeRendered);
   }
-  SharedMemorials.noteRender({loaded:source.length,nearby:visible.length,drawn:visible.length,culled:source.length-visible.length,samples});
+  pendingMemorialLabel=chooseMemorialLabel(labelCandidates);
+  SharedMemorials.noteRender({loaded:source.length,nearby:visible.length,drawn,culled:source.length-visible.length,
+    groups:prepared.groups.length,overlapGroups,overlapBodies,budgetSkipped:prepared.budgetSkipped,ownerDrawn,
+    detailFull,detailReduced,detailMinimal,labelUid:pendingMemorialLabel?pendingMemorialLabel.m.uid:'',
+    labelDistance:pendingMemorialLabel?pendingMemorialLabel.distance:null,samples});
 }
 
 function render(){
@@ -2752,6 +2959,8 @@ function render(){
   drawSprayLayer(true,pal);
   // yeti + frost + vignette
   if(S.yeti.on)drawYetiLayer(nightK);
+  // One proximity-gated shared memorial label, drawn as a screen-space annotation.
+  drawSharedMemorialLabel();
   // kill-cam
   if(S.mode==='dying'){
     const k=1-S.dying/(S.cause==='caught'?C.killCam:C.edgeCam);
@@ -2764,7 +2973,8 @@ function render(){
   if(debugOn){ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(10,LH-190,260,175);
     ctx.fillStyle='#7fffb0';ctx.font='16px monospace';ctx.textAlign='left';
     const L=['spd '+S.speed.toFixed(1)+'/'+C.speedMax,'combo '+S.combo,'\u03b8 '+(S.theta/D2R).toFixed(0)+'\u00b0 p '+S.turnPressure.toFixed(2),
-      'buffer '+(S.yeti.on?S.buffer.toFixed(1):'\u2014'),'npcs '+npcs.length,'depth '+S.depth.toFixed(0),'fps '+fps.toFixed(0)+' '+PerfBudget.profile().name+' '+PerfBudget.avg.toFixed(1)+'ms'];
+      'buffer '+(S.yeti.on?S.buffer.toFixed(1):'\u2014'),'npcs '+npcs.length,'depth '+S.depth.toFixed(0),'fps '+fps.toFixed(0)+' '+PerfBudget.profile().name+' '+PerfBudget.avg.toFixed(1)+'ms',
+      'mem '+SharedMemorials.renderStats().drawn+'/'+SharedMemorials.renderStats().nearby+' g'+SharedMemorials.renderStats().groups];
     L.forEach((s,i)=>ctx.fillText(s,20,LH-165+i*24));ctx.textAlign='center';}
   hud();
 }
@@ -3146,7 +3356,7 @@ function hud(){
     el.combo.style.transform='scale('+(1+S.comboPulse*0.35)+')';
   }else{el.combo.textContent='';}
 }
-const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF,memorialStats:()=>SharedMemorials.renderStats()});
+const Rendering=Object.freeze({render,hud,palette,projD,deformation:DEF,memorialStats:()=>SharedMemorials.renderStats(),memorialStyle});
 /* ====================== MODULE: INPUT ====================== */
 let anchor=null;
 const keys={};
@@ -3219,7 +3429,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5d.1 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. v5d.4 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
@@ -3243,7 +3453,11 @@ function bestCheckRequested(){
   try{return new URLSearchParams(location.search).get('bestcheck')==='1'||store.getItem('ep_best_diag')==='1';}
   catch(e){return false;}
 }
-function diagnosticRequested(){return authDiagRequested()||bestCheckRequested();}
+function memorialCheckRequested(){
+  try{return new URLSearchParams(location.search).get('memorialcheck')==='1'||store.getItem('ep_memorial_diag')==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested();}
 const BestCheck=(()=>{
   const RELOAD_KEY='ep_bestcheck_reload_v5c4';
   const PROBE_KEY='ep_bestcheck_queue_probe_v5c4';
@@ -3397,12 +3611,177 @@ const BestCheck=(()=>{
   }
   return Object.freeze({init,run,last:()=>lastReport,requested:bestCheckRequested});
 })();
+/* ================== MODULE: SHARED MEMORIAL RELEASE CHECK ==================
+   v5d.4 validates the read-only bridge and renderer with temporary in-memory
+   records. It never submits, replaces or deletes a Firebase best-run record. */
+const MemorialCheck=(()=>{
+  const PROBE_KEY='ep_memorialcheck_cache_probe_v5d4';
+  const LEGACY_PATH='/endless_powder/scores';
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood');
+  const warn=(id,text)=>row(id,text||'CHECK','authWarn');
+  const fail=(id,text)=>row(id,text||'FAIL','authBad');
+  const close=(a,b,eps)=>Math.abs(a-b)<=(eps||1e-6);
+  const realUid=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''))&&String(uid).indexOf('local-')!==0;
+  function make(uid,over){
+    over=Object.assign({},over||{});
+    const deathDepth=Number.isFinite(+over.deathDepth)?+over.deathDepth:1001;
+    const run={score:Number.isFinite(+over.score)?+over.score:9000,distance:Number.isFinite(+over.distance)?+over.distance:Math.floor(deathDepth),
+      cleanFlags:Number.isFinite(+over.cleanFlags)?+over.cleanFlags:12,attemptedFlags:Number.isFinite(+over.attemptedFlags)?+over.attemptedFlags:14,
+      bestCombo:Number.isFinite(+over.bestCombo)?+over.bestCombo:8,collisions:Number.isFinite(+over.collisions)?+over.collisions:1,
+      deathX:Number.isFinite(+over.deathX)?+over.deathX:LW/2,deathDepth,deathTheta:Number.isFinite(+over.deathTheta)?+over.deathTheta:0,
+      deathCause:over.deathCause||'caught',worldVersion:over.worldVersion||WORLD_VERSION,
+      timestamp:Number.isFinite(+over.timestamp)?+over.timestamp:Date.now()-1000};
+    return Object.assign({uid:String(uid)},BestRuns.build(over.initials||'TST',run));
+  }
+  function requestCount(fragment){
+    try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(fragment)).length;}
+    catch(e){return 0;}
+  }
+  function snapshot(){
+    const rows=SharedMemorials.records().map(e=>{const out={uid:e.uid};for(const k of BEST_RUN_FIELDS)out[k]=e[k];return out;});
+    return{rows,owner:SharedMemorials.stats().ownerUid,mode:S.mode,depth:S.depth,x:S.x,camZ:S.camZ,quality:PerfBudget.level,cz:CZ,utop:UTOP,ubot:UBOT,label:pendingMemorialLabel};
+  }
+  function restore(snap){
+    S.mode=snap.mode;S.depth=snap.depth;S.x=snap.x;S.camZ=snap.camZ;
+    if(PerfBudget.level!==snap.quality)PerfBudget.setLevel(snap.quality);
+    CZ=snap.cz;UTOP=snap.utop;UBOT=snap.ubot;pendingMemorialLabel=snap.label;
+    SharedMemorials.ingest(snap.rows,snap.owner);
+  }
+  function setTestView(){S.mode='play';S.depth=1000;S.x=LW/2;S.camZ=220;CZ=220;UTOP=uOfz(-120,CZ);UBOT=uOfz(LH+100,CZ);}
+  function deterministic(){
+    const snap=snapshot(),auth=Identity.status(),owner=realUid(auth.uid)?auth.uid:'memorial-owner';
+    const result={bridge:false,world:false,projection:false,causes:false,culling:false,overlap:false,budgets:false,style:false,label:false,offline:false,
+      bridgeStats:null,renderStats:null,budgetCounts:[],error:''};
+    try{
+      setTestView();PerfBudget.setLevel(2);setTestView();
+      const bridgeRows=[make(owner,{deathX:260,deathDepth:1001}),make('bridge-two',{deathX:360,deathDepth:1005}),
+        make('bridge-three',{deathX:460,deathDepth:1009}),make('old-world',{deathX:560,deathDepth:1013,worldVersion:'mountain-old'}),
+        Object.assign({},make('bad-record',{deathX:620,deathDepth:1017}),{unexpected:true})];
+      SharedMemorials.ingest(bridgeRows,owner);const bridge=SharedMemorials.stats();result.bridgeStats=bridge;
+      result.bridge=bridge.source===5&&bridge.accepted===3&&bridge.invalid===1;
+      result.world=bridge.worldMismatch===1&&SharedMemorials.records().every(e=>e.worldVersion===WORLD_VERSION);
+
+      const u=7,x=430,p=projD(x,u),es=CZ/(CZ-u);
+      result.projection=close(p.s,es)&&close(p.x,LW/2+(x-LW/2)*es)&&close(p.y,PIN_Y+PXM*u*es);
+
+      const causeRows=[
+        make('cause-caught',{initials:'CAT',score:9400,deathX:170,deathDepth:1001,deathTheta:-0.35,deathCause:'caught'}),
+        make('cause-edge',{initials:'EDG',score:9300,deathX:290,deathDepth:1005,deathTheta:0.42,deathCause:'edge'}),
+        make('cause-tree',{initials:'TRE',score:9200,deathX:430,deathDepth:1009,deathTheta:-0.58,deathCause:'tree'}),
+        make('cause-rock',{initials:'ROC',score:9100,deathX:550,deathDepth:1013,deathTheta:0.64,deathCause:'boulder'}),
+        make('cause-far',{initials:'FAR',score:9000,deathX:360,deathDepth:1500,deathCause:'caught'})];
+      SharedMemorials.ingest(causeRows,owner);drawSharedMemorials(0);const rs=SharedMemorials.renderStats();result.renderStats=rs;
+      const sampleCauses=new Set(rs.samples.map(e=>e.cause));
+      result.causes=rs.drawn===4&&['caught','edge','tree','boulder'].every(c=>sampleCauses.has(c));
+      result.culling=rs.loaded===5&&rs.nearby===4&&rs.culled===1;
+      if(result.causes&&result.projection){
+        for(const m of causeRows.slice(0,4)){
+          const sm=rs.samples.find(e=>e.uid===m.uid),ep=projD(m.deathX,m.deathDepth-S.depth);
+          if(!sm||!close(sm.x,+ep.x.toFixed(2),0.01)||!close(sm.y,+ep.y.toFixed(2),0.01))result.projection=false;
+        }
+      }
+
+      const overlapRows=[];
+      for(let i=0;i<5;i++)overlapRows.push(make(i===4?owner:'overlap-'+i,{initials:'OVR',score:10000-i,deathX:360,deathDepth:1003,deathTheta:i*.1,deathCause:i%2?'tree':'caught'}));
+      SharedMemorials.ingest(overlapRows,owner);drawSharedMemorials(0);const os1=SharedMemorials.renderStats();drawSharedMemorials(0);const os2=SharedMemorials.renderStats();
+      const stable=JSON.stringify(os1.samples.map(e=>[e.uid,e.x,e.y,e.alpha]))===JSON.stringify(os2.samples.map(e=>[e.uid,e.x,e.y,e.alpha]));
+      result.overlap=os1.groups===1&&os1.overlapGroups===1&&os1.drawn===4&&os1.budgetSkipped===1&&os1.ownerDrawn===1&&stable;
+
+      const grid=[];let n=0;
+      for(let r=0;r<5;r++)for(let c=0;c<10;c++)grid.push(make('grid-'+(n++),{score:12000-n,deathX:75+c*62,deathDepth:1001+r*4,deathTheta:(c-4.5)*.04,deathCause:['caught','edge','tree','boulder'][n%4]}));
+      SharedMemorials.ingest(grid,owner);
+      const counts=[];let lod=true;
+      for(let q=0;q<3;q++){
+        PerfBudget.setLevel(q);setTestView();drawSharedMemorials(0);const st=SharedMemorials.renderStats(),pf=PerfBudget.profile();counts.push(st.drawn);
+        const mid=(.96+pf.memorialDetailScale)/2;
+        lod=lod&&st.drawn===pf.memorialBodies&&memorialDetailLevel({s:.98},pf)===2&&memorialDetailLevel({s:mid},pf)===1&&memorialDetailLevel({s:pf.memorialDetailScale-.03},pf)===0;
+      }
+      result.budgetCounts=counts;result.budgets=lod&&counts[0]===14&&counts[1]===28&&counts[2]===50;
+
+      const a=memorialStyle('appearance-a'),a2=memorialStyle('appearance-a'),b=memorialStyle('appearance-b');
+      result.style=JSON.stringify(a)===JSON.stringify(a2)&&a.hash!==b.hash;
+
+      PerfBudget.setLevel(2);setTestView();
+      const labelRows=[make('label-rival',{initials:'RIV',score:8000,deathX:360,deathDepth:1002}),
+        make(owner,{initials:'YOU',score:7900,deathX:385,deathDepth:1001.5})];
+      SharedMemorials.ingest(labelRows,owner);drawSharedMemorials(0);const ls=SharedMemorials.renderStats();
+      SharedMemorials.ingest([make('label-far',{initials:'FAR',deathX:360,deathDepth:1014})],owner);drawSharedMemorials(0);const lf=SharedMemorials.renderStats();
+      result.label=ls.labeled===1&&ls.labelUid===owner&&Number.isFinite(ls.labelDistance)&&lf.labeled===0;
+
+      try{
+        const cached=[make('cache-one',{deathX:300,deathDepth:1003}),make('cache-two',{deathX:430,deathDepth:1007})];
+        Persistence.setJSON(PROBE_KEY,{records:cached,owner});const back=Persistence.getJSON(PROBE_KEY,null);
+        SharedMemorials.ingest(back&&back.records,back&&back.owner);result.offline=!!back&&SharedMemorials.stats().accepted===2;
+      }catch(e){result.offline=false;}finally{try{store.removeItem(PROBE_KEY);}catch(e){}}
+    }catch(e){result.error=(e&&e.message)||String(e);}
+    finally{restore(snap);}
+    return result;
+  }
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('memorialRetry');if(btn)btn.textContent='CHECKING…';
+    ['memorialAuth','memorialBridge','memorialWorld','memorialProjection','memorialCauses','memorialCulling','memorialOverlap','memorialBudgets','memorialStyle','memorialLabel','memorialOwner','memorialOffline','memorialLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    const details=[];
+    try{
+      const liveBefore=SharedMemorials.stats(),d=deterministic(),liveAfter=SharedMemorials.stats(),auth=Identity.status();
+      auth.authenticated&&auth.tokenReady?pass('memorialAuth','CONNECTED — UID MATCH'):warn('memorialAuth','OFFLINE / LOCAL FALLBACK');
+      d.bridge?pass('memorialBridge','PASS — VALID RECORDS ONLY'):fail('memorialBridge','FAIL');
+      d.world?pass('memorialWorld','PASS — MISMATCH EXCLUDED'):fail('memorialWorld','FAIL');
+      d.projection?pass('memorialProjection','PASS — WORLD SPACE'):fail('memorialProjection','FAIL');
+      d.causes?pass('memorialCauses','PASS — 4 / 4'):fail('memorialCauses','FAIL');
+      d.culling?pass('memorialCulling','PASS — OFFSCREEN SKIPPED'):fail('memorialCulling','FAIL');
+      d.overlap?pass('memorialOverlap','PASS — STABLE + BUDGETED'):fail('memorialOverlap','FAIL');
+      d.budgets?pass('memorialBudgets','PASS — '+d.budgetCounts.join(' / ')):fail('memorialBudgets','FAIL — '+d.budgetCounts.join(' / '));
+      d.style?pass('memorialStyle','PASS — UID DETERMINISTIC'):fail('memorialStyle','FAIL');
+      d.label?pass('memorialLabel','PASS — ONE + OWNER TIE'):fail('memorialLabel','FAIL');
+      d.offline?pass('memorialOffline','PASS — CACHE RESTORED'):fail('memorialOffline','FAIL');
+      if(realUid(auth.uid))liveAfter.ownerPresent?pass('memorialOwner','FOUND IN TOP 50'):warn('memorialOwner','VALID UID — NO TOP-50 BODY');
+      else warn('memorialOwner','LOCAL FALLBACK UID');
+      const legacy=requestCount(LEGACY_PATH);legacy===0?pass('memorialLegacy','ISOLATED — 0 REQUESTS'):fail('memorialLegacy',legacy+' REQUEST(S)');
+      const deterministicOK=d.bridge&&d.world&&d.projection&&d.causes&&d.culling&&d.overlap&&d.budgets&&d.style&&d.label&&d.offline;
+      const liveOK=legacy===0;
+      details.push('Build: '+BUILD_VERSION);
+      details.push('World: '+WORLD_VERSION);
+      details.push('UID: '+(auth.uid||'—'));
+      details.push('Live source / compatible: '+liveBefore.source+' / '+liveBefore.accepted);
+      details.push('Live world mismatches: '+liveBefore.worldMismatch);
+      details.push('Live invalid records: '+liveBefore.invalid);
+      details.push('Current UID memorial: '+(liveAfter.ownerPresent?'YES':'NO'));
+      details.push('Best-run collection requests: '+requestCount('/endless_powder/best_runs'));
+      details.push('Synthetic Firebase writes: NONE');
+      if(d.error)details.push('Local test error: '+d.error);
+      const overall=$('memorialOverall');
+      if(overall){
+        if(deterministicOK&&liveOK&&auth.authenticated){overall.textContent='VERIFIED — v5d SHARED MEMORIALS PASSED';overall.className='authGood';}
+        else if(deterministicOK&&liveOK){overall.textContent='LOCAL MEMORIAL VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else{overall.textContent='VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const de=$('memorialDetails');if(de)de.textContent=details.join('\n');
+      lastReport={deterministic:d,live:liveAfter,authenticated:auth.authenticated,legacyRequests:legacy,passed:deterministicOK&&liveOK&&auth.authenticated};
+    }catch(e){
+      fail('memorialBridge','ERROR');const overall=$('memorialOverall');if(overall){overall.textContent='VALIDATION ERROR';overall.className='authBad';}
+      const de=$('memorialDetails');if(de)de.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN CHECKS';}
+    return lastReport;
+  }
+  function init(){
+    const box=$('memorialDiag');if(!box||!memorialCheckRequested())return;
+    box.classList.add('show');
+    $('memorialRetry').addEventListener('click',e=>{e.stopPropagation();run();});
+    $('memorialClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});
+  }
+  return Object.freeze({init,run,last:()=>lastReport,requested:memorialCheckRequested});
+})();
 Input.bind();
 initAuthDiag();
 BestCheck.init();
+MemorialCheck.init();
 Identity.start().finally(async()=>{
   Identity.verify();SharedMemorials.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
   if(bestCheckRequested())await BestCheck.run();
+  if(memorialCheckRequested())await MemorialCheck.run();
   if(!diagnosticRequested())Leaderboard.drain();
 });
 /* tune sliders */
@@ -3439,7 +3818,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,sharedMemorials:SharedMemorials,
+  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,sharedMemorials:SharedMemorials,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -3461,7 +3840,7 @@ requestAnimationFrame(frame);
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,sharedMemorials:SharedMemorials,
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,sharedMemorials:SharedMemorials,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
