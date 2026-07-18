@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5b.1</title>
+<title>ENDLESS POWDER v5c.0</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -99,6 +99,26 @@
   .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
   #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
   .version{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:max(11px,calc(15*var(--u)));font-weight:700;letter-spacing:.16em;color:rgba(220,232,244,.48);text-transform:uppercase;pointer-events:none}
+
+  /* v5c.0 auth verification is hidden during normal play and opens only with ?authcheck=1. */
+  #authDiag{position:absolute;z-index:20;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow:auto;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(143,216,255,.38);border-radius:14px;
+    background:rgba(5,9,15,.96);box-shadow:0 18px 60px rgba(0,0,0,.58);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(17*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y}
+  #authDiag.show{display:block}
+  #authDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #authDiag .authSub{opacity:.62;margin-bottom:14px}
+  .authRow{display:grid;grid-template-columns:minmax(90px,36%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .authRow span{opacity:.60;text-transform:uppercase;letter-spacing:.08em;font-weight:750}
+  .authRow b{font-weight:850;word-break:break-all}
+  .authGood{color:#99efc0}.authWarn{color:#ffd76a}.authBad{color:#ff9a8a}.authNeutral{color:#b8d3e7}
+  #authHint{margin-top:14px;padding:11px;border-radius:9px;background:rgba(143,216,255,.08);white-space:pre-line}
+  #authError{margin-top:10px;color:#ffb0a5;word-break:break-word;display:none}
+  #authActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #authActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #authActions button.primary{background:#8fd8ff;color:#07121d;border-color:transparent}
 </style>
 </head>
 <body>
@@ -124,7 +144,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5b.1</div>
+    <div class="version">v5c.0</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -153,6 +173,19 @@
       <button class="actionBtn primary" id="lbRetry" type="button">RUN AGAIN</button>
     </div>
   </div>
+
+  <div id="authDiag" aria-live="polite">
+    <h2>FIREBASE AUTH CHECK</h2>
+    <div class="authSub">v5c.0 verifies identity only. It does not write a score or database record.</div>
+    <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
+    <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
+    <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
+    <div class="authRow"><span>Session mode</span><b id="authMode" class="authNeutral">STARTING</b></div>
+    <div class="authRow"><span>Anonymous UID</span><b id="authUid" class="authNeutral">—</b></div>
+    <div id="authHint">Starting silent authentication…</div>
+    <div id="authError"></div>
+    <div id="authActions"><button class="primary" id="authRetry" type="button">RECHECK</button><button id="authClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -160,7 +193,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5b.1';
+const BUILD_VERSION='v5c.0';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -348,8 +381,10 @@ let FIREBASE_API_KEY='AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI'; // Public Fireba
 const AUTH_SESSION_KEY='ep_firebase_auth_v5b';
 const INSTALL_ID_KEY='ep_install_id_v5b';
 const API_KEY_OVERRIDE_KEY='ep_firebase_api_key';
+const AUTH_VERIFY_KEY='ep_auth_verify_v5c0';
 const Identity=(()=>{
-  let state={mode:'starting',uid:'',idToken:'',refreshToken:'',expiresAt:0,apiKey:'',error:''};
+  let state={mode:'starting',uid:'',idToken:'',refreshToken:'',expiresAt:0,apiKey:'',error:'',restoredUid:''};
+  let check={phase:'checking',stable:null,tokenValid:false,subjectMatch:false,previousUid:'',checkedAt:0};
   let boot=null,refreshing=null;
   const now=()=>Date.now();
   const safeString=v=>typeof v==='string'?v:'';
@@ -380,6 +415,7 @@ const Identity=(()=>{
     state.expiresAt=Number.isFinite(+s.expiresAt)?+s.expiresAt:0;
     state.apiKey=safeString(s.apiKey)||state.apiKey;
     state.mode=mode||'authenticated';state.error='';saveSession();
+    verifySession();
     return state;
   }
   async function requestJSON(url,options,timeout){
@@ -427,15 +463,43 @@ const Identity=(()=>{
     return{uid:safeString(data.user_id),idToken:safeString(data.id_token),refreshToken:safeString(data.refresh_token)||token,
       expiresAt:now()+Math.max(60,parseInt(data.expires_in||'3600',10)-45)*1000,apiKey:key};
   }
+  function jwtPayload(token){
+    try{
+      const part=safeString(token).split('.')[1];if(!part)return null;
+      const raw=part.replace(/-/g,'+').replace(/_/g,'/');
+      const pad=raw+'='.repeat((4-raw.length%4)%4);
+      return JSON.parse(decodeURIComponent(Array.from(atob(pad),c=>'%'+c.charCodeAt(0).toString(16).padStart(2,'0')).join('')));
+    }catch(e){return null;}
+  }
+  function verifySession(){
+    const current=uid(),authenticated=state.mode.indexOf('authenticated')===0;
+    const claims=jwtPayload(state.idToken),subject=safeString(claims&&(claims.sub||claims.user_id));
+    const tokenValid=!!claims&&Number.isFinite(+claims.exp)&&(+claims.exp*1000)>now()+10000;
+    const subjectMatch=!!subject&&subject===current;
+    let previous='';try{previous=safeString(store.getItem(AUTH_VERIFY_KEY));}catch(e){}
+    const baseline=previous||safeString(state.restoredUid);
+    const stable=baseline?baseline===current:null;
+    let phase='checking';
+    if(!state.apiKey)phase='not-configured';
+    else if(!authenticated)phase='offline';
+    else if(!tokenValid||!subjectMatch)phase='token-invalid';
+    else if(stable===false)phase='uid-changed';
+    else if(stable===true)phase='verified';
+    else phase='reload-needed';
+    check={phase,stable,tokenValid,subjectMatch,previousUid:baseline,checkedAt:now()};
+    if(authenticated&&tokenValid&&subjectMatch&&stable!==false){try{store.setItem(AUTH_VERIFY_KEY,current);}catch(e){}}
+    return verification();
+  }
   async function start(){
     if(boot)return boot;
     boot=(async()=>{
       const saved=loadSession();
-      state.uid=saved&&saved.uid?saved.uid:localUid();
-      state.mode=saved&&saved.uid?'cached-id':'local';
+      state.restoredUid=saved&&saved.uid?saved.uid:'';
+      state.uid=state.restoredUid||localUid();
+      state.mode=state.restoredUid?'cached-id':'local';
       if(saved){state.idToken=saved.idToken;state.refreshToken=saved.refreshToken;state.expiresAt=saved.expiresAt;state.apiKey=saved.apiKey;}
       const key=await discoverApiKey(saved);state.apiKey=key;
-      if(!key){state.mode=saved&&saved.uid?'cached-id':'local';return state;}
+      if(!key){state.mode=state.restoredUid?'cached-id':'local';verifySession();return state;}
       try{
         if(saved&&saved.uid&&saved.idToken&&saved.expiresAt>now()+60000)
           return applySession(Object.assign({},saved,{apiKey:key}),'authenticated-cached');
@@ -444,30 +508,36 @@ const Identity=(()=>{
         return applySession(await createAnonymous(key),'authenticated-new');
       }catch(e){
         state.error=(e&&e.message)||String(e);
-        state.mode=saved&&saved.uid?'offline-cached':'local';
+        state.mode=state.restoredUid?'offline-cached':'local';
         state.idToken=saved&&saved.expiresAt>now()?saved.idToken:'';
-        return state;
+        verifySession();return state;
       }
     })();
     return boot;
   }
   async function ensure(){
     await start();
-    if(!state.apiKey||!state.refreshToken||state.expiresAt>now()+60000)return state;
+    if(!state.apiKey||!state.refreshToken||state.expiresAt>now()+60000){verifySession();return state;}
     if(!refreshing)refreshing=refreshAnonymous(state.apiKey,state.refreshToken)
       .then(s=>applySession(s,'authenticated-refreshed'))
-      .catch(e=>{state.error=(e&&e.message)||String(e);state.idToken='';state.mode='offline-cached';return state;})
+      .catch(e=>{state.error=(e&&e.message)||String(e);state.idToken='';state.mode='offline-cached';verifySession();return state;})
       .finally(()=>{refreshing=null;});
     return refreshing;
+  }
+  async function retry(){
+    if(state.mode.indexOf('authenticated')===0){await ensure();verifySession();return state;}
+    boot=null;return start();
   }
   async function token(){await ensure();return state.idToken||'';}
   async function url(raw){const t=await token();if(!t)return raw;
     return raw+(raw.includes('?')?'&':'?')+'auth='+encodeURIComponent(t);}
   function uid(){return state.uid||localUid();}
+  function verification(){return Object.assign({},check,{passed:check.phase==='verified',uid:uid()});}
   function status(){return{mode:state.mode,uid:uid(),authenticated:state.mode.indexOf('authenticated')===0,
-    tokenReady:!!state.idToken,expiresAt:state.expiresAt,error:state.error,configured:!!state.apiKey};}
-  return Object.freeze({start,ensure,token,url,uid,status});
-})();
+    tokenReady:!!state.idToken,expiresAt:state.expiresAt,error:state.error,configured:!!state.apiKey,
+    verification:verification()};}
+  return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
+})();;
 /* ==================== ONLINE LEADERBOARD (Firebase RTDB REST) ====================
    Ported from JumpOvertheMoon's HighScoreService. Set FIREBASE_DB_URL to enable —
    leave empty and the feature hides itself entirely. No SDK: plain REST + fetch. */
@@ -2767,8 +2837,45 @@ function bindInput(){
   $('bSound').addEventListener('click',function(e){e.stopPropagation();this.style.opacity=Audio.toggle()?'1':'0.4';});
 }
 const Input=Object.freeze({bind:bindInput,beginRun,pdown,pmove,pup,kb});
+function authDiagRequested(){
+  try{return new URLSearchParams(location.search).get('authcheck')==='1'||store.getItem('ep_auth_diag')==='1';}
+  catch(e){return false;}
+}
+function authClass(id,name){const e=$(id);if(e)e.className=name;}
+function renderAuthDiag(){
+  const box=$('authDiag');if(!box||!box.classList.contains('show'))return;
+  const s=Identity.status(),v=s.verification||{};
+  const fb=$('authFirebase'),tok=$('authToken'),per=$('authPersistence'),mode=$('authMode'),uidEl=$('authUid'),hint=$('authHint'),err=$('authError');
+  mode.textContent=(s.mode||'starting').toUpperCase();uidEl.textContent=s.uid||'—';
+  if(s.authenticated){fb.textContent='CONNECTED';authClass('authFirebase','authGood');}
+  else if(!s.configured){fb.textContent='NOT CONFIGURED';authClass('authFirebase','authBad');}
+  else{fb.textContent='OFFLINE / FAILED';authClass('authFirebase','authBad');}
+  if(v.tokenValid&&v.subjectMatch){tok.textContent='VALID — UID MATCH';authClass('authToken','authGood');}
+  else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
+  else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
+  if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
+    hint.textContent='PASS: anonymous authentication is active, the token belongs to this UID, and the same UID was restored. v5c.1 may safely use auth.uid ownership rules.';}
+  else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
+    hint.textContent='Authentication and token validation passed. Reload this same page once; v5c.0 will confirm that the UID survives the reload.';}
+  else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
+    hint.textContent='The authenticated UID differs from the previously stored UID. Do not proceed to auth.uid database rules until this is understood.';}
+  else if(v.phase==='token-invalid'){per.textContent='NOT VERIFIED';authClass('authPersistence','authBad');
+    hint.textContent='Firebase returned a session, but the token could not be validated against the anonymous UID.';}
+  else if(v.phase==='not-configured'){per.textContent='NOT AVAILABLE';authClass('authPersistence','authBad');
+    hint.textContent='No Firebase Web API key was found.';}
+  else{per.textContent='NOT VERIFIED';authClass('authPersistence','authWarn');
+    hint.textContent='Silent authentication is unavailable right now. The game remains playable under its local fallback identity.';}
+  err.style.display=s.error?'block':'none';err.textContent=s.error?'Firebase response: '+s.error:'';
+}
+function initAuthDiag(){
+  const box=$('authDiag');if(!box||!authDiagRequested())return;
+  box.classList.add('show');renderAuthDiag();
+  $('authRetry').addEventListener('click',async e=>{e.stopPropagation();$('authRetry').textContent='CHECKING…';await Identity.retry();renderAuthDiag();$('authRetry').textContent='RECHECK';});
+  $('authClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});
+}
 Input.bind();
-Identity.start().finally(()=>{Leaderboard.refresh();Leaderboard.drain();});
+initAuthDiag();
+Identity.start().finally(()=>{Identity.verify();renderAuthDiag();Leaderboard.refresh();if(!authDiagRequested())Leaderboard.drain();});
 /* tune sliders */
 function slider(id,vid,fn,fmt){const s=$(id),v=$(vid);
   s.addEventListener('input',()=>{const val=parseFloat(s.value);fn(val);v.textContent=fmt?fmt(val):val;});}
