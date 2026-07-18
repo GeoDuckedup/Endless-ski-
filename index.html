@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5c.2</title>
+<title>ENDLESS POWDER v5c.3</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -97,6 +97,7 @@
   .lbRow i{margin-left:auto;font-style:normal;opacity:.9;text-align:right}
   .lbRow i strong{font-weight:900}.lbRow i small{display:block;font-size:calc(13*var(--u));opacity:.58}
   .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
+  .lbEmpty{padding:calc(18*var(--u)) 0;font-size:calc(17*var(--u));font-weight:800;letter-spacing:.14em;opacity:.5}
   #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
   .version{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:max(11px,calc(15*var(--u)));font-weight:700;letter-spacing:.16em;color:rgba(220,232,244,.48);text-transform:uppercase;pointer-events:none}
 
@@ -144,7 +145,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5c.2</div>
+    <div class="version">v5c.3</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -176,7 +177,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5c.2 submits one authenticated personal-best record per anonymous UID. The displayed leaderboard remains on the legacy score collection until v5c.3.</div>
+    <div class="authSub">v5c.3 submits one authenticated personal-best record per anonymous UID and builds the public leaderboard from those same best-run records.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -193,7 +194,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5c.2';
+const BUILD_VERSION='v5c.3';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -539,9 +540,8 @@ const Identity=(()=>{
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5c.2 uses the canonical /best_runs/{uid} record for live submissions.
-   The legacy /scores collection is now read-only from the client and remains
-   the displayed leaderboard source until v5c.3. */
+   v5c.3 uses the canonical /best_runs/{uid} record for both authenticated
+   personal-best submissions and the public leaderboard. */
 const BEST_RUN_PATH='/endless_powder/best_runs';
 const BEST_RUN_FIELDS=Object.freeze([
   'initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions',
@@ -599,22 +599,23 @@ const BestRuns=(()=>{
   }
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
-/* ==================== ONLINE BEST RUN + LEGACY BOARD ====================
-   v5c.2 writes full records with PUT to /best_runs/{auth.uid}. Server rules
-   atomically reject equal/lower replacements. The old /scores path is queried
-   only for the temporary v5c.2 leaderboard display and is never written. */
+/* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
+   v5c.3 reads and writes only /best_runs. Firebase returns the highest score
+   records; the client then applies the full ranking order: score, distance,
+   clean flags, fewer collisions. The legacy /scores collection is isolated. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
-const LEGACY_LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_FETCH=40, LB_REFRESH=30000;
+const LB_PATH=BEST_RUN_PATH, LB_SIZE=10, LB_FETCH=50, LB_REFRESH=30000;
+// Keep the v5c.2 submission key so an offline queued best survives this upgrade.
 const BEST_RUN_STATE_KEY='ep_best_run_submit_v5c2';
+const BEST_RUN_BOARD_KEY='ep_best_run_board_v5c3';
 const LB_BAD=INITIALS_BAD;
 const LB=(()=>{
-  let cache={initials:'AAA',top:[],pending:null,remoteBest:null,remoteUid:''};
+  let cache={initials:'AAA',top:[],records:[],pending:null,remoteBest:null,remoteUid:''};
   let retiredLegacyPending=0;
   try{
     const c=JSON.parse(store.getItem('ep_lb_v3a')||'{}');
     if(c&&typeof c==='object'){
       if(typeof c.initials==='string')cache.initials=sanitizeInitials(c.initials);
-      if(Array.isArray(c.top))cache.top=c.top;
       if(Array.isArray(c.pending))retiredLegacyPending=c.pending.length;
     }
   }catch(e){}
@@ -632,36 +633,51 @@ const LB=(()=>{
   }catch(e){}
   let lastRefresh=0,busy=false,lastSub=null,lastNotice='';
   const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
+  const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
+  const sanit=sanitizeInitials;
+  const validStored=e=>BestRuns.valid(e,Math.max(Date.now(),+(e&&e.timestamp)||0));
+  const cmp=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.uid).localeCompare(String(b.uid));
+  const itemOf=(uid,e)=>{
+    if(!uidOK(uid)||!validStored(e))return null;
+    return{uid:String(uid),initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+      attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+      deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+      worldVersion:e.worldVersion,timestamp:e.timestamp};
+  };
+  const recordOf=e=>e?{initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+    attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+    deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+    worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  const syncTop=()=>{cache.records.sort(cmp);cache.records=cache.records.slice(0,LB_FETCH);cache.top=cache.records.slice(0,LB_SIZE);};
+  const norm=p=>{
+    if(!p||typeof p!=='object'||Array.isArray(p))return[];
+    const rows=[];
+    for(const [uid,e] of Object.entries(p)){const item=itemOf(uid,e);if(item)rows.push(item);}
+    return rows.sort(cmp).slice(0,LB_FETCH);
+  };
+  try{
+    const b=Persistence.getJSON(BEST_RUN_BOARD_KEY,null);
+    if(b&&Array.isArray(b.records)){
+      cache.records=b.records.map(e=>itemOf(e&&e.uid,recordOf(e))).filter(Boolean);
+      syncTop();
+    }
+  }catch(e){}
   const save=()=>{
-    try{store.setItem('ep_lb_v3a',JSON.stringify({initials:cache.initials,top:cache.top,pending:[]}));}catch(e){}
+    try{store.setItem('ep_lb_v3a',JSON.stringify({initials:cache.initials,top:[],pending:[]}));}catch(e){}
     Persistence.setJSON(BEST_RUN_STATE_KEY,{initials:cache.initials,pending:cache.pending,remoteBest:cache.remoteBest,remoteUid:cache.remoteUid});
+    Persistence.setJSON(BEST_RUN_BOARD_KEY,{records:cache.records});
   };
   const setNotice=msg=>{lastNotice=msg||'';lbStatus(lastNotice);};
-  const sanit=sanitizeInitials;
-  const entryOf=e=>({
-    initials:sanit(e&&e.initials),
-    score:Math.max(0,Math.min(9999999,Math.floor(+(e&&e.score)||0))),
-    distance:Math.max(0,Math.min(999999,Math.floor(+(e&&e.distance)||0))),
-    cleanFlags:Math.max(0,Math.min(99999,Math.floor(+(e&&e.cleanFlags)||0))),
-    attemptedFlags:Math.max(0,Math.min(99999,Math.floor(+(e&&e.attemptedFlags)||0))),
-    bestCombo:Math.max(0,Math.min(9999,Math.floor(+(e&&e.bestCombo)||0))),
-    collisions:Math.max(0,Math.min(9999,Math.floor(+(e&&e.collisions)||0))),
-    timestamp:Math.floor(+(e&&e.timestamp)||0)
-  });
-  const cmp=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp;
-  const validComposite=e=>e&&typeof e==='object'&&
-    typeof e.initials==='string'&&Number.isFinite(+e.score)&&Number.isFinite(+e.distance)&&
-    Number.isFinite(+e.cleanFlags)&&Number.isFinite(+e.attemptedFlags)&&
-    Number.isFinite(+e.bestCombo)&&Number.isFinite(+e.collisions)&&Number.isFinite(+e.timestamp);
-  const validStored=e=>BestRuns.valid(e,Math.max(Date.now(),+(e&&e.timestamp)||0));
-  const norm=p=>{
-    const raw=p&&typeof p==='object'?Object.values(p):[];
-    return raw.filter(validComposite).map(entryOf).sort(cmp).slice(0,LB_SIZE);
-  };
   const ownerHint=()=>{
     const s=Identity.status(),uid=String(s.uid||'');
     return uid&&uid.indexOf('local-')!==0?uid:'';
   };
+  function mergeRecord(uid,record,paint=true){
+    const item=itemOf(uid,record);if(!item)return false;
+    cache.records=cache.records.filter(e=>e.uid!==item.uid);cache.records.push(item);syncTop();
+    if(uid===ownerHint()){cache.remoteBest=recordOf(item);cache.remoteUid=uid;}
+    save();if(paint)renderBoard();return true;
+  }
   async function fetchTimed(url,options,timeout){
     let timer=0,controller=null;
     try{
@@ -678,11 +694,15 @@ const LB=(()=>{
     if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
     lastRefresh=Date.now();
     try{
-      const url=await Identity.url(FIREBASE_DB_URL+LEGACY_LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
+      const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
       const r=await fetchTimed(url,{cache:'no-store'});
-      if(r.ok){cache.top=norm(await readJSON(r));save();renderBoard();if(!lastNotice)lbStatus('');}
-      else if(!lastNotice)lbStatus('board unreachable ('+r.status+') — check database rules');
-    }catch(e){if(!lastNotice)lbStatus('board offline');}
+      if(r.ok){
+        cache.records=norm(await readJSON(r));syncTop();
+        const uid=ownerHint(),own=uid&&cache.records.find(e=>e.uid===uid);
+        if(own){cache.remoteBest=recordOf(own);cache.remoteUid=uid;}
+        save();renderBoard();if(!lastNotice)lbStatus('');
+      }else if(!lastNotice)lbStatus('board unreachable ('+r.status+') — check database rules');
+    }catch(e){if(!lastNotice)lbStatus(cache.top.length?'board offline — showing cached best runs':'board offline');}
   }
   async function confirmServerBest(rawUrl,pending,uid){
     try{
@@ -690,9 +710,9 @@ const LB=(()=>{
       if(!r.ok)return false;
       const stored=await readJSON(r);
       if(stored!==null&&validStored(stored)&&stored.score>=pending.record.score){
-        cache.remoteBest=stored;cache.remoteUid=uid;
+        cache.remoteBest=stored;cache.remoteUid=uid;mergeRecord(uid,stored);
         const completed=cache.pending===pending;if(completed)cache.pending=null;save();
-        setNotice('personal best unchanged • leaderboard migration follows in v5c.3');
+        setNotice('personal best unchanged');
         return completed?'complete':'newer';
       }
     }catch(e){}
@@ -718,19 +738,19 @@ const LB=(()=>{
       if(!read.ok){setNotice('best run queued — record check failed ('+read.status+')');return;}
       const stored=await readJSON(read);
       if(stored!==null&&!validStored(stored)){setNotice('best-run record is malformed — submission paused');return;}
-      cache.remoteBest=stored;cache.remoteUid=auth.uid;save();
+      cache.remoteBest=stored;cache.remoteUid=auth.uid;if(stored)mergeRecord(auth.uid,stored);else save();
       if(stored&&pending.record.score<=stored.score){
         if(cache.pending===pending)cache.pending=null;else rerun=true;
-        save();setNotice('personal best unchanged • leaderboard migration follows in v5c.3');return;
+        save();setNotice('personal best unchanged');return;
       }
       const created=!stored;
       const writeUrl=await Identity.url(rawUrl);
       const write=await fetchTimed(writeUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending.record)});
       if(write.ok){
-        cache.remoteBest=pending.record;cache.remoteUid=auth.uid;
+        cache.remoteBest=pending.record;cache.remoteUid=auth.uid;mergeRecord(auth.uid,pending.record);
         if(cache.pending===pending)cache.pending=null;else rerun=true;save();
-        setNotice((created?'personal best created':'new personal best saved')+' • leaderboard migration follows in v5c.3');
-        return;
+        setNotice(created?'personal best created':'new personal best saved');
+        setTimeout(()=>refresh(true),0);return;
       }
       if(write.status===403){const confirmed=await confirmServerBest(rawUrl,pending,auth.uid);
         if(confirmed){rerun=confirmed==='newer';return;}}
@@ -744,10 +764,9 @@ const LB=(()=>{
     if(LB_BAD.test(initials))return false;
     const record=BestRuns.build(initials,run);
     if(!BestRuns.valid(record))return false;
-    cache.initials=initials;lastSub=entryOf(record);
-    const uid=ownerHint();
+    cache.initials=initials;const uid=ownerHint();lastSub={uid,record};
     if(cache.remoteBest&&cache.remoteUid&&uid&&cache.remoteUid===uid&&record.score<=cache.remoteBest.score){
-      save();setNotice('personal best unchanged • leaderboard migration follows in v5c.3');return true;
+      save();setNotice('personal best unchanged');return true;
     }
     if(cache.pending){
       if(cache.pending.uid&&uid&&cache.pending.uid!==uid)cache.pending=null;
@@ -758,17 +777,17 @@ const LB=(()=>{
     cache.pending={uid,record};save();setNotice('checking personal best…');drain();return true;
   }
   if(retiredLegacyPending)save();
-  return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,
-    notice:()=>lastNotice,retiredLegacyPending:()=>retiredLegacyPending,_setUrl:u=>{FIREBASE_DB_URL=u;}};
+  return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,records:()=>cache.records.slice(),
+    compare:cmp,notice:()=>lastNotice,retiredLegacyPending:()=>retiredLegacyPending,_setUrl:u=>{FIREBASE_DB_URL=u;}};
 })();
 const Leaderboard=LB;
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList');if(!list)return;
-  const top=LB.cache().top,ls=LB.lastSub();
-  if(!top.length){list.innerHTML='';return;}
+  const top=LB.cache().top,myUid=String(Identity.status().uid||''),ls=LB.lastSub();
+  if(!top.length){list.innerHTML='<div class="lbEmpty">NO BEST RUNS YET</div>';return;}
   list.innerHTML=top.map((e,i)=>{
-    const mine=ls&&e.initials===ls.initials&&e.score===ls.score&&e.distance===ls.distance;
+    const mine=(myUid&&e.uid===myUid)||(!myUid&&ls&&ls.uid&&e.uid===ls.uid);
     return '<div class="lbRow'+(mine?' mine':'')+'"><span>'+(i+1)+'</span><b>'+e.initials+'</b><i><strong>'+fmtNum(e.score)+'</strong> pts<small>'+fmtNum(e.distance)+' m</small></i></div>';
   }).join('');
 }
@@ -1482,7 +1501,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5c.2 personal-best submission
+  lastFinishedRun=run; // complete death-aware payload used by the v5c.3 personal-best submission and leaderboard
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -3000,7 +3019,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5c.2 can submit the signed-in UID’s personal-best record to /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. v5c.3 submits and ranks the signed-in UID’s record through /best_runs/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
