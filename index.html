@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v4b</title>
+<title>ENDLESS POWDER v4c</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -111,7 +111,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v4b</div>
+    <div class="version">v4c</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -413,20 +413,20 @@ function addMarker(t,d,x){markers.push({t,d:Math.round(d*10)/10,x:Math.round(x)}
   try{store.setItem('ep_markers',JSON.stringify(markers));}catch(e){}}
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
-let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[];
+let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[],carveSegs=[];
 let debugOn=false;
 const PUBLIC_BUILD=true;
 function fresh(){
   R=mulberry32(C.SEED);
   gates.length=0;obs.length=0;npcs.length=0;edgeT.length=0;balls.length=0;
-  parts.length=0;spray.length=0;sluff.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;
+  parts.length=0;spray.length=0;sluff.length=0;floaters.length=0;snow.length=0;rings.length=0;corDbg.length=0;smears.length=0;carveSegs.length=0;
   M=baseM();
   S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
     prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,tightBoost:0,
     scoreFlag:0,scoreCombo:0,scorePenalty:0,cleanFlags:0,flagsAttempted:0,bestCombo:0,collisions:0,
-    steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
+    steer:0,steerSm:0,active:false,gen:0,corC:LW/2,routeNextD:7,routePhrase:0,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
     yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0},
@@ -440,83 +440,154 @@ function corridorWidth(d){
   return lerp(first,C.corMin,smooth01(clamp((d-1200)/(8200-1200),0,1)));
 }
 /* ============================ WORLD GEN ============================ */
+function routeSpacing(dx,kind,d){
+  // Use a deliberately conservative portion of the player's reachable lateral budget.
+  // Deep sweeps consume more of that budget, but also receive substantially more descent.
+  const load=kind==='deep'?0.73:kind==='short'?0.57:0.65;
+  const base=8+Math.abs(dx)/(11*load);
+  const lo=kind==='deep'?22:kind==='short'?12:15;
+  const hi=kind==='deep'?38:kind==='short'?24:33;
+  return clamp(base+(R()*2-1)*1.7,lo,hi);
+}
+function reserveCarve(x0,d0,x1,d1,kind){
+  if(d1<=d0)return;
+  carveSegs.push({x0,d0,x1,d1,w:kind==='deep'?58:kind==='short'?38:48});
+  if(carveSegs.length>120)carveSegs.splice(0,carveSegs.length-120);
+}
+function routeBlocked(x,d,r){
+  for(const s of carveSegs){
+    if(d<s.d0-3||d>s.d1+3)continue;
+    if(segDist(s.x0,s.d0*PXM,s.x1,s.d1*PXM,x,d*PXM)<s.w+r+8)return true;
+  }
+  return false;
+}
+function addRouteFlag(gd,need,kind){
+  need=clamp(need,EDGE+95,LW-EDGE-95);
+  const prevX=S.lastFlagX===null?LW/2:S.lastFlagX;
+  const prevD=S.lastFlagX===null?0:S.lastFlagD;
+  if(S.lastFlagX!==null){
+    const dd=gd-prevD;
+    if(dd<4.5)return false;
+    const budget=Math.max(0,dd-8)*11;
+    if(Math.abs(need-prevX)>budget+0.5)return false;
+  }
+  let sd=Math.abs(need-LW/2)<16?-(S.lastSide||1):(need<LW/2?-1:1);
+  const x=need-sd*(PR+8);
+  if(x<EDGE+30||x>LW-EDGE-30)return false;
+  if(S.lastFlagX!==null)reserveCarve(prevX,prevD,need,gd,kind);
+  S.lastSide=sd;S.lastFlagD=gd;S.lastFlagX=need;
+  gates.push({k:1,d:gd,x,side:sd,done:0,need,phrase:kind||'slalom'});
+  return true;
+}
+function addThreadGate(gd,gx){
+  gx=clamp(gx,EDGE+120,LW-EDGE-120);
+  const prevX=S.lastFlagX===null?LW/2:S.lastFlagX;
+  const prevD=S.lastFlagX===null?0:S.lastFlagD;
+  if(S.lastFlagX!==null){
+    const dd=gd-prevD,budget=Math.max(0,dd-8)*11;
+    if(dd<7||Math.abs(gx-prevX)>budget+1)return false;
+    reserveCarve(prevX,prevD,gx,gd,'normal');
+  }
+  const gap=clamp(170-Difficulty.profile(gd).layout*34,126,170);
+  gates.push({k:1,d:gd,x:gx-gap/2,side:1,done:0,need:gx,phrase:'thread'});
+  gates.push({k:1,d:gd+0.5,x:gx+gap/2,side:-1,done:0,need:gx,phrase:'thread'});
+  S.lastFlagD=gd+0.5;S.lastFlagX=gx;S.lastSide=R()<0.5?-1:1;
+  return true;
+}
+function phraseCenter(depth){
+  // Phrases may lean across the mountain, but remain centered enough that alternating
+  // lanes visibly cross the screen instead of accumulating along one edge.
+  const layout=Difficulty.profile(depth).layout;
+  const inherited=clamp((S.corC-LW/2)*0.28,-34,34);
+  return clamp(LW/2+inherited+(R()*2-1)*(34+20*layout),LW/2-72,LW/2+72);
+}
+function laneTarget(center,side,amp,jitter){
+  const raw=center+side*amp+(R()*2-1)*(jitter||0);
+  return side<0?clamp(raw,EDGE+95,LW/2-38):clamp(raw,LW/2+38,LW-EDGE-95);
+}
+function generateRoutePhrase(startD){
+  const p=Difficulty.profile(startD),late=clamp((startD-420)/1700,0,1);
+  const center=phraseCenter(startD);
+  const current=S.lastFlagX===null?LW/2:S.lastFlagX;
+  let side=current<center?1:-1; // begin by crossing away from the current line
+  let d=Math.max(startD,S.lastFlagD+7);
+  let r=M.alt?0:R();
+  const altW=lerp(0.64,0.52,late);
+  const deepW=lerp(0.12,0.25,late);
+  const sameW=0.13, gateW=0.07;
+  const addTarget=(target,kind)=>{
+    const from=S.lastFlagX===null?LW/2:S.lastFlagX;
+    d+=routeSpacing(target-from,kind,d);
+    if(!addRouteFlag(d,target,kind)){
+      // Rare wall/spacing disagreement: give the transition more descent rather than flattening it.
+      d+=5;
+      addRouteFlag(d,target,kind);
+    }
+  };
+  if(r<altW){
+    // Core slalom phrase: three to five clear alternating pass points.
+    const n=(startD<380?2:3)+Math.floor(R()*(startD>900?3:2));
+    for(let i=0;i<n;i++){
+      const amp=lerp(62,88,p.training)+R()*22;
+      const target=laneTarget(center,side,amp,11);
+      addTarget(target,'normal');side*=-1;
+    }
+  }else if(r<altW+deepW){
+    // Deep sweep: large side-to-side cuts with enough vertical room to finish the carve cleanly.
+    const n=2+(R()<(0.30+0.25*late)?1:0);
+    for(let i=0;i<n;i++){
+      const amp=96+R()*(28+18*late);
+      const target=laneTarget(center,side,amp,8);
+      addTarget(target,'deep');side*=-1;
+    }
+  }else if(r<altW+deepW+sameW){
+    // Hold-line double, always followed by a substantial mandatory crossover.
+    const amp=72+R()*30;
+    const first=laneTarget(center,side,amp,0);
+    addTarget(first,'normal');
+    addTarget(clamp(first+side*(18+R()*25),EDGE+95,LW-EDGE-95),'short');
+    side*=-1;
+    addTarget(laneTarget(center,side,98+R()*30,0),'deep');
+  }else if(r<altW+deepW+sameW+gateW){
+    // Thread formation, then immediately release into a clear opposite-side carve.
+    const gx=clamp(center+(R()*2-1)*38,EDGE+130,LW-EDGE-130);
+    const from=S.lastFlagX===null?LW/2:S.lastFlagX;
+    d+=routeSpacing(gx-from,'normal',d);
+    if(!addThreadGate(d,gx)){d+=6;addThreadGate(d,gx);}
+    side=gx<center?1:-1;
+    addTarget(laneTarget(center,side,88+R()*28,0),'normal');
+  }else{
+    // Breather: one readable transition with a little extra setup time.
+    d+=7+R()*6;
+    const amp=62+R()*35;
+    addTarget(laneTarget(center,side,amp,0),'normal');
+  }
+  S.routePhrase++;
+  S.routeNextD=d+5+R()*8;
+}
+function ensureRoute(targetD){
+  let guard=0;
+  while(S.routeNextD<targetD&&guard++<8)generateRoutePhrase(S.routeNextD);
+}
 function genChunk(){
   const d0=S.gen;
   const wv=0.5+0.5*Math.sin(d0/300*6.283); // pacing wave: tight stretch, breather, repeat (~150m each)
   const half=Math.max(C.corMin*0.5,corridorWidth(d0)*(1.12-0.24*wv)/2);
-  const ez=Difficulty.profile(d0).layout; // fixed, comparable progression through the record range
-  S.corC=clamp(S.corC+(R()*2-1)*(28+42*ez),EDGE+half+10,LW-EDGE-half-10);
+  const ez=Difficulty.profile(d0).layout;
+  S.corC=clamp(S.corC+(R()*2-1)*(22+34*ez),EDGE+half+10,LW-EDGE-half-10);
   corDbg.push({d:d0,c:S.corC,h:half}); if(corDbg.length>40)corDbg.shift();
-  const spawnFlag=(gd,sd)=>{ // the flag sits BETWEEN center and the target lane:
-      // the command forces you across it. Cut depth grows with depth, eases at the
-      // long fixed progression, breathing with the pacing wave. Riding center satisfies nothing.
-      const push=Difficulty.profile(gd).layout;
-      const cutFrac=Math.min(0.55,(0.06+R()*0.26)*(1+0.35*push)*(0.25+0.75*ez)*(0.88+0.24*wv));
-      const cut=clamp(half*cutFrac,22,half-34); // 22px floor: trivial for a thumb, never free for a statue
-      let x=clamp(S.corC+sd*cut,EDGE+30,LW-EDGE-30);
-      // WALL SAFETY: the commanded pass line never comes within 95px of the treeline.
-      let need=clamp(x+sd*(PR+8),EDGE+95,LW-EDGE-95);
-      // REACHABILITY: every cut must be carveable from the previous flag's natural line.
-      // Lateral travel ≈ 11 px per meter of descent after an 8m reaction allowance
-      // (conservative vs the 30 px/m full-lock ceiling, honest about human hands).
-      if(S.lastFlagX!==null){
-        const dd=gd-S.lastFlagD;
-        if(dd<4.5)return false; // stacked on the last flag's heels: no flag beats an unfair flag
-        const budget=Math.max(0,dd-8)*11;
-        const delta=need-S.lastFlagX;
-        if(Math.abs(delta)>budget)need=S.lastFlagX+Math.sign(delta)*budget;
-        need=clamp(need,EDGE+95,LW-EDGE-95);
-        if(Math.abs(need-S.lastFlagX)>budget+0.5)return false; // wall + budget irreconcilable here
-      }
-      x=need-sd*(PR+8);
-      if((x-S.corC)*sd<22)return false; // can't be made both fair and meaningful here
-      S.lastSide=sd;S.lastFlagD=gd;S.lastFlagX=need;
-      gates.push({k:1,d:gd,x,side:sd,done:0});
-      return true;
-  };
-  if(R()<C.gateChance){
-    const alt=()=>-(S.lastSide||1);
-    const r=M.alt?0:R(); // SWITCHBACK: pure alternation
-    if(r<0.60)spawnFlag(d0+R()*C.chunk*0.8,alt()); // the default rhythm
-    else if(r<0.73){const sd=alt(); // same-side double: hold the line
-      spawnFlag(d0+R()*C.chunk*0.3,sd);spawnFlag(d0+C.chunk*(0.55+R()*0.35),sd);}
-    else if(r<0.77){const sd=alt(); // rare triple
-      spawnFlag(d0+C.chunk*0.1,sd);spawnFlag(d0+C.chunk*0.45,sd);spawnFlag(d0+C.chunk*0.8,sd);}
-    else if(r<0.88){ // gate formation: blue left + red right, thread between for the jackpot
-      const gd=d0+R()*C.chunk*0.7;
-      const gap=Math.max(120,180-Difficulty.profile(gd).layout*50);
-      let gx=clamp(S.corC+(R()*2-1)*half*0.3,EDGE+gap/2+30,LW-EDGE-gap/2-30);
-      let ok=true;
-      if(S.lastFlagX!==null){ // the thread-point must be reachable too
-        const dd=gd-S.lastFlagD;
-        if(dd<4.5)ok=false;
-        else{const budget=Math.max(0,dd-8)*11;
-          gx=clamp(gx,S.lastFlagX-budget,S.lastFlagX+budget);
-          gx=clamp(gx,EDGE+gap/2+30,LW-EDGE-gap/2-30);
-          if(Math.abs(gx-S.lastFlagX)>budget+1)ok=false;}
-      }
-      if(ok){
-        gates.push({k:1,d:gd,x:gx-gap/2,side:1,done:0});
-        gates.push({k:1,d:gd+0.5,x:gx+gap/2,side:-1,done:0});
-        S.lastFlagD=gd+0.5;S.lastFlagX=gx;
-        S.lastSide=R()<0.5?-1:1;
-      }
-    } // else: breather chunk, no flag
-  }
-  // DROUGHT GUARD: the economy starves without flags — never more than ~40m empty.
-  // At large gaps the reachability budget is huge, so a fallback is virtually
-  // always feasible; try the alternating side first, then flip.
-  if(d0+C.chunk-S.lastFlagD>40){
-    const gd=d0+C.chunk*(0.3+R()*0.5);
-    if(!spawnFlag(gd,-(S.lastSide||1)))spawnFlag(gd+0.01,(S.lastSide||1));
-  }
+
+  // Plan far enough ahead that obstacle placement can respect the whole incoming carve phrase.
+  ensureRoute(d0+C.chunk+42);
+
   const cnt=lerp(1.15,C.obsMax,ez)*M.obs*(0.82+0.30*wv)*0.42;
   let n=Math.floor(cnt)+(R()<(cnt%1)?1:0);
   for(let i=0;i<n;i++){
-    for(let tr=0;tr<6;tr++){
-      const x=EDGE+16+R()*(LW-2*EDGE-32);
-      if(Math.abs(x-S.corC)<half+18)continue;
-      obs.push({d:d0+R()*C.chunk,x,r:14+R()*8,tree:R()<0.72,hue:R()*360,lit:R()<0.85});
+    for(let tr=0;tr<9;tr++){
+      const x=EDGE+16+R()*(LW-2*EDGE-32),d=d0+R()*C.chunk,r=14+R()*8;
+      if(Math.abs(x-S.corC)<half+12&&!routeBlocked(x,d,r))continue;
+      if(routeBlocked(x,d,r))continue;
+      obs.push({d,x,r,tree:R()<0.72,hue:R()*360,lit:R()<0.85});
       break;
     }
   }
@@ -539,6 +610,7 @@ function genTo(){while(S.gen<S.depth+C.ahead)genChunk();
   while(gates.length&&gates[0].d<S.depth-BEHIND)gates.shift();
   while(obs.length&&obs[0].d<S.depth-BEHIND)obs.shift();
   while(edgeT.length&&edgeT[0].d<S.depth-BEHIND)edgeT.shift();
+  while(carveSegs.length&&carveSegs[0].d1<S.depth-BEHIND)carveSegs.shift();
   if(gates.length>60)gates.splice(0,gates.length-60);
   if(obs.length>200)obs.splice(0,obs.length-200);
   if(edgeT.length>380)edgeT.splice(0,edgeT.length-380);}
