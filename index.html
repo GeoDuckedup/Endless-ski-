@@ -4,13 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v4f.1</title>
+<title>ENDLESS POWDER v4f.2.1</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
   #wrap{position:fixed;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden}
   #stage{position:absolute;inset:0;width:100%;height:100%;--u:1px;overflow:hidden;background:#05070c}
+  /* Desktop browsers use a centered phone-shaped playfield. Touch devices retain the full viewport. */
+  @media (hover:hover) and (pointer:fine) and (min-width:700px){
+    #wrap{display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+    #stage{
+      position:relative;inset:auto;flex:0 0 auto;
+      width:min(500px,calc((100vh - 32px)*.461538));
+      height:min(calc(100vh - 32px),1083.33px);
+      width:min(500px,calc((100dvh - 32px)*.461538));
+      height:min(calc(100dvh - 32px),1083.33px);
+      border-radius:14px;
+      box-shadow:0 0 0 1px rgba(255,255,255,.10),0 22px 70px rgba(0,0,0,.55);
+    }
+  }
   #cv{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block;touch-action:none;
     filter:saturate(1.1)}
   .hud{position:absolute;z-index:2;pointer-events:none;color:#fff;text-shadow:0 calc(2*var(--u)) calc(6*var(--u)) rgba(0,0,0,.55)}
@@ -111,7 +124,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v4f.1</div>
+    <div class="version">v4f.2.1</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -174,9 +187,12 @@ const C={
 /* ==================== MODULE: PERFORMANCE BUDGETS ==================== */
 const PerfBudget=(()=>{
   const profiles=[
-    {name:'LOW',dpr:1.15,fx:0.48,snow:120,spray:260,parts:120,rings:28,defStrips:12,groundStep:2,treeStep:2,glints:2,lights:false},
-    {name:'MED',dpr:1.5,fx:0.72,snow:210,spray:430,parts:190,rings:40,defStrips:18,groundStep:1,treeStep:1,glints:3,lights:true},
-    {name:'HIGH',dpr:2,fx:1,snow:320,spray:650,parts:280,rings:56,defStrips:24,groundStep:1,treeStep:1,glints:4,lights:true}
+    {name:'LOW',dpr:1.15,fx:0.48,snow:120,spray:260,parts:120,rings:28,defStrips:12,groundStep:2,treeStep:2,glints:2,lights:false,
+      npcTrailEmitters:2,npcTrailStep:0.95,rockBeds:1,rockBedInterval:2.20,boulderTrails:1,boulderTrailStep:1.20},
+    {name:'MED',dpr:1.5,fx:0.72,snow:210,spray:430,parts:190,rings:40,defStrips:18,groundStep:1,treeStep:1,glints:3,lights:true,
+      npcTrailEmitters:4,npcTrailStep:0.62,rockBeds:2,rockBedInterval:1.60,boulderTrails:2,boulderTrailStep:0.85},
+    {name:'HIGH',dpr:2,fx:1,snow:320,spray:650,parts:280,rings:56,defStrips:24,groundStep:1,treeStep:1,glints:4,lights:true,
+      npcTrailEmitters:7,npcTrailStep:0.42,rockBeds:4,rockBedInterval:1.15,boulderTrails:3,boulderTrailStep:0.60}
   ];
   let level=1,avg=12,slowFrames=0,fastFrames=0,lastChange=0;
   function initial(){
@@ -429,7 +445,8 @@ function fresh(){
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,routeNextD:7,routePhrase:0,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0},
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0,
+      walkPhase:0,moveSpeed:0,lateralSpeed:0,bodyPhase:0,visualBreathPhase:0},
     buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
   DEF.reset();
@@ -660,7 +677,8 @@ function genChunk(){
     npcs.push({d:nd,x:nx,prevD:nd,prevX:nx,theta:0,turnVel:0,
       spd:C.glide*speedMul,vx:0,tw:Math.random()*7,down:0,skill,
       route:[],planCD:0.4+R()*2.2,avoidT:0,
-      snowPhase:R()*1000,sprayCD:R()*0.2});
+      snowPhase:R()*1000,sprayCD:R()*0.2,snowEmit:false,snowAccum:0,
+      trailX:nx,trailD:nd,trailTheta:0});
   }
   S.gen+=C.chunk;
 }
@@ -1359,14 +1377,18 @@ function update(dt){
     else wrongSide(g);
   }
   updateCleanSkiingPressure(dt);
-  // Static boulders sit inside the snowpack: a compressed base, uphill lip, and faint downhill drift.
-  // Reapply slowly so snowfall can soften the imprint without making the rock appear pasted on top.
+  // Static boulder bedding is quality-budgeted. Due beds remain queued, spreading expensive
+  // multi-stamp work across frames while snowfall still softens and renews the imprint.
+  let rockBedBudget=Q.rockBeds;
   for(const o of obs){
     if(o.tree)continue;
     const u=o.d-S.depth;
     if(u<UTOP-3||u>UBOT+3)continue;
     o.snowT=(o.snowT||0)-dt;
-    if(o.snowT<=0){DEF.rockBed(o.x,o.d,o.r,o.snowSeed||0);o.snowT=0.85+((o.snowSeed||0)%37)/100;}
+    if(o.snowT<=0&&rockBedBudget>0){
+      DEF.rockBed(o.x,o.d,o.r,o.snowSeed||0);rockBedBudget--;
+      o.snowT=Q.rockBedInterval+((o.snowSeed||0)%41)/100;
+    }
   }
   // mountain obstacles are terminal, but hitboxes follow the visible solid material rather than foliage.
   if(S.iframe<=0){
@@ -1387,12 +1409,25 @@ function update(dt){
       }
     }
   }
-  // NPCs
+  // NPCs. Only the nearest visible traffic receives persistent deformation budget;
+  // distant skiers keep their behavior but do not compete with the player's snow work.
   const Y=S.yeti;
+  for(const n of npcs)n.snowEmit=false;
+  // Select the nearest eligible emitters without allocating and sorting a full candidate array.
+  for(let slot=0;slot<Q.npcTrailEmitters;slot++){
+    let best=null,bestDist=Infinity;
+    for(const n of npcs){
+      if(n.snowEmit||n.down>0||n.d<=S.depth-48||n.d>=S.depth+62)continue;
+      const dist=Math.abs(n.d-S.depth);
+      if(dist<bestDist){bestDist=dist;best=n;}
+    }
+    if(!best)break;best.snowEmit=true;
+  }
   for(let i=npcs.length-1;i>=0;i--){
     const n=npcs[i];n.tw+=dt;n.sprayCD=Math.max(0,(n.sprayCD||0)-dt);
     const x0=n.x,d0=n.d,theta0=n.theta||0;
-    if(n.down>0){n.down-=dt;n.d+=n.spd*0.3*dt;n.route.length=0;}
+    if(n.down>0){n.down-=dt;n.d+=n.spd*0.3*dt;n.route.length=0;
+      n.snowAccum=0;n.trailX=n.x;n.trailD=n.d;n.trailTheta=n.theta||0;}
     else{
       n.planCD=Math.max(0,(n.planCD||0)-dt);
       while(n.route.length&&n.d>n.route[0].d+1.2)n.route.shift();
@@ -1411,8 +1446,11 @@ function update(dt){
       else if(n.skill==='aggressive')tvx=Math.sin(n.tw*0.78)*76;
 
       let near=null,nd=1e9;
+      // Obstacles are depth-sorted, so skip everything behind and stop once the local window ends.
       for(const o of obs){const ahead=o.d-n.d;
-        if(ahead>0.5&&ahead<24&&Math.abs(o.x-n.x)<48&&ahead<nd){nd=ahead;near=o;}}
+        if(ahead<=0.5)continue;
+        if(ahead>=24)break;
+        if(Math.abs(o.x-n.x)<48&&ahead<nd){nd=ahead;near=o;}}
       if(near){
         const avoid=(n.x<near.x?-1:1)*(n.skill==='aggressive'?175:145);
         tvx=avoid;n.avoidT=(n.avoidT||0)+dt;
@@ -1426,8 +1464,8 @@ function update(dt){
       const response=n.skill==='aggressive'?5.8:n.skill==='competent'?4.6:5.0;
       n.vx+=(tvx-n.vx)*Math.min(1,response*dt);n.x+=n.vx*dt;n.d+=n.spd*dt;
 
-      // NPCs cut the same material as the player: two shallow grooves, a faint compressed wake,
-      // and a modest outside berm. Their marks are deliberately thinner and lower contrast.
+      // NPC heading remains frame-responsive, while deformation is emitted by distance traveled.
+      // This keeps continuous lines without paying several canvas strokes for every NPC every frame.
       const dx=n.x-x0,dd=Math.max(0.0001,n.d-d0);
       let nth=Math.atan2(dx/PXM,dd),da=nth-theta0;
       while(da>Math.PI)da-=Math.PI*2;while(da<-Math.PI)da+=Math.PI*2;
@@ -1436,28 +1474,41 @@ function update(dt){
       const skillTurn=n.skill==='aggressive'?1.16:n.skill==='competent'?1.04:0.94;
       const turnK=clamp((Math.abs(n.turnVel)/(125*D2R)+Math.abs(n.vx)/330)*skillTurn,0,1);
       const outside=-(Math.sign(n.turnVel)||Math.sign(nth)||1);
-      const off0=5.1+1.2*Math.abs(Math.sin(theta0)),off1=5.1+1.2*Math.abs(Math.sin(nth));
-      DEF.npcWake(x0,d0,n.x,n.d,4.2+2.5*turnK,0.085+0.055*turnK);
-      for(const sk of[-1,1]){
-        const sx0=x0+Math.cos(theta0)*off0*sk,sd0=d0-Math.sin(theta0)*off0*sk/PXM;
-        const sx1=n.x+Math.cos(nth)*off1*sk,sd1=n.d-Math.sin(nth)*off1*sk/PXM;
-        DEF.npcSkiSegment(sx0,sd0,sx1,sd1,2.2+1.35*turnK,
-          (0.100+0.075*turnK)*(sk===outside?1.0:0.78),outside);
+      const traveled=Math.hypot(dx/PXM,dd);
+      n.snowAccum=(n.snowAccum||0)+traveled;
+      if(!n.snowEmit){
+        n.snowAccum=0;n.trailX=n.x;n.trailD=n.d;n.trailTheta=nth;
+      }else if(n.snowAccum>=Q.npcTrailStep){
+        const tx0=Number.isFinite(n.trailX)?n.trailX:x0;
+        const td0=Number.isFinite(n.trailD)?n.trailD:d0;
+        const tth=Number.isFinite(n.trailTheta)?n.trailTheta:theta0;
+        const off0=5.1+1.2*Math.abs(Math.sin(tth)),off1=5.1+1.2*Math.abs(Math.sin(nth));
+        DEF.npcWake(tx0,td0,n.x,n.d,4.2+2.5*turnK,0.085+0.055*turnK);
+        for(const sk of[-1,1]){
+          const sx0=tx0+Math.cos(tth)*off0*sk,sd0=td0-Math.sin(tth)*off0*sk/PXM;
+          const sx1=n.x+Math.cos(nth)*off1*sk,sd1=n.d-Math.sin(nth)*off1*sk/PXM;
+          DEF.npcSkiSegment(sx0,sd0,sx1,sd1,2.2+1.35*turnK,
+            (0.100+0.075*turnK)*(sk===outside?1.0:0.78),outside);
+        }
+        n.snowAccum=0;n.trailX=n.x;n.trailD=n.d;n.trailTheta=nth;
       }
-      // Small world-space powder flicks on stronger turns; never as large or bright as the player plume.
-      if(turnK>0.32&&n.sprayCD<=0&&parts.length<PerfBudget.profile().parts){
-        const count=turnK>0.72?2:1;
+      // Small world-space powder flicks share the same active-emitter budget.
+      if(n.snowEmit&&turnK>0.32&&n.sprayCD<=0&&parts.length<Q.parts){
+        const count=turnK>0.72&&Q.fx>0.6?2:1;
         for(let k=0;k<count;k++)parts.push({
           x:n.x+outside*(6+Math.random()*5),d:n.d-0.05-Math.random()*0.16,
           vx:outside*(11+Math.random()*24),vy:-2.5+Math.random()*4.5,
           t:0.18+Math.random()*0.16,col:'rgba(242,247,252,0.82)',r:0.8+Math.random()*1.25});
-        n.sprayCD=0.08+Math.random()*0.12;
+        n.sprayCD=lerp(0.15,0.08,Q.fx)+Math.random()*0.12;
       }
 
-      // npc hits obstacle
-      for(const o of obs){if(Math.abs(o.d-n.d)<1.4&&Math.abs(o.x-n.x)<o.r*C.forgive+10){
-        n.down=1+Math.random()*0.2;burstAt(n.x,n.d,'#ffb066',12,80);
-        bloodSmear(n.x,n.d,Math.sign(n.vx)||0,1,0.6);break;}}
+      // NPC collision checks use only the immediate depth neighborhood.
+      for(const o of obs){const od=o.d-n.d;
+        if(od<-1.4)continue;
+        if(od>1.4)break;
+        if(Math.abs(o.x-n.x)<o.r*C.forgive+10){
+          n.down=1+Math.random()*0.2;burstAt(n.x,n.d,'#ffb066',12,80);
+          bloodSmear(n.x,n.d,Math.sign(n.vx)||0,1,0.6);break;}}
       // npc hits player
       if(S.iframe<=0&&Math.abs(n.d-S.depth)<1.5&&Math.abs(n.x-S.x)<PR+11){
         if(S.speed>=0.6*C.speedMax)barge(n);else shove(n);}
@@ -1472,12 +1523,19 @@ function update(dt){
   // boulders
   if(S.depth>C.boulderAfter&&Math.random()<lerp(0.025,0.065,Difficulty.profile(S.depth).layout)*dt){spawnBall();if(Math.random()<lerp(0.20,0.38,Difficulty.profile(S.depth).layout))S.ball2=0.4+Math.random()*0.5;}
   if(S.ball2>0){S.ball2-=dt;if(S.ball2<=0)spawnBall();}
+  let boulderTrailBudget=Q.boulderTrails;
   for(let i=balls.length-1;i>=0;i--){
     const b=balls[i],bx0=b.x,bd0=b.d;
     b.d+=b.spd*dt;b.x+=b.vx*dt;b.re-=dt;b.snowPhase=(b.snowPhase||0)+dt*(1.2+b.spd*0.025);
-    DEF.boulderSegment(bx0,bd0,b.x,b.d,b.r,0.12,b.snowPhase);
+    const bTravel=Math.hypot((b.x-bx0)/PXM,b.d-bd0);
+    b.snowAccum=(b.snowAccum||0)+bTravel;
+    if(b.snowAccum>=Q.boulderTrailStep&&boulderTrailBudget>0){
+      const sx=Number.isFinite(b.snowX)?b.snowX:bx0,sd=Number.isFinite(b.snowD)?b.snowD:bd0;
+      DEF.boulderSegment(sx,sd,b.x,b.d,b.r,0.12,b.snowPhase);
+      b.snowX=b.x;b.snowD=b.d;b.snowAccum=0;boulderTrailBudget--;
+    }
     // Loose chunks peel from both churned edges and settle back into the persistent snow layer.
-    if(Math.random()<clamp(3.0+b.spd*0.08,3,7)*dt&&parts.length<PerfBudget.profile().parts){
+    if(Math.random()<clamp(3.0+b.spd*0.08,3,7)*dt*Q.fx&&parts.length<Q.parts){
       const sd=Math.random()<0.5?-1:1;
       parts.push({x:b.x+sd*(b.r*0.58+Math.random()*b.r*0.24),d:b.d-0.08+Math.random()*0.18,
         vx:sd*(8+Math.random()*20)+b.vx*0.16,vy:-1+Math.random()*4,
@@ -1514,10 +1572,12 @@ function update(dt){
   }
   if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
     Y.gapImpulse=0;Y.renderGap=C.yetiStart;Y.renderX=S.x;Y.renderScale=0.98;Y.renderPosture=1;Y.renderYOffset=0;
+    Y.walkPhase=0;Y.moveSpeed=0;Y.lateralSpeed=0;Y.bodyPhase=0;Y.visualBreathPhase=0;
     const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);
     Y.lullNext=S.time+14+Math.random()*12;Y.npcNext=S.time+5+Math.random()*7;}
   if(Y.on){
     const D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
+    const yetiMoveD0=Y.d,yetiMoveX0=Y.x;
     if(Math.abs(Y.gapImpulse||0)>0.001){
       const attackLocked=Y.burst>0||Y.npcBurst>0;
       const resolveSpeed=attackLocked?2.4:(Y.tele>0||Y.npcTele>0)?3.4:5.6;
@@ -1659,6 +1719,16 @@ function update(dt){
     const tx=(Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0)?Y.aimX:S.x;
     const xr=Y.stag>0?0.3:((Y.burst>0||Y.npcBurst>0)?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
     Y.x+=(tx-Y.x)*Math.min(1,xr*dt);
+    // Gait and body motion are derived from actual predator travel, not the global clock.
+    const yd=Y.d-yetiMoveD0,yx=Y.x-yetiMoveX0;
+    const moved=Math.hypot(yx/PXM,yd),moveRate=moved/Math.max(dt,0.0001);
+    Y.moveSpeed=lerp(Y.moveSpeed||0,moveRate,Math.min(1,5.5*dt));
+    Y.lateralSpeed=lerp(Y.lateralSpeed||0,Math.abs(yx)/Math.max(dt,0.0001),Math.min(1,6*dt));
+    const attackMove=Y.burst>0||Y.npcBurst>0,teleMove=Y.tele>0||Y.npcTele>0;
+    const gaitRate=attackMove?4.5:teleMove?1.05:(Y.lull>0||Y.eat>0)?1.45:2.75;
+    Y.walkPhase=(Y.walkPhase||0)+moved*gaitRate;
+    Y.bodyPhase=(Y.bodyPhase||0)+dt*(0.72+0.018*Math.min(55,Y.moveSpeed));
+    Y.visualBreathPhase=(Y.visualBreathPhase||0)+dt*(2.15+2.55*P+(Y.tired>0?1.25:0));
     updateYetiVisual(Y,dt);
     if(stNow===2){Y.foot-=dt;if(Y.foot<=0){Y.foot=0.45;S.shake=Math.max(S.shake,4);}}
     if(S.buffer<=0&&Y.pass!==4&&Y.eat<=0){
@@ -1677,7 +1747,8 @@ function update(dt){
 }
 function spawnBall(){const x=EDGE+30+Math.random()*(LW-2*EDGE-60),d=S.depth-PIN_Y/PXM-3;
   balls.push({x,d,prevX:x,prevD:d,r:18+Math.random()*17,vx:(Math.random()*2-1)*45,
-    spd:Math.max(S.speed*1.35,24),re:1+Math.random(),snowPhase:Math.random()*1000});}
+    spd:Math.max(S.speed*1.35,24),re:1+Math.random(),snowPhase:Math.random()*1000,
+    snowX:x,snowD:d,snowAccum:0});}
 const Simulation=Object.freeze({update,spawnBall,segDist});
 /* ============================ PALETTE ============================ */
 const PAL_CYCLE=5600;
@@ -2119,7 +2190,8 @@ function drawYetiLayer(nightK){
       ctx.beginPath();ctx.arc(ap.x,ap.y,12+k*28,0,6.283);ctx.stroke();}
   }
   const violent=Y.burst>0||Y.npcBurst>0;
-  const walkBob=violent?0:Math.sin(S.time*(4.8+1.8*prox))*(0.45+0.85*prox);
+  const motionK=clamp((Y.moveSpeed||0)/34,0,1),gait=Y.walkPhase||0;
+  const walkBob=violent?0:Math.sin(gait*2)*(0.18+0.95*motionK)*(0.72+0.28*prox);
   const yy=lerp(-58,PIN_Y-96,prox)+walkBob;
   const scale=Number.isFinite(Y.renderScale)?Y.renderScale:lerp(0.98,1.22,smooth01(prox));
   const sy=Number.isFinite(Y.renderPosture)?Y.renderPosture:1;
@@ -2287,15 +2359,25 @@ function drawYetiBody(x,y,sc,sy,eat,red,nightK){
   for(const s of[[-30,-24],[-18,-31],[20,-32],[31,-23]]){
     ctx.moveTo(s[0],s[1]);ctx.lineTo(s[0]+4,s[1]-9);ctx.lineTo(s[0]+8,s[1]);}
   ctx.fill();
+  // Subtle deterministic body motion stays inside the silhouette instead of shaking its global position.
+  const bodyN=Math.sin((S.yeti.bodyPhase||0)*1.13),headX=bodyN*0.8,headY=-30+Math.cos((S.yeti.bodyPhase||0)*0.91)*0.45;
   // head sunk between shoulders + brow
-  ctx.beginPath();ctx.arc(0,-30,13,0,6.283);ctx.fill();
-  ctx.fillRect(-11,-38,22,5);
-  // arms swing
-  const t=S.time;
+  ctx.beginPath();ctx.arc(headX,headY,13,0,6.283);ctx.fill();
+  ctx.fillRect(headX-11,headY-8,22,5);
+  // Arms follow traveled gait distance. Telegraphs compress the silhouette; committed attacks
+  // sharply reach forward without making normal stalking jitter with frame time.
+  const t=S.time,Y=S.yeti,gait=Y.walkPhase||0,motionK=clamp((Y.moveSpeed||0)/34,0,1);
+  const violent=Y.burst>0||Y.npcBurst>0,telegraph=Y.tele>0||Y.npcTele>0;
+  const burstMax=Y.npcBurst>0?0.52:C.lungeT;
+  const attackP=violent?clamp(1-(Y.npcBurst>0?Y.npcBurst:Y.burst)/Math.max(0.001,burstMax),0,1):0;
+  const attackReach=violent?Math.sin(attackP*Math.PI):0;
   ctx.strokeStyle='#0c1017';ctx.lineWidth=11;ctx.lineCap='round';
   for(const sd of[-1,1]){
-    const hx=sd*42,hy=24+Math.sin(t*7+sd*2)*7;
-    ctx.beginPath();ctx.moveTo(sd*26,-16);ctx.quadraticCurveTo(sd*40,4,hx,hy);ctx.stroke();
+    const alternating=gait+(sd>0?Math.PI:0);
+    const swing=(telegraph?1.5:(2.0+6.5*motionK))*Math.sin(alternating);
+    const hx=sd*(42-8*attackReach-(telegraph?4:0));
+    const hy=24+swing+18*attackReach-(telegraph?5:0)+Math.sin((Y.bodyPhase||0)+sd)*0.65;
+    ctx.beginPath();ctx.moveTo(sd*26,-16);ctx.quadraticCurveTo(sd*(40-6*attackReach),4+8*attackReach,hx,hy);ctx.stroke();
     ctx.lineWidth=3.5;
     for(let c=-1;c<=1;c++){ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(hx+c*5,hy+9);ctx.stroke();}
     ctx.lineWidth=11;
@@ -2303,14 +2385,19 @@ function drawYetiBody(x,y,sc,sy,eat,red,nightK){
   // eyes
   const bright=0.75+0.25*nightK,fk=red?1:S.yeti.fury;
   ctx.fillStyle=`rgba(${(130+125*fk)|0},${(220-175*fk)|0},${(255-225*fk)|0},${bright})`;
-  ctx.beginPath();ctx.arc(-5,-31,2.6,0,6.283);ctx.arc(5,-31,2.6,0,6.283);ctx.fill();
+  ctx.beginPath();ctx.arc(headX-5,headY-1,2.6,0,6.283);ctx.arc(headX+5,headY-1,2.6,0,6.283);ctx.fill();
   // feast flecks
   if(eat>0){ctx.fillStyle='rgba(220,30,20,0.8)';
     for(let i=0;i<3;i++){ctx.beginPath();
       ctx.arc((Math.sin(t*9+i*2))*14,32+Math.sin(t*13+i)*4,2.4,0,6.283);ctx.fill();}}
-  // breath puff
-  if(Math.sin(t*(7+S.yeti.fury*5+(S.yeti.tired>0?4:0)))>0.92){ctx.fillStyle='rgba(230,240,255,0.35)';
-    ctx.beginPath();ctx.arc(0,-18,6+Math.random()*3,0,6.283);ctx.fill();}
+  // Deterministic breath: no per-frame randomness, so the puff expands instead of flickering.
+  const bp=Y.visualBreathPhase||0,bw=Math.max(0,(Math.sin(bp)-0.70)/0.30);
+  if(bw>0){
+    ctx.fillStyle=`rgba(230,240,255,${(0.10+0.25*bw).toFixed(3)})`;
+    ctx.beginPath();ctx.arc(Math.sin(bp*0.73)*1.4,-18-bw*2.5,5.2+4.2*bw,0,6.283);ctx.fill();
+    ctx.fillStyle=`rgba(236,245,255,${(0.05+0.12*bw).toFixed(3)})`;
+    ctx.beginPath();ctx.arc(-2.5+Math.cos(bp*0.91)*1.2,-19-bw*5,2.8+2.4*bw,0,6.283);ctx.fill();
+  }
   // feet snow
   ctx.fillStyle='rgba(255,255,255,0.4)';
   ctx.beginPath();ctx.ellipse(0,34,26,5,0,0,6.283);ctx.fill();
