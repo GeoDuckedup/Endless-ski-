@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5c.0</title>
+<title>ENDLESS POWDER v5c.1</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -100,7 +100,7 @@
   #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
   .version{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:max(11px,calc(15*var(--u)));font-weight:700;letter-spacing:.16em;color:rgba(220,232,244,.48);text-transform:uppercase;pointer-events:none}
 
-  /* v5c.0 auth verification is hidden during normal play and opens only with ?authcheck=1. */
+  /* Auth verification remains hidden during normal play and opens only with ?authcheck=1. */
   #authDiag{position:absolute;z-index:20;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
     top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
     overflow:auto;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(143,216,255,.38);border-radius:14px;
@@ -144,7 +144,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5c.0</div>
+    <div class="version">v5c.1</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -176,7 +176,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5c.0 verifies identity only. It does not write a score or database record.</div>
+    <div class="authSub">Auth verification remains read-only. v5c.1 defines the best-run schema but does not submit to it.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -193,7 +193,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5c.0';
+const BUILD_VERSION='v5c.1';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -538,19 +538,79 @@ const Identity=(()=>{
     verification:verification()};}
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
+/* ====================== MODULE: BEST-RUN SCHEMA ======================
+   v5c.1 defines the canonical /best_runs/{uid} record without changing live
+   submission behavior. The legacy /scores path remains active through v5c.2. */
+const BEST_RUN_PATH='/endless_powder/best_runs';
+const BEST_RUN_FIELDS=Object.freeze([
+  'initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions',
+  'deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp'
+]);
+const INITIALS_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
+function sanitizeInitials(v){
+  const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  return(c||'AAA').slice(0,3).padEnd(3,'A');
+}
+const BestRuns=(()=>{
+  const causes=new Set(['caught','edge','tree','boulder']);
+  const int=(v,max)=>Math.max(0,Math.min(max,Math.floor(+v||0)));
+  const round=(v,p)=>Math.round((+v||0)*p)/p;
+  function build(initials,run){
+    run=run&&typeof run==='object'?run:{};
+    return{
+      initials:sanitizeInitials(initials),
+      score:int(run.score,9999999),
+      distance:int(run.distance,999999),
+      cleanFlags:int(run.cleanFlags,99999),
+      attemptedFlags:int(run.attemptedFlags,99999),
+      bestCombo:int(run.bestCombo,9999),
+      collisions:int(run.collisions,9999),
+      deathX:round(clamp(Number.isFinite(+run.deathX)?+run.deathX:LW/2,EDGE,LW-EDGE),10),
+      deathDepth:round(clamp(Number.isFinite(+run.deathDepth)?+run.deathDepth:+run.distance||0,0,999999),10),
+      deathTheta:round(clamp(Number.isFinite(+run.deathTheta)?+run.deathTheta:0,-1.2,1.2),1000),
+      deathCause:causes.has(run.deathCause)?run.deathCause:'caught',
+      worldVersion:typeof run.worldVersion==='string'&&run.worldVersion?run.worldVersion:WORLD_VERSION,
+      timestamp:Math.floor(Number.isFinite(+run.timestamp)?+run.timestamp:Date.now())
+    };
+  }
+  function valid(e,clock){
+    if(!e||typeof e!=='object'||Array.isArray(e))return false;
+    const keys=Object.keys(e).sort(),expected=BEST_RUN_FIELDS.slice().sort();
+    if(keys.length!==expected.length||keys.some((k,i)=>k!==expected[i]))return false;
+    if(!/^[A-Z0-9]{3}$/.test(e.initials)||INITIALS_BAD.test(e.initials))return false;
+    const ints=[['score',9999999],['distance',999999],['cleanFlags',99999],['attemptedFlags',99999],['bestCombo',9999],['collisions',9999]];
+    if(ints.some(([k,max])=>!Number.isInteger(e[k])||e[k]<0||e[k]>max))return false;
+    if(e.cleanFlags>e.attemptedFlags||e.bestCombo>e.cleanFlags)return false;
+    if(!Number.isFinite(e.deathX)||e.deathX<EDGE||e.deathX>LW-EDGE)return false;
+    if(!Number.isFinite(e.deathDepth)||e.deathDepth<0||e.deathDepth>999999.9||e.deathDepth<e.distance-4||e.deathDepth>e.distance+4)return false;
+    if(!Number.isFinite(e.deathTheta)||e.deathTheta<-1.2||e.deathTheta>1.2)return false;
+    if(!causes.has(e.deathCause))return false;
+    if(typeof e.worldVersion!=='string'||!/^[A-Za-z0-9._-]{1,64}$/.test(e.worldVersion))return false;
+    const now=Number.isFinite(+clock)?+clock:Date.now();
+    return Number.isInteger(e.timestamp)&&e.timestamp>1735689600000&&e.timestamp<=now+60000;
+  }
+  function canReplace(stored,incoming){
+    return valid(incoming)&&(!stored||(valid(stored)&&incoming.score>stored.score));
+  }
+  function recordPath(uid){
+    uid=String(uid||'');
+    return uid&&/^[A-Za-z0-9_-]{1,128}$/.test(uid)?BEST_RUN_PATH+'/'+uid:'';
+  }
+  return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
+})();
 /* ==================== ONLINE LEADERBOARD (Firebase RTDB REST) ====================
    Ported from JumpOvertheMoon's HighScoreService. Set FIREBASE_DB_URL to enable —
    leave empty and the feature hides itself entirely. No SDK: plain REST + fetch. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
-const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_FETCH=40, LB_REFRESH=30000;
-const LB_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
+const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_FETCH=40, LB_REFRESH=30000; // legacy until v5c.2
+const LB_BAD=INITIALS_BAD;
 const LB=(()=>{
   let cache={initials:'AAA',top:[],pending:[]};
   try{const c=JSON.parse(store.getItem('ep_lb_v3a')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
   let lastRefresh=0,busy=false,lastSub=null;
   const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
   const save=()=>{try{store.setItem('ep_lb_v3a',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
-  const sanit=v=>{const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return (c||'AAA').slice(0,3).padEnd(3,'A');};
+  const sanit=sanitizeInitials;
   const entryOf=e=>({
     initials:sanit(e&&e.initials),
     score:Math.max(0,Math.min(9999999,Math.floor(+(e&&e.score)||0))),
@@ -1328,8 +1388,12 @@ function finalizePlayerDeath(){
   const newScore=score>oldScore,newDistance=dist>oldDistance;
   if(newScore){bestScore=score;store.setItem('ep_best_score_v2',String(bestScore));}
   if(newDistance){longestDistance=dist;store.setItem('ep_best',String(longestDistance));}
-  const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions};
-  lastFinishedRun=run;
+  const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions,
+    deathX:Math.round(clamp(Number.isFinite(S.deathX)?S.deathX:S.x,EDGE,LW-EDGE)*10)/10,
+    deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
+    deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
+    deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
+  lastFinishedRun=run; // complete v5c.1 payload; legacy submit intentionally ignores the death fields until v5c.2
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -2856,7 +2920,7 @@ function renderAuthDiag(){
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
     hint.textContent='PASS: anonymous authentication is active, the token belongs to this UID, and the same UID was restored. v5c.1 may safely use auth.uid ownership rules.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
-    hint.textContent='Authentication and token validation passed. Reload this same page once; v5c.0 will confirm that the UID survives the reload.';}
+    hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
     hint.textContent='The authenticated UID differs from the previously stored UID. Do not proceed to auth.uid database rules until this is understood.';}
   else if(v.phase==='token-invalid'){per.textContent='NOT VERIFIED';authClass('authPersistence','authBad');
@@ -2910,7 +2974,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,identity:Identity,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
+  persistence:Persistence,identity:Identity,bestRuns:BestRuns,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -2931,7 +2995,7 @@ requestAnimationFrame(frame);
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,identity:Identity,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
