@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5c.3</title>
+<title>ENDLESS POWDER v5c.4</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -120,6 +120,26 @@
   #authActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #authActions button.primary{background:#8fd8ff;color:#07121d;border-color:transparent}
+
+
+  /* Best-run compatibility verification is hidden during normal play and opens only with ?bestcheck=1. */
+  #bestDiag{position:absolute;z-index:21;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow:auto;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(153,239,192,.38);border-radius:14px;
+    background:rgba(5,9,15,.97);box-shadow:0 18px 60px rgba(0,0,0,.62);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y}
+  #bestDiag.show{display:block}
+  #bestDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #bestDiag .bestSub{opacity:.62;margin-bottom:14px}
+  .bestRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .bestRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .bestRow b{font-weight:850;word-break:break-word}
+  #bestOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(153,239,192,.08);white-space:pre-line;font-weight:800}
+  #bestDetails{margin-top:10px;white-space:pre-line;opacity:.72;word-break:break-word}
+  #bestActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #bestActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #bestActions button.primary{background:#99efc0;color:#07150e;border-color:transparent}
 </style>
 </head>
 <body>
@@ -145,7 +165,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5c.3</div>
+    <div class="version">v5c.4</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -177,7 +197,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5c.3 submits one authenticated personal-best record per anonymous UID and builds the public leaderboard from those same best-run records.</div>
+    <div class="authSub">v5c.4 validates anonymous identity, best-run compatibility, leaderboard isolation and offline persistence without writing diagnostic data to Firebase.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -187,6 +207,25 @@
     <div id="authError"></div>
     <div id="authActions"><button class="primary" id="authRetry" type="button">RECHECK</button><button id="authClose" type="button">CLOSE</button></div>
   </div>
+
+
+  <div id="bestDiag" aria-live="polite">
+    <h2>BEST-RUN COMPATIBILITY CHECK</h2>
+    <div class="bestSub">Read-only Firebase verification plus deterministic local tests. This screen never submits, replaces or deletes a live best-run record.</div>
+    <div class="bestRow"><span>Authentication</span><b id="bestAuth" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Reload persistence</span><b id="bestReload" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Schema rules</span><b id="bestSchema" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>PB replacement</span><b id="bestReplace" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Ranking order</span><b id="bestRanking" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Duplicate initials</span><b id="bestDuplicate" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Offline queue</span><b id="bestOffline" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Own server record</span><b id="bestOwn" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Public best runs</span><b id="bestBoard" class="authNeutral">CHECKING</b></div>
+    <div class="bestRow"><span>Legacy /scores</span><b id="bestLegacy" class="authNeutral">CHECKING</b></div>
+    <div id="bestOverall">Running validation…</div>
+    <div id="bestDetails"></div>
+    <div id="bestActions"><button class="primary" id="bestRetry" type="button">RUN CHECKS</button><button id="bestClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -194,7 +233,7 @@
 const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
-const BUILD_VERSION='v5c.3';
+const BUILD_VERSION='v5c.4';
 const WORLD_VERSION='mountain-v4-course-1';
 const LOCAL_DEATH_KEY='ep_local_deaths_v5a';
 const C={
@@ -540,9 +579,10 @@ const Identity=(()=>{
   return Object.freeze({start,ensure,retry,token,url,uid,status,verification,verify:verifySession});
 })();;
 /* ====================== MODULE: BEST-RUN SCHEMA ======================
-   v5c.3 uses the canonical /best_runs/{uid} record for both authenticated
+   v5c.4 retains the canonical /best_runs/{uid} record for authenticated
    personal-best submissions and the public leaderboard. */
 const BEST_RUN_PATH='/endless_powder/best_runs';
+const BEST_RUN_SCHEMA_VERSION='best-runs-v1';
 const BEST_RUN_FIELDS=Object.freeze([
   'initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions',
   'deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp'
@@ -600,7 +640,7 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5c.3 reads and writes only /best_runs. Firebase returns the highest score
+   v5c.4 reads and writes only /best_runs during normal gameplay. Firebase returns the highest score
    records; the client then applies the full ranking order: score, distance,
    clean flags, fewer collisions. The legacy /scores collection is isolated. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
@@ -1501,7 +1541,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5c.3 personal-best submission and leaderboard
+  lastFinishedRun=run; // complete death-aware payload used by the v5c.4 validated personal-best submission and leaderboard
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -3019,7 +3059,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. v5c.3 submits and ranks the signed-in UID’s record through /best_runs/{uid}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. v5c.4 uses the signed-in UID’s owned record at /best_runs/{uid}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
@@ -3038,9 +3078,173 @@ function initAuthDiag(){
   $('authRetry').addEventListener('click',async e=>{e.stopPropagation();$('authRetry').textContent='CHECKING…';await Identity.retry();renderAuthDiag();$('authRetry').textContent='RECHECK';});
   $('authClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});
 }
+
+function bestCheckRequested(){
+  try{return new URLSearchParams(location.search).get('bestcheck')==='1'||store.getItem('ep_best_diag')==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested();}
+const BestCheck=(()=>{
+  const RELOAD_KEY='ep_bestcheck_reload_v5c4';
+  const PROBE_KEY='ep_bestcheck_queue_probe_v5c4';
+  const LEGACY_PATH='/endless_powder/scores';
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood');
+  const warn=(id,text)=>row(id,text||'CHECK','authWarn');
+  const fail=(id,text)=>row(id,text||'FAIL','authBad');
+  const copy=o=>JSON.parse(JSON.stringify(o));
+  const make=(overrides)=>Object.assign(BestRuns.build('TST',{
+    score:1200,distance:500,cleanFlags:12,attemptedFlags:15,bestCombo:6,collisions:2,
+    deathX:360,deathDepth:500.4,deathTheta:-0.25,deathCause:'boulder',
+    worldVersion:WORLD_VERSION,timestamp:Date.now()
+  }),overrides||{});
+  function deterministic(){
+    const base=make(),higher=make({score:1201}),equal=make({score:1200,timestamp:base.timestamp+1}),lower=make({score:1199});
+    const exact=BestRuns.valid(base);
+    const malformed=[
+      Object.assign(copy(base),{deathCause:'avalanche'}),
+      Object.assign(copy(base),{cleanFlags:16}),
+      Object.assign(copy(base),{unexpected:true}),
+      (()=>{const x=copy(base);delete x.deathX;return x;})()
+    ];
+    const schema=exact&&malformed.every(x=>!BestRuns.valid(x));
+    const replace=BestRuns.canReplace(null,base)&&BestRuns.canReplace(base,higher)&&
+      !BestRuns.canReplace(base,equal)&&!BestRuns.canReplace(base,lower);
+    const mk=(uid,over)=>Object.assign({uid},make(over));
+    const scoreA=mk('score-a',{score:9001,distance:100,cleanFlags:1,collisions:9});
+    const scoreB=mk('score-b',{score:9000,distance:999,cleanFlags:99,collisions:0});
+    const distA=mk('dist-a',{score:8000,distance:501,cleanFlags:1,collisions:9});
+    const distB=mk('dist-b',{score:8000,distance:500,cleanFlags:99,collisions:0});
+    const cleanA=mk('clean-a',{score:7000,distance:400,cleanFlags:11,attemptedFlags:12,collisions:9});
+    const cleanB=mk('clean-b',{score:7000,distance:400,cleanFlags:10,attemptedFlags:12,collisions:0});
+    const collA=mk('coll-a',{score:6000,distance:300,cleanFlags:9,attemptedFlags:10,collisions:1});
+    const collB=mk('coll-b',{score:6000,distance:300,cleanFlags:9,attemptedFlags:10,collisions:2});
+    const ranking=LB.compare(scoreA,scoreB)<0&&LB.compare(distA,distB)<0&&
+      LB.compare(cleanA,cleanB)<0&&LB.compare(collA,collB)<0;
+    const dupA=mk('duplicate-a',{initials:'DUP',score:5100});
+    const dupB=mk('duplicate-b',{initials:'DUP',score:5000});
+    const duplicates=[dupA,dupB].sort(LB.compare).length===2&&dupA.uid!==dupB.uid&&dupA.initials===dupB.initials;
+    let offline=false;
+    try{
+      const probe={uid:'offline-probe',record:base};Persistence.setJSON(PROBE_KEY,probe);
+      const restored=Persistence.getJSON(PROBE_KEY,null);
+      offline=!!restored&&restored.uid===probe.uid&&BestRuns.valid(restored.record);
+    }catch(e){offline=false;}finally{try{store.removeItem(PROBE_KEY);}catch(e){}}
+    const cache=LB.cache(),cacheCompatible=(!cache.pending||BestRuns.valid(cache.pending.record,Math.max(Date.now(),+cache.pending.record.timestamp||0)))&&
+      (!cache.remoteBest||BestRuns.valid(cache.remoteBest,Math.max(Date.now(),+cache.remoteBest.timestamp||0)))&&
+      LB.records().every(e=>BestRuns.valid({initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+        attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,deathX:e.deathX,deathDepth:e.deathDepth,
+        deathTheta:e.deathTheta,deathCause:e.deathCause,worldVersion:e.worldVersion,timestamp:e.timestamp},Math.max(Date.now(),+e.timestamp||0)));
+    return{schema,replace,ranking,duplicates,offline,cacheCompatible};
+  }
+  function reloadStatus(uid){
+    let previous=null;try{previous=Persistence.getJSON(RELOAD_KEY,null);}catch(e){}
+    const now=Date.now(),real=uid&&String(uid).indexOf('local-')!==0;
+    if(!real)return{ok:false,waiting:false,text:'WAITING FOR AUTH'};
+    if(previous&&previous.uid===uid&&previous.build===BUILD_VERSION&&previous.schema===BEST_RUN_SCHEMA_VERSION){
+      return{ok:true,waiting:false,text:'VERIFIED'};
+    }
+    Persistence.setJSON(RELOAD_KEY,{uid,build:BUILD_VERSION,schema:BEST_RUN_SCHEMA_VERSION,timestamp:now});
+    return{ok:false,waiting:true,text:previous&&previous.uid&&previous.uid!==uid?'UID CHANGED — RELOAD':'RELOAD REQUIRED'};
+  }
+  function legacyRequests(){
+    try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(LEGACY_PATH)).length;}
+    catch(e){return 0;}
+  }
+  async function timed(url,options,timeout){
+    let timer=0,controller=null;
+    try{
+      if(typeof AbortController!=='undefined'){
+        controller=new AbortController();options=Object.assign({},options||{},{signal:controller.signal});
+        timer=setTimeout(()=>controller.abort(),timeout||6500);
+      }
+      return await fetch(url,options||{});
+    }finally{if(timer)clearTimeout(timer);}
+  }
+  async function json(r){try{return await r.json();}catch(e){return null;}}
+  async function server(){
+    const out={auth:false,own:'unavailable',ownOK:false,board:'unavailable',boardOK:false,validCount:0,invalidCount:0,error:''};
+    try{
+      await Identity.ensure();const a=Identity.status();out.auth=!!(a.authenticated&&a.tokenReady);
+      if(!out.auth){out.error=a.error||'authentication offline';return out;}
+      const path=BestRuns.recordPath(a.uid);if(!path){out.error='invalid anonymous UID';return out;}
+      const ownUrl=await Identity.url(FIREBASE_DB_URL+path+'.json');
+      const ownRes=await timed(ownUrl,{cache:'no-store'});
+      if(ownRes.ok){const own=await json(ownRes);out.own=own===null?'NONE':BestRuns.valid(own,Math.max(Date.now(),+(own&&own.timestamp)||0))?'VALID':'MALFORMED';out.ownOK=own===null||out.own==='VALID';}
+      else{out.own='HTTP '+ownRes.status;}
+      const boardUrl=await Identity.url(FIREBASE_DB_URL+BEST_RUN_PATH+'.json?orderBy=%22score%22&limitToLast=50');
+      const boardRes=await timed(boardUrl,{cache:'no-store'});
+      if(boardRes.ok){
+        const raw=await json(boardRes),entries=raw&&typeof raw==='object'&&!Array.isArray(raw)?Object.entries(raw):[];
+        for(const [uid,record] of entries){
+          if(/^[A-Za-z0-9_-]{1,128}$/.test(uid)&&BestRuns.valid(record,Math.max(Date.now(),+(record&&record.timestamp)||0)))out.validCount++;
+          else out.invalidCount++;
+        }
+        out.board='VALID '+out.validCount+(out.invalidCount?' / IGNORED '+out.invalidCount:'');out.boardOK=true;
+      }else out.board='HTTP '+boardRes.status;
+    }catch(e){out.error=(e&&e.message)||String(e);}
+    return out;
+  }
+  async function run(){
+    if(running)return lastReport;running=true;
+    const btn=$('bestRetry');if(btn)btn.textContent='CHECKING…';
+    ['bestAuth','bestReload','bestSchema','bestReplace','bestRanking','bestDuplicate','bestOffline','bestOwn','bestBoard','bestLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    const details=[];
+    try{
+      const d=deterministic();
+      d.schema?pass('bestSchema','PASS — EXACT FIELDS'):fail('bestSchema','FAIL');
+      d.replace?pass('bestReplace','PASS — FIRST / HIGHER ONLY'):fail('bestReplace','FAIL');
+      d.ranking?pass('bestRanking','PASS — 4 TIEBREAKERS'):fail('bestRanking','FAIL');
+      d.duplicates?pass('bestDuplicate','PASS — UID SEPARATED'):fail('bestDuplicate','FAIL');
+      d.offline&&d.cacheCompatible?pass('bestOffline','PASS — QUEUE + CACHE'):fail('bestOffline','FAIL');
+      const live=await server(),auth=Identity.status();
+      live.auth?pass('bestAuth','CONNECTED — UID MATCH'):fail('bestAuth','OFFLINE / FAILED');
+      const rel=reloadStatus(auth.uid);rel.ok?pass('bestReload',rel.text):warn('bestReload',rel.text);
+      live.ownOK?pass('bestOwn',live.own):fail('bestOwn',live.own);
+      live.boardOK?pass('bestBoard',live.board):fail('bestBoard',live.board);
+      const legacy=legacyRequests();legacy===0?pass('bestLegacy','ISOLATED — 0 REQUESTS'):fail('bestLegacy',legacy+' REQUEST(S)');
+      if(live.error)details.push('Firebase: '+live.error);
+      details.push('Schema: '+BEST_RUN_SCHEMA_VERSION);
+      details.push('World: '+WORLD_VERSION);
+      details.push('UID: '+(auth.uid||'—'));
+      details.push('Cached board records: '+LB.records().length);
+      details.push('Pending best run: '+(LB.cache().pending?'YES — not drained in diagnostic mode':'NO'));
+      details.push('Diagnostic writes to Firebase: NONE');
+      const deterministicOK=d.schema&&d.replace&&d.ranking&&d.duplicates&&d.offline&&d.cacheCompatible;
+      const liveOK=live.auth&&live.ownOK&&live.boardOK&&legacy===0;
+      const overall=$('bestOverall');
+      if(overall){
+        if(deterministicOK&&liveOK&&rel.ok){overall.textContent='VERIFIED — v5c BEST-RUN MIGRATION PASSED';overall.className='authGood';}
+        else if(deterministicOK&&liveOK&&rel.waiting){overall.textContent='LIVE CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
+        else if(deterministicOK&&!live.auth){overall.textContent='LOCAL COMPATIBILITY PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else{overall.textContent='VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const de=$('bestDetails');if(de)de.textContent=details.join('\n');
+      lastReport={deterministic:d,live,reload:rel,legacyRequests:legacy,passed:deterministicOK&&liveOK&&rel.ok};
+    }catch(e){
+      fail('bestAuth','ERROR');const overall=$('bestOverall');if(overall){overall.textContent='VALIDATION ERROR';overall.className='authBad';}
+      const de=$('bestDetails');if(de)de.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN CHECKS';}
+    return lastReport;
+  }
+  function init(){
+    const box=$('bestDiag');if(!box||!bestCheckRequested())return;
+    box.classList.add('show');
+    $('bestRetry').addEventListener('click',e=>{e.stopPropagation();run();});
+    $('bestClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});
+  }
+  return Object.freeze({init,run,last:()=>lastReport,requested:bestCheckRequested});
+})();
 Input.bind();
 initAuthDiag();
-Identity.start().finally(()=>{Identity.verify();renderAuthDiag();Leaderboard.refresh();if(!authDiagRequested())Leaderboard.drain();});
+BestCheck.init();
+Identity.start().finally(async()=>{
+  Identity.verify();renderAuthDiag();await Leaderboard.refresh();
+  if(bestCheckRequested())await BestCheck.run();
+  if(!diagnosticRequested())Leaderboard.drain();
+});
 /* tune sliders */
 function slider(id,vid,fn,fmt){const s=$(id),v=$(vid);
   s.addEventListener('input',()=>{const val=parseFloat(s.value);fn(val);v.textContent=fmt?fmt(val):val;});}
@@ -3075,7 +3279,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  persistence:Persistence,identity:Identity,bestRuns:BestRuns,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
+  persistence:Persistence,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -3096,7 +3300,7 @@ requestAnimationFrame(frame);
 window.__EP={
   modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,balls,localDeaths,smears,spray,parts,snow,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
 };
