@@ -16,6 +16,7 @@
   .hud{position:absolute;z-index:2;pointer-events:none;color:#fff;text-shadow:0 calc(2*var(--u)) calc(6*var(--u)) rgba(0,0,0,.55)}
   #hDepth{top:calc(env(safe-area-inset-top) + 14px);left:calc(env(safe-area-inset-left) + 16px);font-size:calc(58*var(--u));font-weight:800;letter-spacing:-.02em}
   #hDepth small{font-size:calc(26*var(--u));font-weight:600;opacity:.8}
+  #hScore{top:calc(env(safe-area-inset-top) + 78px);left:calc(env(safe-area-inset-left) + 18px);font-size:calc(22*var(--u));font-weight:800;letter-spacing:.06em;opacity:.82;font-variant-numeric:tabular-nums}
   #hCombo{top:calc(env(safe-area-inset-top) + 10px);right:calc(env(safe-area-inset-right) + 16px);font-size:calc(64*var(--u));font-weight:900;text-align:right;transform-origin:top right}
   .btnrow{position:absolute;z-index:7;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 12px);display:flex;gap:10px}
   .ib{pointer-events:auto;width:max(48px,calc(64*var(--u)));height:max(48px,calc(64*var(--u)));border-radius:max(12px,calc(14*var(--u)));
@@ -42,6 +43,13 @@
   .ov .tag{margin-top:calc(6*var(--u));font-size:calc(24*var(--u));color:#ff9a8a;font-weight:700}
   .ov .big{font-size:calc(88*var(--u));font-weight:900;margin:calc(14*var(--u)) 0 0}
   .ov .best{font-size:calc(24*var(--u));opacity:.75;margin-top:calc(4*var(--u))}
+  .scoreUnit{font-size:calc(18*var(--u));font-weight:800;letter-spacing:.22em;opacity:.62;margin-top:calc(-5*var(--u))}
+  #rBreakdown{width:min(78%,calc(560*var(--u)));margin-top:calc(18*var(--u));font-variant-numeric:tabular-nums}
+  .scoreRow{display:flex;justify-content:space-between;align-items:center;padding:calc(4*var(--u)) calc(2*var(--u));font-size:calc(20*var(--u));border-bottom:1px solid rgba(255,255,255,.08)}
+  .scoreRow span{opacity:.72}.scoreRow b{font-weight:850}.scoreRow.penalty b{color:#ff9a8a}
+  #runStats{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(10*var(--u));margin-top:calc(15*var(--u))}
+  #runStats span{display:flex;flex-direction:column;gap:calc(2*var(--u));font-size:calc(21*var(--u));font-weight:850}
+  #runStats small{font-size:calc(11*var(--u));font-weight:750;letter-spacing:.09em;opacity:.55}
   .ov .go{margin-top:calc(40*var(--u));font-size:calc(26*var(--u));font-weight:800;letter-spacing:.18em;
     color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
@@ -65,7 +73,8 @@
     padding:calc(3*var(--u)) 0;font-variant-numeric:tabular-nums}
   .lbRow span{width:calc(30*var(--u));opacity:.55;text-align:right}
   .lbRow b{letter-spacing:.2em}
-  .lbRow i{margin-left:auto;font-style:normal;opacity:.85}
+  .lbRow i{margin-left:auto;font-style:normal;opacity:.9;text-align:right}
+  .lbRow i strong{font-weight:900}.lbRow i small{display:block;font-size:calc(13*var(--u));opacity:.58}
   .lbRow.mine{color:#ffd76a;text-shadow:0 0 calc(10*var(--u)) rgba(255,215,106,.5)}
   #lbStatus{margin-top:calc(8*var(--u));font-size:calc(16*var(--u));opacity:.6;min-height:calc(18*var(--u))}
   .version{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);font-size:max(11px,calc(15*var(--u)));font-weight:700;letter-spacing:.16em;color:rgba(220,232,244,.48);text-transform:uppercase;pointer-events:none}
@@ -75,6 +84,7 @@
 <div id="wrap"><div id="stage">
   <canvas id="cv"></canvas>
   <div class="hud" id="hDepth">0<small> m</small></div>
+  <div class="hud" id="hScore">0 pts</div>
   <div class="hud" id="hCombo"></div>
   <div class="btnrow" id="btnRow">
     <button class="ib" id="bTune" type="button" aria-label="Open tuning controls">⚙︎</button>
@@ -93,14 +103,28 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v1</div>
+    <div class="version">v2</div>
   </div>
   <div class="ov hide" id="ovResults">
     <h1 id="rTitle">Caught</h1>
     <div class="tag" id="rTag"></div>
-    <div class="big" id="rDist">0 m</div>
+    <div class="big" id="rScore">0</div>
+    <div class="scoreUnit">POINTS</div>
     <div class="best" id="rBest"></div>
-    <div id="rNew" style="display:none">NEW BEST</div>
+    <div id="rNew" style="display:none">NEW BEST SCORE</div>
+    <div id="rBreakdown">
+      <div class="scoreRow"><span>Distance points</span><b id="rDistancePts">0</b></div>
+      <div class="scoreRow"><span>Flag points</span><b id="rFlagPts">0</b></div>
+      <div class="scoreRow"><span>Combo bonus</span><b id="rComboPts">0</b></div>
+      <div class="scoreRow penalty"><span>Collision penalties</span><b id="rPenaltyPts">0</b></div>
+      <div id="runStats">
+        <span><b id="rRunDistance">0 m</b><small>DISTANCE</small></span>
+        <span><b id="rAccuracy">0 / 0</b><small>CLEAN FLAGS</small></span>
+        <span><b id="rAccuracyPct">0%</b><small>ACCURACY</small></span>
+        <span><b id="rBestCombo">0×</b><small>BEST COMBO</small></span>
+        <span><b id="rCollisions">0</b><small>COLLISIONS</small></span>
+      </div>
+    </div>
     <div id="lbWrap" style="display:none">
       <div id="lbEntry" style="display:none">
         <input id="lbInit" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AAA">
@@ -110,7 +134,7 @@
       <div id="lbStatus"></div>
     </div>
     <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
-    <div id="rLegend"><span><b class="you"></b>RUN</span><span id="rPrevLegend"><b class="bestMark"></b>PREVIOUS BEST</span></div>
+    <div id="rLegend"><span><b class="you"></b>RUN</span><span id="rPrevLegend"><b class="bestMark"></b>PREVIOUS LONGEST</span></div>
     <div class="go">TAP TO RETRY</div>
   </div>
 </div></div>
@@ -224,8 +248,8 @@ const $=id=>document.getElementById(id);
 /* ============================ DOM ============================ */
 const cv=$('cv'), stage=$('stage');
 const ctx=cv.getContext('2d');
-const el={depth:$('hDepth'),combo:$('hCombo'),
-  intro:$('ovIntro'),results:$('ovResults'),rTitle:$('rTitle'),rTag:$('rTag'),rDist:$('rDist'),rBest:$('rBest'),
+const el={depth:$('hDepth'),score:$('hScore'),combo:$('hCombo'),
+  intro:$('ovIntro'),results:$('ovResults'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),rBest:$('rBest'),
   tune:$('tunePanel')};
 /* ============================ AUDIO ============================ */
 let AC=null, sndOn=store.getItem('ep_snd')!=='0';
@@ -289,27 +313,36 @@ const PHASES=[
    Ported from JumpOvertheMoon's HighScoreService. Set FIREBASE_DB_URL to enable —
    leave empty and the feature hides itself entirely. No SDK: plain REST + fetch. */
 let FIREBASE_DB_URL='https://endless-powder-default-rtdb.firebaseio.com';
-const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_REFRESH=30000;
+const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_FETCH=40, LB_REFRESH=30000;
 const LB_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
 const LB=(()=>{
   let cache={initials:'AAA',top:[],pending:[]};
-  try{const c=JSON.parse(store.getItem('ep_lb')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
+  try{const c=JSON.parse(store.getItem('ep_lb_v2')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
   let lastRefresh=0,busy=false,lastSub=null;
   const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
-  const save=()=>{try{store.setItem('ep_lb',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
+  const save=()=>{try{store.setItem('ep_lb_v2',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
   const sanit=v=>{const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return (c||'AAA').slice(0,3).padEnd(3,'A');};
+  const entryOf=e=>({
+    initials:sanit(e&&e.initials),
+    score:Math.max(0,Math.min(9999999,Math.floor(+(e&&e.score)||0))),
+    distance:Math.max(0,Math.min(999999,Math.floor(+(e&&e.distance)||0))),
+    cleanFlags:Math.max(0,Math.min(99999,Math.floor(+(e&&e.cleanFlags)||0))),
+    attemptedFlags:Math.max(0,Math.min(99999,Math.floor(+(e&&e.attemptedFlags)||0))),
+    bestCombo:Math.max(0,Math.min(9999,Math.floor(+(e&&e.bestCombo)||0))),
+    collisions:Math.max(0,Math.min(9999,Math.floor(+(e&&e.collisions)||0))),
+    timestamp:Math.floor(+(e&&e.timestamp)||0)
+  });
+  const cmp=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp;
   const norm=p=>{
     const raw=p&&typeof p==='object'?Object.values(p):[];
-    return raw.filter(e=>e&&typeof e==='object')
-      .map(e=>({initials:sanit(e.initials),score:Math.max(0,Math.min(999999,Math.floor(+e.score||0))),timestamp:Math.floor(+e.timestamp||0)}))
-      .sort((a,b)=>b.score-a.score||a.timestamp-b.timestamp).slice(0,LB_SIZE);
+    return raw.filter(e=>e&&typeof e==='object').map(entryOf).sort(cmp).slice(0,LB_SIZE);
   };
   async function refresh(force){
     if(!on())return;
     if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
     lastRefresh=Date.now();
     try{
-      const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_SIZE);
+      const r=await fetch(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
       if(r.ok){cache.top=norm(await r.json());save();renderBoard();lbStatus('');}
       else lbStatus('board unreachable ('+r.status+') — check database rules');
     }catch(e){lbStatus('board offline');}
@@ -328,12 +361,16 @@ const LB=(()=>{
     busy=false;
     if(!cache.pending.length)refresh(true);
   }
-  const qualifies=score=>on()&&(cache.top.length<LB_SIZE||score>cache.top[cache.top.length-1].score);
-  function submit(initials,score){
+  const qualifies=run=>{
+    if(!on())return false;
+    const e=entryOf(run||{});
+    return cache.top.length<LB_SIZE||cmp(e,cache.top[cache.top.length-1])<0;
+  };
+  function submit(initials,run){
     initials=sanit(initials);
     if(LB_BAD.test(initials))return false; // server enforces too; this avoids a doomed write
     cache.initials=initials;
-    const entry={initials,score:Math.max(0,Math.min(999999,Math.floor(score))),timestamp:Date.now()};
+    const entry=entryOf(Object.assign({},run,{initials,timestamp:Date.now()}));
     lastSub=entry;
     cache.pending.push(entry);cache.pending=cache.pending.slice(-20);
     save();drain();return true;
@@ -348,13 +385,14 @@ function renderBoard(){
   const top=LB.cache().top,ls=LB.lastSub();
   if(!top.length){list.innerHTML='';return;}
   list.innerHTML=top.map((e,i)=>{
-    const mine=ls&&e.initials===ls.initials&&e.score===ls.score;
-    return '<div class="lbRow'+(mine?' mine':'')+'"><span>'+(i+1)+'</span><b>'+e.initials+'</b><i>'+e.score+' m</i></div>';
+    const mine=ls&&e.initials===ls.initials&&e.score===ls.score&&e.distance===ls.distance;
+    return '<div class="lbRow'+(mine?' mine':'')+'"><span>'+(i+1)+'</span><b>'+e.initials+'</b><i><strong>'+fmtNum(e.score)+'</strong> pts<small>'+fmtNum(e.distance)+' m</small></i></div>';
   }).join('');
 }
 /* ============================ PERSISTENCE ============================ */
 let markers=[];try{markers=JSON.parse(store.getItem('ep_markers')||'[]')||[];}catch(e){markers=[];}
-let best=parseFloat(store.getItem('ep_best')||'0')||0;
+let longestDistance=parseFloat(store.getItem('ep_best')||'0')||0;
+let bestScore=parseFloat(store.getItem('ep_best_score_v2')||'0')||0;
 let lastDeathReal=0;
 function addMarker(t,d,x){markers.push({t,d:Math.round(d*10)/10,x:Math.round(x)});
   if(markers.length>C.markerCap)markers.splice(0,markers.length-C.markerCap);
@@ -373,6 +411,7 @@ function fresh(){
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
     prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,
+    scoreFlag:0,scoreCombo:0,scorePenalty:0,cleanFlags:0,flagsAttempted:0,bestCombo:0,collisions:0,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
@@ -524,6 +563,11 @@ function pushSluff(p){
 const Effects=Object.freeze({floater,burstAt,bloodSmear,ringAt});
 /* ============================ ECONOMY EVENTS ============================ */
 function heatRGB(){return S.combo>=15?'255,157,58':S.combo>=9?'255,215,106':S.combo>=4?'127,230,255':'255,255,255';}
+function fmtNum(n){return String(Math.max(0,Math.floor(+n||0))).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function distancePoints(){return Math.max(0,Math.floor(S.depth))*2;}
+function totalScore(){return Math.max(0,distancePoints()+S.scoreFlag+S.scoreCombo-S.scorePenalty);}
+function recordFlagAttempt(clean){S.flagsAttempted++;if(clean)S.cleanFlags++;}
+function recordCollision(penalty){S.collisions++;S.scorePenalty+=Math.max(0,penalty||0);}
 function addFury(base,extraLungeChance){ // one pressure system: every sloppy event feeds the predator
   const D=Difficulty.profile(S.depth),Y=S.yeti;
   if(S.time-S.lastMistake<=6)S.mistakeChain=Math.min(4,S.mistakeChain+1);
@@ -554,6 +598,8 @@ function cleanFlag(g,px){
   // Diminishing fuel growth: combo remains valuable without one flag refilling the whole pool.
   const fuel=C.flagFuel*M.fuel*(1+Math.min(S.combo,C.comboFuelCap)*C.fuelPerCombo);
   S.fuel=Math.min(S.fuel+fuel,C.poolCap); S.combo++; S.comboPulse=1;
+  recordFlagAttempt(true);S.bestCombo=Math.max(S.bestCombo,S.combo);
+  S.scoreFlag+=30;S.scoreCombo+=4*Math.min(S.combo,20);
   const milestone=S.combo===5||S.combo===10||S.combo===15||S.combo===20;
   if(milestone){
     S.comboPulse=1.6;
@@ -572,6 +618,7 @@ function cleanFlag(g,px){
   sfx.gate(S.combo);
 }
 function softMiss(g){ // reached the side but did not truly commit around the flag
+  recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',8,62);
   S.combo=0;
   addFury(0.10,0.14);
@@ -579,6 +626,7 @@ function softMiss(g){ // reached the side but did not truly commit around the fl
   tone(210,155,0.11,'sine',0.13);
 }
 function wrongSide(g){ // no speed punishment; the cost is broken rhythm and rising predator pressure
+  recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
   addFury(0.16,0.32);
@@ -587,6 +635,7 @@ function wrongSide(g){ // no speed punishment; the cost is broken rhythm and ris
   tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
 }
 function faultFlag(g){
+  recordFlagAttempt(false);recordCollision(75);
   const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0; S.speed*=lerp(C.faultCut,0.69,k); S.flash=Math.max(S.flash,0.25);
@@ -595,6 +644,7 @@ function faultFlag(g){
 }
 function crash(){
   if(S.iframe>0)return;
+  recordCollision(200);
   const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.speed*=lerp(C.crashCut,0.37,k); S.combo=0; S.fuel=0;
@@ -612,6 +662,7 @@ function crash(){
   sfx.crash(); vib(60);
 }
 function shove(n){ // a skier bump is physical, and the commotion draws the yeti
+  recordCollision(250);
   const k=Difficulty.profile(S.depth).penalty;
   const dir=S.x>=n.x?1:-1;
   S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
@@ -624,6 +675,7 @@ function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   tone(180,110,0.12,'square',0.16); vib(20);
 }
 function barge(n){
+  recordCollision(250);
   const k=Difficulty.profile(S.depth).penalty;
   S.speed*=lerp(0.50,0.39,k); S.iframe=0.4; S.hitstop=0.05;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(3,8,k));
@@ -668,19 +720,29 @@ function die(cause){
 function finalizeDeath(){
   S.mode='dead';
   addMarker('death',S.depth,S.x);
-  const dist=Math.floor(S.depth);
-  const oldBest=best,isNew=dist>oldBest,wasBest=dist>oldBest;
-  if(wasBest){best=dist;store.setItem('ep_best',String(best));}
+  const dist=Math.max(0,Math.floor(S.depth));
+  const dPts=dist*2,score=Math.max(0,dPts+S.scoreFlag+S.scoreCombo-S.scorePenalty);
+  const oldScore=bestScore,oldDistance=longestDistance;
+  const newScore=score>oldScore,newDistance=dist>oldDistance;
+  if(newScore){bestScore=score;store.setItem('ep_best_score_v2',String(bestScore));}
+  if(newDistance){longestDistance=dist;store.setItem('ep_best',String(longestDistance));}
+  const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions};
   if(LB.on()){
     $('lbWrap').style.display='block';
-    const q=dist>0&&(wasBest||LB.qualifies(dist));
+    const q=score>0&&(newScore||LB.qualifies(run));
     $('lbEntry').style.display=q?'flex':'none';
-    if(q){$('lbInit').value=LB.cache().initials;$('lbGo').textContent='SUBMIT';
-      $('lbGo').dataset.score=dist;}
+    if(q){
+      $('lbInit').value=LB.cache().initials;$('lbGo').textContent='SUBMIT';
+      const b=$('lbGo');
+      b.dataset.score=String(score);b.dataset.distance=String(dist);b.dataset.cleanFlags=String(S.cleanFlags);
+      b.dataset.attemptedFlags=String(S.flagsAttempted);b.dataset.bestCombo=String(S.bestCombo);b.dataset.collisions=String(S.collisions);
+    }
     renderBoard();LB.refresh(true);LB.drain();
   }else $('lbWrap').style.display='none';
-  $('rNew').style.display=isNew?'block':'none';
-  if(isNew){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
+  const anyRecord=newScore||newDistance;
+  $('rNew').style.display=anyRecord?'block':'none';
+  $('rNew').textContent=newScore&&newDistance?'NEW SCORE + DISTANCE':newScore?'NEW BEST SCORE':'NEW LONGEST';
+  if(anyRecord){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
   if(S.cause==='edge'){title='Off the trail';tag='Skied into the trees';}
   else if(S.cause==='boulder'){title='Wiped out';tag='Direct boulder impact';}
@@ -689,13 +751,23 @@ function finalizeDeath(){
   else if(S.combo===0){title='Caught';tag='Lost the rhythm';}
   else{title='Caught';tag='Caught by the yeti';}
   el.rTitle.textContent=title;el.rTag.textContent=tag;
-  el.rDist.textContent=dist+' m';el.rBest.textContent='BEST '+Math.floor(best)+' m';
+  el.rScore.textContent=fmtNum(score);
+  el.rBest.textContent='BEST SCORE '+fmtNum(bestScore)+'  •  LONGEST '+fmtNum(longestDistance)+' m';
+  $('rDistancePts').textContent=fmtNum(dPts);
+  $('rFlagPts').textContent=fmtNum(S.scoreFlag);
+  $('rComboPts').textContent=fmtNum(S.scoreCombo);
+  $('rPenaltyPts').textContent=S.scorePenalty?'−'+fmtNum(S.scorePenalty):'0';
+  $('rRunDistance').textContent=fmtNum(dist)+' m';
+  $('rAccuracy').textContent=fmtNum(S.cleanFlags)+' / '+fmtNum(S.flagsAttempted);
+  $('rAccuracyPct').textContent=(S.flagsAttempted?Math.round(S.cleanFlags/S.flagsAttempted*100):0)+'%';
+  $('rBestCombo').textContent=fmtNum(S.bestCombo)+'×';
+  $('rCollisions').textContent=fmtNum(S.collisions);
   lastDeathReal=Date.now();
-  const span=Math.max(oldBest,dist,1);
+  const span=Math.max(oldDistance,dist,1);
   $('tYou').style.left=(dist/span*96)+'%';
-  $('tBest').style.left=(oldBest/span*96)+'%';
-  $('tBest').style.display=oldBest>0?'block':'none';
-  $('rPrevLegend').style.display=oldBest>0?'flex':'none';
+  $('tBest').style.left=(oldDistance/span*96)+'%';
+  $('tBest').style.display=oldDistance>0?'block':'none';
+  $('rPrevLegend').style.display=oldDistance>0?'flex':'none';
   $('btnRow').style.display='flex';
   el.results.classList.remove('hide');
 }
@@ -942,7 +1014,7 @@ function update(dt){
       const hit=segDist(S.prevX,py0,S.x,py1,o.x,o.d*PXM);
       if(hit<o.r*C.forgive+PR){
         const directRock=!o.tree&&S.depth>=500&&S.speed>=24&&hit<o.r*0.34+PR*0.42;
-        if(directRock){S.lastCrash=S.time;die('boulder');return;}
+        if(directRock){recordCollision(0);S.lastCrash=S.time;die('boulder');return;}
         crash();break;
       }
     }
@@ -990,7 +1062,7 @@ function update(dt){
     if(S.iframe<=0&&Math.abs(b.d-S.depth)<(b.r+PR)/PXM+0.6&&Math.abs(b.x-S.x)<b.r*0.8+PR){
       const direct=S.depth>=500&&Math.abs(b.x-S.x)<b.r*0.34+PR*0.40&&Math.abs(b.d-S.depth)<(b.r*0.42+PR*0.35)/PXM+0.24;
       balls.splice(i,1);
-      if(direct){S.lastCrash=S.time;die('boulder');return;}
+      if(direct){recordCollision(0);S.lastCrash=S.time;die('boulder');return;}
       crash();continue;
     }
     for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);
@@ -1842,6 +1914,7 @@ DEF.init();
 /* ============================ HUD ============================ */
 function hud(){
   el.depth.innerHTML=Math.floor(S.depth)+'<small> m</small>';
+  el.score.textContent=fmtNum(totalScore())+' pts';
   if(S.combo>0){
     el.combo.textContent=S.combo+'×';
     el.combo.style.color=S.combo>=15?'#ff9d3a':S.combo>=9?'#ffd76a':S.combo>=4?'#7fe6ff':'#ffffff';
@@ -1887,8 +1960,11 @@ function bindInput(){
   el.intro.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
   el.results.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
-  $('lbGo').addEventListener('click',function(){const sc=parseInt(this.dataset.score||'0',10);
-    if(Leaderboard.submit($('lbInit').value,sc)){$('lbEntry').style.display='none';lbStatus('sending…');renderBoard();}
+  $('lbGo').addEventListener('click',function(){
+    const run={score:parseInt(this.dataset.score||'0',10),distance:parseInt(this.dataset.distance||'0',10),
+      cleanFlags:parseInt(this.dataset.cleanFlags||'0',10),attemptedFlags:parseInt(this.dataset.attemptedFlags||'0',10),
+      bestCombo:parseInt(this.dataset.bestCombo||'0',10),collisions:parseInt(this.dataset.collisions||'0',10)};
+    if(Leaderboard.submit($('lbInit').value,run)){$('lbEntry').style.display='none';lbStatus('sending…');renderBoard();}
     else{$('lbInit').value='';$('lbInit').placeholder='NOPE';}});
   $('lbInit').addEventListener('input',function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
   $('bTune').addEventListener('click',e=>{e.stopPropagation();el.tune.classList.toggle('show');});
