@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER</title>
+<title>ENDLESS POWDER v3c</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -62,7 +62,15 @@
   #rLegend .you{background:#ff6a5e}#rLegend .bestMark{background:#ffd76a}
   #rNew{margin-top:calc(14*var(--u));font-size:calc(30*var(--u));font-weight:900;letter-spacing:.2em;
     color:#ffd76a;text-shadow:0 0 calc(16*var(--u)) rgba(255,215,106,.7);animation:pulse 1s ease-in-out infinite}
-  #lbWrap{margin-top:calc(20*var(--u));width:72%;pointer-events:auto}
+  .actionRow{display:flex;gap:calc(12*var(--u));justify-content:center;flex-wrap:wrap;margin-top:calc(24*var(--u));pointer-events:auto}
+  .actionBtn{min-width:calc(180*var(--u));min-height:max(48px,calc(58*var(--u)));padding:0 calc(20*var(--u));border-radius:calc(11*var(--u));
+    border:1px solid rgba(255,255,255,.28);background:rgba(12,20,32,.82);color:#eaf5ff;font-size:calc(20*var(--u));font-weight:850;letter-spacing:.12em}
+  .actionBtn.primary{background:#8fd8ff;color:#0a1420;border-color:transparent}
+  .actionBtn:active{transform:scale(.98);filter:brightness(.92)}
+  #ovLeaderboard{justify-content:flex-start;padding-top:calc(env(safe-area-inset-top) + 34px);padding-bottom:calc(env(safe-area-inset-bottom) + 88px)}
+  #ovLeaderboard h1{font-size:calc(48*var(--u));margin-bottom:calc(2*var(--u))}
+  #lbRunSummary{font-size:calc(18*var(--u));opacity:.68;margin-top:calc(2*var(--u));font-variant-numeric:tabular-nums}
+  #lbWrap{margin-top:calc(18*var(--u));width:min(86%,calc(620*var(--u)));pointer-events:auto}
   #lbEntry{display:flex;gap:calc(10*var(--u));justify-content:center;margin-bottom:calc(14*var(--u))}
   #lbInit{width:calc(120*var(--u));text-align:center;font-size:calc(34*var(--u));font-weight:900;
     letter-spacing:.35em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.1);
@@ -103,7 +111,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v2</div>
+    <div class="version">v3c</div>
   </div>
   <div class="ov hide" id="ovResults">
     <h1 id="rTitle">Caught</h1>
@@ -125,17 +133,28 @@
         <span><b id="rCollisions">0</b><small>COLLISIONS</small></span>
       </div>
     </div>
+    <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
+    <div id="rLegend"><span><b class="you"></b>RUN</span><span id="rPrevLegend"><b class="bestMark"></b>PREVIOUS LONGEST</span></div>
+    <div class="actionRow">
+      <button class="actionBtn primary" id="rLeaderboard" type="button">LEADERBOARD</button>
+      <button class="actionBtn" id="rRetry" type="button">RUN AGAIN</button>
+    </div>
+  </div>
+  <div class="ov hide" id="ovLeaderboard">
+    <h1>LEADERBOARD</h1>
+    <div id="lbRunSummary"></div>
     <div id="lbWrap" style="display:none">
       <div id="lbEntry" style="display:none">
         <input id="lbInit" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AAA">
-        <button id="lbGo">SUBMIT</button>
+        <button id="lbGo" type="button">SUBMIT</button>
       </div>
       <div id="lbList"></div>
       <div id="lbStatus"></div>
     </div>
-    <div id="rStrip"><i id="tYou"></i><i id="tBest"></i></div>
-    <div id="rLegend"><span><b class="you"></b>RUN</span><span id="rPrevLegend"><b class="bestMark"></b>PREVIOUS LONGEST</span></div>
-    <div class="go">TAP TO RETRY</div>
+    <div class="actionRow">
+      <button class="actionBtn" id="lbBack" type="button">BACK TO RESULTS</button>
+      <button class="actionBtn primary" id="lbRetry" type="button">RUN AGAIN</button>
+    </div>
   </div>
 </div></div>
 <script>
@@ -249,7 +268,7 @@ const $=id=>document.getElementById(id);
 const cv=$('cv'), stage=$('stage');
 const ctx=cv.getContext('2d');
 const el={depth:$('hDepth'),score:$('hScore'),combo:$('hCombo'),
-  intro:$('ovIntro'),results:$('ovResults'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),rBest:$('rBest'),
+  intro:$('ovIntro'),results:$('ovResults'),leaderboard:$('ovLeaderboard'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),rBest:$('rBest'),
   tune:$('tunePanel')};
 /* ============================ AUDIO ============================ */
 let AC=null, sndOn=store.getItem('ep_snd')!=='0';
@@ -317,10 +336,10 @@ const LB_PATH='/endless_powder/scores', LB_SIZE=10, LB_FETCH=40, LB_REFRESH=3000
 const LB_BAD=/^(ASS|FUK|FUC|FCK|SHT|SHI|DIK|DIQ|DIC|COK|COC|CUM|FAG|FAT|GAY|GOD|JEW|KKK|NIG|NGA|NGR|PIS|POO|SEX|TIT|TTS|WTF|STF|SUK|SUC|VAG|WOP|KYS|RAP|FKU|CNT|CUN|HOR|HO3|ANU|ANL|BUT|BUM|DAM|DMN|HEL|JIZ|KIK|PEN|PHK|SCK|SLT|SMD)$/;
 const LB=(()=>{
   let cache={initials:'AAA',top:[],pending:[]};
-  try{const c=JSON.parse(store.getItem('ep_lb_v2')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
+  try{const c=JSON.parse(store.getItem('ep_lb_v3a')||'{}');if(c&&typeof c==='object')cache=Object.assign(cache,c);}catch(e){}
   let lastRefresh=0,busy=false,lastSub=null;
   const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
-  const save=()=>{try{store.setItem('ep_lb_v2',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
+  const save=()=>{try{store.setItem('ep_lb_v3a',JSON.stringify({initials:cache.initials,top:cache.top,pending:cache.pending.slice(-20)}));}catch(e){}};
   const sanit=v=>{const c=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return (c||'AAA').slice(0,3).padEnd(3,'A');};
   const entryOf=e=>({
     initials:sanit(e&&e.initials),
@@ -333,9 +352,13 @@ const LB=(()=>{
     timestamp:Math.floor(+(e&&e.timestamp)||0)
   });
   const cmp=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp;
+  const validComposite=e=>e&&typeof e==='object'&&
+    typeof e.initials==='string'&&Number.isFinite(+e.score)&&Number.isFinite(+e.distance)&&
+    Number.isFinite(+e.cleanFlags)&&Number.isFinite(+e.attemptedFlags)&&
+    Number.isFinite(+e.bestCombo)&&Number.isFinite(+e.collisions)&&Number.isFinite(+e.timestamp);
   const norm=p=>{
     const raw=p&&typeof p==='object'?Object.values(p):[];
-    return raw.filter(e=>e&&typeof e==='object').map(entryOf).sort(cmp).slice(0,LB_SIZE);
+    return raw.filter(validComposite).map(entryOf).sort(cmp).slice(0,LB_SIZE);
   };
   async function refresh(force){
     if(!on())return;
@@ -410,13 +433,13 @@ function fresh(){
   S={mode:'intro',slowmo:0,time:0,depth:0,x:LW/2,prevD:0,prevX:LW/2,theta:0,speed:14,fuel:0,combo:0,comboPulse:0,
     stun:0,iframe:0,hitstop:0,shake:0,flash:0,dying:0,cause:'',lastCrash:-99,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
-    prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,
+    prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,tightBoost:0,
     scoreFlag:0,scoreCombo:0,scorePenalty:0,cleanFlags:0,flagsAttempted:0,bestCombo:0,collisions:0,
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0},
-    buffer:999,streak:0,mistakeChain:0,lastMistake:-99};
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0},
+    buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
   DEF.reset();
 }
@@ -568,7 +591,60 @@ function distancePoints(){return Math.max(0,Math.floor(S.depth))*2;}
 function totalScore(){return Math.max(0,distancePoints()+S.scoreFlag+S.scoreCombo-S.scorePenalty);}
 function recordFlagAttempt(clean){S.flagsAttempted++;if(clean)S.cleanFlags++;}
 function recordCollision(penalty){S.collisions++;S.scorePenalty+=Math.max(0,penalty||0);}
-function addFury(base,extraLungeChance){ // one pressure system: every sloppy event feeds the predator
+function debtLevel(){return clamp((S.cleanDebt||0)/8,0,1);}
+function effectiveYetiPressure(D){
+  const Y=S.yeti,hard=(D||Difficulty.profile(S.depth)).hard;
+  const missK=clamp((S.missStreak||0)/3,0,1)*hard;
+  return clamp(Y.fury+0.52*debtLevel()*hard+0.18*missK+0.22*(S.neglectK||0)*hard,0,1);
+}
+function addCleanDebt(amount){
+  const D=Difficulty.profile(S.depth);
+  S.cleanDebt=clamp((S.cleanDebt||0)+Math.max(0,amount||0)*D.hard,0,10);
+}
+function registerFlagMiss(baseFury,debtAdd,extraLungeChance){
+  const D=Difficulty.profile(S.depth),Y=S.yeti;
+  S.missStreak=D.hard<0.15?0:Math.min(4,(S.missStreak||0)+1);
+  addCleanDebt(debtAdd);
+  const n=S.missStreak;
+  const streakBonus=([0,0.025,0.12,0.22,0.28][n]||0.28)*D.hard;
+  const gain=addFury(baseFury+streakBonus,Math.min(0.98,(extraLungeChance||0)+0.13*Math.max(0,n-1)));
+  if(Y.on&&D.hard>0.1){
+    const nudge=([0,1.2,3.0,5.0,6.0][n]||6.0)*D.hard;
+    Y.d=Math.min(S.depth-1.25,Y.d+nudge);
+    Y.surge=Math.max(Y.surge,([0,1.1,1.9,2.6,2.9][n]||2.9)*D.hard);
+    Y.surgePower=Math.max(Y.surgePower,([0,4.0,8.5,12.5,14.0][n]||14.0)*D.hard+2.5*debtLevel());
+    if(n===1)Difficulty.hurryPass(2.2);
+    else if(n===2){
+      Difficulty.hurryPass(0.38);Y.next=Math.min(Y.next||Infinity,S.time+0.38);
+      if(Y.pass===2&&Y.passTotal<3){Y.passLunges++;Y.passTotal++;}
+      sfx.growl();S.shake=Math.max(S.shake,5);vib(24);
+    }else if(n>=3){
+      Difficulty.hurryPass(0.12);Y.next=Math.min(Y.next||Infinity,S.time+0.12);
+      if(Y.pass===2&&Y.passTotal<3){Y.passLunges++;Y.passTotal++;}
+      sfx.roar();S.shake=Math.max(S.shake,9);vib(42);
+    }
+  }
+  return gain;
+}
+function updateCleanSkiingPressure(dt){
+  const D=Difficulty.profile(S.depth),Y=S.yeti;
+  if(S.depth<500){S.neglectK=0;S.neglectWarn=0;return;}
+  const sinceClean=S.depth-Math.max(500,S.lastCleanFlagD||500);
+  const target=clamp((sinceClean-34)/58,0,1);
+  const old=S.neglectK||0;
+  S.neglectK+=(target-S.neglectK)*Math.min(1,3.2*dt);
+  if(S.neglectK>0){
+    Y.fury=Math.min(1,Y.fury+(0.0035+0.0165*S.neglectK)*dt);
+    if(Y.on){
+      if(Y.pass===0)Difficulty.hurryPass(lerp(4.6,0.72,S.neglectK));
+      Y.surge=Math.max(Y.surge,0.25+0.75*S.neglectK);
+      Y.surgePower=Math.max(Y.surgePower,1.5+5.5*S.neglectK+2.0*debtLevel());
+    }
+  }
+  if(old<0.42&&S.neglectK>=0.42){sfx.growl();S.shake=Math.max(S.shake,3);S.neglectWarn=1;}
+  if(old<0.82&&S.neglectK>=0.82){sfx.roar();S.shake=Math.max(S.shake,7);vib(28);S.neglectWarn=2;}
+}
+function addFury(base,extraLungeChance){ // immediate fury; longer-term cleanliness debt is layered on separately
   const D=Difficulty.profile(S.depth),Y=S.yeti;
   if(S.time-S.lastMistake<=6)S.mistakeChain=Math.min(4,S.mistakeChain+1);
   else S.mistakeChain=1;
@@ -580,19 +656,37 @@ function addFury(base,extraLungeChance){ // one pressure system: every sloppy ev
   // Past 500 m pressure is operational, not cosmetic: it wakes the yeti, advances the hunt clock,
   // and makes a close predator prepare its next strike immediately.
   if(Y.on){
+    const P=effectiveYetiPressure(D);
     Y.tired=Math.max(0,Y.tired-gain*1.6*D.hard);
     if(Y.pass===0){
-      const urgency=lerp(7.0,1.15,clamp(Y.fury*0.88+D.training*0.12,0,1));
+      const urgency=lerp(7.0,0.82,clamp(P*0.90+D.training*0.10,0,1));
       Difficulty.hurryPass(urgency);
-      if(D.hard>=0.95&&Y.fury>=0.62)Difficulty.hurryPass(0.80);
-      if(D.hard>=0.95&&Y.fury>=0.82)Y.next=Math.min(Y.next||Infinity,S.time+0.48);
+      if(D.hard>=0.95&&P>=0.58)Difficulty.hurryPass(0.62);
+      if(D.hard>=0.95&&P>=0.78)Y.next=Math.min(Y.next||Infinity,S.time+0.30);
     }
   }
   // A collision during an active hunt can authorize one extra follow-up, never beyond three total.
-  if(extraLungeChance&&Y.pass===2&&D.training>0.55&&Y.passTotal<3&&Math.random()<extraLungeChance*D.training){
-    Y.passLunges++;Y.passTotal++;
+  if(extraLungeChance&&Y.pass===2&&D.training>0.55&&Y.passTotal<3){
+    const chance=Math.min(0.98,extraLungeChance*D.training+0.16*debtLevel());
+    if(Math.random()<chance){Y.passLunges++;Y.passTotal++;}
   }
   return gain;
+}
+function applyTightPass(g,px){
+  // A clean pass closer to the pole earns a short, physical speed reward.
+  // 12px is the minimum clean commitment; beyond 48px there is no proximity boost.
+  const clearance=Math.abs(px-g.x);
+  const tight=clamp((48-clearance)/(48-12),0,1);
+  if(tight<=0)return 0;
+  const boost=0.35+2.65*Math.pow(tight,1.35); // up to +3 temporary speed
+  S.tightBoost=Math.max(S.tightBoost||0,boost);
+  S.speed=Math.min(C.speedMax+S.tightBoost,S.speed+boost);
+  // Feedback stays diegetic: sharper chime, stronger ring and a small snow snap at the pole.
+  tone(820+260*tight,1180+420*tight,0.11+0.05*tight,'triangle',0.10+0.08*tight);
+  ringAt(g.x,g.d,`rgba(225,246,255,${(0.55+0.35*tight).toFixed(2)})`,18+30*tight);
+  burstAt(g.x,g.d,'#eef9ff',3+Math.round(5*tight),55+75*tight);
+  if(tight>0.82)vib(12);
+  return tight;
 }
 function cleanFlag(g,px){
   // Diminishing fuel growth: combo remains valuable without one flag refilling the whole pool.
@@ -606,9 +700,18 @@ function cleanFlag(g,px){
     const bf=520+S.combo*9;
     tone(bf,bf*1.5,0.35,'triangle',0.25);tone(bf*1.25,bf*1.9,0.35,'triangle',0.18);vib(35);
   }
-  S.streak=0;S.mistakeChain=0;S.lastMistake=-99;
-  const calm=C.furyCalm+Math.min(0.03,S.combo*0.003)+(milestone?0.04:0);
+  S.streak=0;S.mistakeChain=0;S.lastMistake=-99;S.missStreak=0;
+  S.lastCleanFlagD=S.depth;S.neglectK=0;S.neglectWarn=0;
+  const tight=applyTightPass(g,px);
+  const D=Difficulty.profile(S.depth);
+  let relief=(0.40+0.20*tight)*D.hard;
+  if(S.combo===5)relief+=0.75*D.hard;
+  else if(S.combo===10)relief+=1.25*D.hard;
+  else if(S.combo===15||S.combo===20)relief+=0.75*D.hard;
+  S.cleanDebt=Math.max(0,(S.cleanDebt||0)-relief);
+  const calm=C.furyCalm+Math.min(0.03,S.combo*0.003)+(milestone?0.04:0)+0.025*tight;
   S.yeti.fury=Math.max(0,S.yeti.fury-calm);
+  S.yeti.surge=Math.max(0,S.yeti.surge-0.55);S.yeti.surgePower=Math.max(0,S.yeti.surgePower-2.5-2*tight);
   // A clean flag immediately after a clean dodge can cancel one queued follow-up lunge.
   if(S.yeti.pass===2&&S.yeti.cleanWindow>0&&S.yeti.passLunges>0){
     S.yeti.passLunges--;S.yeti.cleanWindow=0;
@@ -621,7 +724,7 @@ function softMiss(g){ // reached the side but did not truly commit around the fl
   recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',8,62);
   S.combo=0;
-  addFury(0.10,0.14);
+  registerFlagMiss(0.10,1.0,0.14);
   ringAt(g.x,g.d,'rgba(185,195,205,.75)',14);
   tone(210,155,0.11,'sine',0.13);
 }
@@ -629,7 +732,7 @@ function wrongSide(g){ // no speed punishment; the cost is broken rhythm and ris
   recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
-  addFury(0.16,0.32);
+  registerFlagMiss(0.16,1.25,0.32);
   ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
   burstAt(g.x,g.d,'#9aa5b5',8,60);
   tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
@@ -639,7 +742,7 @@ function faultFlag(g){
   const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0; S.speed*=lerp(C.faultCut,0.69,k); S.flash=Math.max(S.flash,0.25);
-  addFury(C.furyFault+0.03,0.48);
+  registerFlagMiss(C.furyFault+0.03,1.75,0.48);
   ringAt(g.x,g.d,'rgba(255,140,70,.9)',0); sfx.miss(); vib(20);
 }
 function crash(){
@@ -654,12 +757,23 @@ function crash(){
   DEF.stamp('dark',S.x,S.depth,15,0.5);
   DEF.stamp('lip',S.x-12,S.depth,6,0.35);DEF.stamp('lip',S.x+12,S.depth,6,0.35);
   bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
-  addFury(C.furyCrash+0.05,0.78);
+  addCleanDebt(2.0);addFury(C.furyCrash+0.05,0.78);
   addMarker('ko',S.depth,S.x);
   const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95);
   if(ng){const away=S.x<LW/2?1:-1;
     ng.side=away;ng.x=clamp(S.x-away*60,EDGE+115,LW-EDGE-115);}
   sfx.crash(); vib(60);
+}
+function fatalTerrain(cause,x,d){
+  if(S.mode!=='play')return;
+  recordCollision(0); // fatal terrain ends the run; no additional fixed score deduction
+  S.lastCrash=S.time;S.combo=0;S.fuel=0;S.shake=22;S.flash=0.75;S.hitstop=Math.max(S.hitstop,0.10);
+  burstAt(x,d,'#ffffff',30,135);
+  DEF.stamp('dark',x,d,17,0.55);
+  DEF.stamp('lip',x-13,d,7,0.38);DEF.stamp('lip',x+13,d,7,0.38);
+  bloodSmear(x,d,Math.sin(S.theta),Math.cos(S.theta),1.15);
+  addMarker('ko',d,x);
+  die(cause);
 }
 function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   recordCollision(250);
@@ -668,7 +782,7 @@ function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
   S.speed*=lerp(0.85,0.72,k); S.iframe=0.5;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(0,4,k));
-  addFury(0.24,0.62);
+  addCleanDebt(2.0);addFury(0.24,0.62);
   n.down=0.8; n.x=clamp(n.x-dir*20,EDGE+10,LW-EDGE-10);
   burstAt((S.x+n.x)/2,S.depth,'#e8eef4',10,80);
   S.shake=Math.max(S.shake,5);
@@ -679,21 +793,21 @@ function barge(n){
   const k=Difficulty.profile(S.depth).penalty;
   S.speed*=lerp(0.50,0.39,k); S.iframe=0.4; S.hitstop=0.05;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(3,8,k));
-  addFury(0.34,0.86);
+  addCleanDebt(2.0);addFury(0.34,0.86);
   S.shake=Math.max(S.shake,9); S.flash=Math.max(S.flash,0.2);
   n.down=1.2;
   burstAt(n.x,n.d,'#ffffff',18,120);
   bloodSmear(n.x,n.d,Math.sin(S.theta),Math.cos(S.theta),1.5);
   tone(220,90,0.18,'square',0.22); vib(30);
 }
-function passBreak(){ // a successful escape earns separation, though high pressure brings the next hunt sooner
-  const Y=S.yeti,D=Difficulty.profile(S.depth);
-  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(3.0,2.2,D.attack));Y.tele=0;Y.burst=0;
+function passBreak(){ // a successful escape earns separation, though accumulated sloppiness keeps pressure alive
+  const Y=S.yeti,D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
+  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(3.0,1.8,Math.max(D.attack,debt)));Y.tele=0;Y.burst=0;
   Y.passLunges=0;Y.passTotal=0;Y.cleanWindow=0;
-  const passK=Math.max(D.attack,D.hard*0.92);
-  const lo=lerp(C.passMin,7.5,passK),span=lerp(C.passSpan,5.5,passK);
-  const delay=(lo+Math.random()*span)*(1-0.66*Y.fury)*(1-0.14*D.overtime);
-  Y.passNext=S.time+Math.max(lerp(5.5,2.8,D.hard),delay);
+  const passK=Math.max(D.attack,D.hard*0.92,debt*0.95);
+  const lo=lerp(C.passMin,6.0,passK),span=lerp(C.passSpan,4.2,passK);
+  const delay=(lo+Math.random()*span)*(1-0.72*P)*(1-0.16*debt)*(1-0.14*D.overtime);
+  Y.passNext=S.time+Math.max(lerp(5.0,1.9,Math.max(D.hard,debt)),delay);
 }
 function whiff(){ // it swiped where you were; a clean dodge buys a brief recovery opportunity
   const Y=S.yeti;
@@ -717,6 +831,7 @@ function die(cause){
   if(hiss)hiss.g.gain.value=0;
   if(cause==='caught'){sfx.roar();vib([80,60,160]);}else{sfx.crash();vib(120);}
 }
+let lastFinishedRun=null;
 function finalizeDeath(){
   S.mode='dead';
   addMarker('death',S.depth,S.x);
@@ -727,8 +842,11 @@ function finalizeDeath(){
   if(newScore){bestScore=score;store.setItem('ep_best_score_v2',String(bestScore));}
   if(newDistance){longestDistance=dist;store.setItem('ep_best',String(longestDistance));}
   const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions};
+  lastFinishedRun=run;
+  $('rLeaderboard').style.display=LB.on()?'inline-block':'none';
   if(LB.on()){
     $('lbWrap').style.display='block';
+    $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
     const q=score>0&&(newScore||LB.qualifies(run));
     $('lbEntry').style.display=q?'flex':'none';
     if(q){
@@ -738,14 +856,18 @@ function finalizeDeath(){
       b.dataset.attemptedFlags=String(S.flagsAttempted);b.dataset.bestCombo=String(S.bestCombo);b.dataset.collisions=String(S.collisions);
     }
     renderBoard();LB.refresh(true);LB.drain();
-  }else $('lbWrap').style.display='none';
+  }else{
+    $('lbWrap').style.display='none';
+    $('lbRunSummary').textContent='Online leaderboard unavailable';
+  }
   const anyRecord=newScore||newDistance;
   $('rNew').style.display=anyRecord?'block':'none';
   $('rNew').textContent=newScore&&newDistance?'NEW SCORE + DISTANCE':newScore?'NEW BEST SCORE':'NEW LONGEST';
   if(anyRecord){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
   let title,tag;
-  if(S.cause==='edge'){title='Off the trail';tag='Skied into the trees';}
-  else if(S.cause==='boulder'){title='Wiped out';tag='Direct boulder impact';}
+  if(S.cause==='edge'){title='Off the trail';tag='Left the marked slope';}
+  else if(S.cause==='tree'){title='Wiped out';tag='Tree trunk impact';}
+  else if(S.cause==='boulder'){title='Wiped out';tag='Boulder impact';}
   else if(S.time-S.lastCrash<2){title='Caught';tag='Knocked down — then caught';}
   else if(S.combo===0&&S.speed<C.glide+3){title='Caught';tag='Ran out of speed';}
   else if(S.combo===0){title='Caught';tag='Lost the rhythm';}
@@ -769,6 +891,7 @@ function finalizeDeath(){
   $('tBest').style.display=oldDistance>0?'block':'none';
   $('rPrevLegend').style.display=oldDistance>0?'flex':'none';
   $('btnRow').style.display='flex';
+  el.leaderboard.classList.add('hide');
   el.results.classList.remove('hide');
 }
 /* ============================ PHASE SWITCH ============================ */
@@ -808,9 +931,11 @@ function update(dt){
   {const spkS=S.speed/C.speedMax,flatS=1-Math.abs(Math.sin(S.theta));
    const sinkT=clamp((0.48+0.90*S.powK)*(1-0.54*spkS)*(0.42+0.58*flatS)*1.9,0,0.98);
    S.sink+=(sinkT-S.sink)*Math.min(1,3.5*dt);}
-  // speed economy
+  // speed economy; tight flag passes temporarily raise the speed ceiling, then release it smoothly.
+  S.tightBoost=Math.max(0,(S.tightBoost||0)-4.0*dt);
   S.speed+=(C.glide-S.speed)*C.bleed*M.bleed*dt;
-  const pour=Math.min(S.fuel,C.fuelRate*dt);S.fuel-=pour;S.speed=Math.min(C.speedMax,S.speed+pour);
+  const pour=Math.min(S.fuel,C.fuelRate*dt);S.fuel-=pour;
+  S.speed=Math.min(C.speedMax+S.tightBoost,S.speed+pour);
   // phase
   if(S.depth>S.phaseAt)switchPhase();
   // snowfall
@@ -1006,16 +1131,23 @@ function update(dt){
     else if(Math.sign(px-g.x)===g.side)softMiss(g); // correct side, but not enough commitment
     else wrongSide(g);
   }
-  // obstacles
+  updateCleanSkiingPressure(dt);
+  // mountain obstacles are terminal, but hitboxes follow the visible solid material rather than foliage.
   if(S.iframe<=0){
     const py0=S.prevD*PXM,py1=S.depth*PXM;
     for(const o of obs){
       if(o.d<S.prevD-2.5||o.d>S.depth+2.5)continue;
-      const hit=segDist(S.prevX,py0,S.x,py1,o.x,o.d*PXM);
-      if(hit<o.r*C.forgive+PR){
-        const directRock=!o.tree&&S.depth>=500&&S.speed>=24&&hit<o.r*0.34+PR*0.42;
-        if(directRock){recordCollision(0);S.lastCrash=S.time;die('boulder');return;}
-        crash();break;
+      if(o.tree){
+        // The lethal tree core is the narrow trunk near its downhill base; outer branches remain forgiving.
+        const trunkY=o.d*PXM+o.r*0.30;
+        const trunkHit=segDist(S.prevX,py0,S.x,py1,o.x,trunkY);
+        const trunkR=PR*0.72+3.5;
+        if(trunkHit<trunkR){fatalTerrain('tree',o.x,o.d);return;}
+      }else{
+        // Static boulder collision closely matches the visible rock body and is always lethal.
+        const rockHit=segDist(S.prevX,py0,S.x,py1,o.x,o.d*PXM);
+        const rockR=o.r*0.78+PR*0.68;
+        if(rockHit<rockR){fatalTerrain('boulder',o.x,o.d);return;}
       }
     }
   }
@@ -1059,30 +1191,28 @@ function update(dt){
     if(b.re<=0){b.vx=(Math.random()*2-1)*45;b.re=1+Math.random()*1.5;}
     if(b.x<EDGE+b.r){b.x=EDGE+b.r;b.vx=Math.abs(b.vx);}
     if(b.x>LW-EDGE-b.r){b.x=LW-EDGE-b.r;b.vx=-Math.abs(b.vx);}
-    if(S.iframe<=0&&Math.abs(b.d-S.depth)<(b.r+PR)/PXM+0.6&&Math.abs(b.x-S.x)<b.r*0.8+PR){
-      const direct=S.depth>=500&&Math.abs(b.x-S.x)<b.r*0.34+PR*0.40&&Math.abs(b.d-S.depth)<(b.r*0.42+PR*0.35)/PXM+0.24;
-      balls.splice(i,1);
-      if(direct){recordCollision(0);S.lastCrash=S.time;die('boulder');return;}
-      crash();continue;
+    if(S.iframe<=0){
+      const bDist=Math.hypot(b.x-S.x,(b.d-S.depth)*PXM);
+      const bHitR=b.r*0.82+PR*0.72;
+      if(bDist<bHitR){
+        balls.splice(i,1);
+        fatalTerrain('boulder',b.x,b.d);
+        return;
+      }
     }
     for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);
       bloodSmear(n.x,n.d,Math.sign(b.vx)||0,1,0.9);}
     if(b.d>S.depth+62)balls.splice(i,1);
   }
   // yeti brain
-  function choosePassLunges(D,fury){
-    if(S.depth<220)return 1; // opening remains readable
-    const ramp=D.training;
-    let secondChance;
-    if(fury<0.20)secondChance=0.05;
-    else if(fury<0.45)secondChance=lerp(0.18,0.42,(fury-0.20)/0.25);
-    else if(fury<0.70)secondChance=lerp(0.52,0.76,(fury-0.45)/0.25);
-    else secondChance=lerp(0.84,0.95,(fury-0.70)/0.30);
-    secondChance*=ramp;
+  function choosePassLunges(D,pressure){
+    if(S.depth<500)return 1; // full multi-lunge behavior begins when training wheels come off
+    const debt=debtLevel(),miss=clamp((S.missStreak||0)/3,0,1);
+    const secondChance=clamp(0.07+0.72*pressure+0.13*debt+0.12*miss,0,0.96);
     let n=Math.random()<secondChance?2:1;
-    if(n===2&&S.depth>=1800&&fury>0.58){
-      const late=clamp((S.depth-1800)/2200,0,1);
-      const thirdChance=late*lerp(0.04,0.20,clamp((fury-0.58)/0.42,0,1));
+    if(n===2&&S.depth>=2000&&pressure>0.52){
+      const late=clamp((S.depth-2000)/2600,0,1);
+      const thirdChance=late*clamp(0.015+0.15*pressure+0.09*debt+0.07*miss,0,0.27);
       if(Math.random()<thirdChance)n=3;
     }
     return n;
@@ -1090,23 +1220,25 @@ function update(dt){
   if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
     const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);}
   if(Y.on){
-    const D=Difficulty.profile(S.depth);
+    const D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
     S.buffer=S.depth-Y.d;
     const st=S.buffer>20?0:S.buffer>7?1:2;
     if(st>Y.st){sfx.roar();S.shake=Math.max(S.shake,8+st*3);vib(40);}
     Y.st=st;
     Y.fury=Math.max(0,Y.fury-C.furyDecay*lerp(1,0.12,D.hard)*dt);
     Y.cleanWindow=Math.max(0,Y.cleanWindow-dt);
+    if(Y.surge>0)Y.surge=Math.max(0,Y.surge-dt);
+    else Y.surgePower=Math.max(0,Y.surgePower-7.5*dt);
     // sprint/rest: a predator can't run forever — fury lengthens sprints, shortens rests
     if(Y.tired>0){Y.tired-=dt;Y.pant-=dt;
       if(Y.pant<=0){Y.pant=0.6;tone(95,70,0.16,'sawtooth',0.12);}}
     else if(st>=1&&Y.pass===0){Y.press+=dt;
-      const sprint=lerp(7.0,12.0,D.attack)+C.sprintFury*Y.fury;
-      if(Y.press>sprint){Y.tired=Math.max(1.5,lerp(4.5,2.2,D.attack)-C.restFury*Y.fury);Y.press=0;}}
+      const sprint=lerp(7.0,12.0,D.attack)+C.sprintFury*P;
+      if(Y.press>sprint){Y.tired=Math.max(1.5,lerp(4.5,2.2,D.attack)-C.restFury*P);Y.press=0;}}
     else Y.press=Math.max(0,Y.press-dt*0.5);
-    if(Y.fury>0.6){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
+    if(P>0.55){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
     // hunting passes: it attacks on its own schedule, however far behind it fell
-    if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>lerp(18,12,D.hard)){
+    if(Y.pass===0&&Y.eat<=0&&Y.stag<=0&&S.depth>C.passFirst&&S.time>Y.passNext&&S.buffer>lerp(18,10,Math.max(D.hard,debt))){
       Y.pass=1;vib(30);
       tone(55,150,1.3,'sawtooth',0.3);tone(110,300,1.3,'triangle',0.16);
     }
@@ -1119,11 +1251,11 @@ function update(dt){
     else if(Y.eat>0){Y.eat-=dt;}
     else if(Y.pass===1){ // pressure determines how decisively it closes, while the warning remains intact
       Y.foot-=dt;if(Y.foot<=0){Y.foot=0.5;tone(72,50,0.09,'square',0.15);}
-      adv=S.speed+Math.max(6,S.buffer/2.5)*(1+0.32*Y.fury*D.training);
+      adv=S.speed+Math.max(6,S.buffer/2.5)*(1+0.38*P*D.training)+(Y.surge>0?Y.surgePower:0);
       if(S.buffer<=12){
         Y.pass=2;
-        Y.passLunges=choosePassLunges(D,Y.fury);Y.passTotal=Y.passLunges;
-        Y.passT=3.7+2.0*Y.passTotal+2.0*deepK+1.1*Y.fury+0.8*D.overtime;
+        Y.passLunges=choosePassLunges(D,P);Y.passTotal=Y.passLunges;
+        Y.passT=3.7+2.0*Y.passTotal+2.0*deepK+1.15*P+0.8*D.overtime;
       }
     }
     else if(Y.pass===2){ // press: it grinds in, then strikes — dodge the strike or lose the ground
@@ -1132,28 +1264,29 @@ function update(dt){
         if(Y.tele<=0){Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}}
       else if(Y.burst>0){Y.burst-=dt;adv=S.speed+C.lungeBoost; // the strike always resolves: catch, or whiff past you
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
-      else{adv=S.speed+4;
+      else{adv=S.speed+4+(Y.surge>0?Y.surgePower*0.35:0);
         if(Y.passLunges>0&&S.buffer<6){
           Y.passLunges--;Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
         }else if(Y.passLunges<=0&&Y.stag<=0)passBreak();}
       if(Y.passT<=0)passBreak();
     }
-    else if(Y.pass===3){ // retreat: falls away to the shadows
+    else if(Y.pass===3){ // retreat: debt limits how far the predator is willing to fall behind
       adv=Math.max(0,S.speed-7);
-      if(S.buffer>C.SAFE+6)Y.pass=0;
+      const retreatTarget=lerp(C.SAFE+6,16,debt*D.hard);
+      if(S.buffer>retreatTarget)Y.pass=0;
     }
     else{ // capped running speed; attack sophistication carries the late-game escalation
       // Once training ends, fury materially closes the gap. Clean skiing keeps this term near zero;
       // coasting through flags at high fury lets the predator run in the mid-20s to mid-30s.
-      const pressureRun=16.5*Y.fury*D.hard;
-      const ys=Math.min(36.5,(lerp(C.yetiBase,27.5,D.speed)+pressureRun)*C.yetiPressure*M.yeti)*(Y.tired>0?lerp(0.72,0.84,D.attack):1);
+      const pressureRun=18.5*P*D.hard+(Y.surge>0?Y.surgePower:0);
+      const ys=Math.min(36.5,(lerp(C.yetiBase,27.5,D.speed)+pressureRun)*C.yetiPressure*M.yeti)*(Y.tired>0?lerp(0.72,0.88,Math.max(D.attack,debt)):1);
       if(Y.tele>0){Y.tele-=dt;if(Y.tele<=0){Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}}
       else if(Y.burst>0){Y.burst-=dt;adv=ys+C.lungeBoost;
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=ys;
         if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
           const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);
-          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-C.furyLunge*Y.fury)*(1-0.10*D.overtime);}}
+          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-C.furyLunge*P)*(1-0.14*debt)*(1-0.10*D.overtime);}}
     }
     Y.d+=adv*dt;
     if(adv>0&&S.buffer<50){ // its passage marks the snow: footprints, and a furrow when it dives
@@ -1951,14 +2084,23 @@ function kb(){
 }
 function beginRun(){Generation.fresh();if(lastDeathReal)S.speed=17;
   $('btnRow').style.display='none';el.tune.classList.remove('show');
-  S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');Audio.ac();}
+  S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');el.leaderboard.classList.add('hide');Audio.ac();}
+function showLeaderboard(){
+  if(!LB.on())return;
+  el.results.classList.add('hide');el.leaderboard.classList.remove('hide');
+  renderBoard();LB.refresh(true);LB.drain();
+}
+function showResults(){el.leaderboard.classList.add('hide');el.results.classList.remove('hide');}
 function bindInput(){
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
   document.addEventListener('touchmove',e=>{if(!el.tune.classList.contains('show'))e.preventDefault();},{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
   el.intro.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
-  el.results.addEventListener('pointerdown',e=>{e.preventDefault();Input.beginRun();});
+  $('rLeaderboard').addEventListener('click',e=>{e.stopPropagation();showLeaderboard();});
+  $('rRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
+  $('lbBack').addEventListener('click',e=>{e.stopPropagation();showResults();});
+  $('lbRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
   $('lbGo').addEventListener('click',function(){
     const run={score:parseInt(this.dataset.score||'0',10),distance:parseInt(this.dataset.distance||'0',10),
