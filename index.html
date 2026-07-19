@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v6f</title>
+<title>ENDLESS POWDER v7a</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -242,9 +242,29 @@
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #uniqueActions button.primary{background:#b4ee9c;color:#091508;border-color:transparent}
 
+  /* Arcade data-foundation verification is hidden during normal play and opens only with ?arcadecheck=1. */
+  #arcadeDiag{position:absolute;z-index:27;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(255,188,112,.52);border-radius:14px;
+    background:rgba(5,9,15,.98);box-shadow:0 18px 60px rgba(0,0,0,.66);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  #arcadeDiag.show{display:block}
+  #arcadeDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #arcadeDiag .arcadeSub{opacity:.62;margin-bottom:14px}
+  .arcadeRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .arcadeRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .arcadeRow b{font-weight:850;word-break:break-word}
+  #arcadeOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(255,188,112,.09);white-space:pre-line;font-weight:850}
+  #arcadeDetails{margin-top:10px;white-space:pre-line;opacity:.74;word-break:break-word}
+  #arcadeActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #arcadeActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #arcadeActions button.primary{background:#ffbc70;color:#1d1004;border-color:transparent}
+
   /* Phone diagnostics become full-viewport scroll surfaces. Normal gameplay keeps its locked canvas viewport. */
   @media (hover:none), (pointer:coarse), (max-width:699px){
-    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show{
+    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show,#arcadeDiag.show{
       position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-height:none;
       margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:scroll;overflow-x:hidden;
       padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px)
@@ -277,7 +297,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v6f</div>
+    <div class="version">v7a</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -309,7 +329,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v6f keeps the private 50-death ledger intact while hiding local stains so the visible mountain is entirely shared and named.</div>
+    <div class="authSub">v7a adds the inactive arcade data foundation while preserving the Phase 6 mountain and leaderboard behavior until cutover.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -441,6 +461,26 @@
     <div id="uniqueDetails"></div>
     <div id="uniqueActions"><button class="primary" id="uniqueRetry" type="button">RUN FULL CHECK</button><button id="uniqueClose" type="button">CLOSE</button></div>
   </div>
+
+
+  <div id="arcadeDiag" aria-live="polite">
+    <h2>ARCADE DATA FOUNDATION CHECK</h2>
+    <div class="arcadeSub">Read-only Firebase probes plus deterministic local tests for immutable run IDs, append-only run records, initials-governed mountain bests, retry envelopes and duplicate-submit prevention. It performs no Firebase writes.</div>
+    <div class="arcadeRow"><span>Authentication</span><b id="arcadeAuth" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>New Firebase paths</span><b id="arcadePaths" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Stable run IDs</span><b id="arcadeIds" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Payload schema</span><b id="arcadeSchema" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Retry envelope</span><b id="arcadeQueue" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Duplicate guard</span><b id="arcadeDuplicate" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Arcade sequence</span><b id="arcadeSequence" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Initials best</span><b id="arcadeInitials" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Conditional update</span><b id="arcadeTransaction" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Current UI boundary</span><b id="arcadeBoundary" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Mobile scrolling</span><b id="arcadeScroll" class="authNeutral">READY</b></div>
+    <div id="arcadeOverall">Running v7a foundation validation…</div>
+    <div id="arcadeDetails"></div>
+    <div id="arcadeActions"><button class="primary" id="arcadeRetry" type="button">RUN FOUNDATION CHECK</button><button id="arcadeClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -449,17 +489,17 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v6f is the stable Unique-Initial Mountain release. Deployment, schema, persistence,
-   diagnostics and performance policy derive from this one immutable block.
+   v7a adds the inactive arcade data foundation on top of the stable Phase 6 release.
+   Existing visible leaderboard and mountain behavior remain unchanged until v7b/v7c cutover.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v6f',channel:'unique-mountain-release'}),
+  build:Object.freeze({version:'v7a',channel:'arcade-data-foundation'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
     databaseUrl:'https://endless-powder-default-rtdb.firebaseio.com',
     apiKey:'AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI',
-    paths:Object.freeze({bestRuns:'/endless_powder/best_runs',legacyScores:'/endless_powder/scores'}),
+    paths:Object.freeze({bestRuns:'/endless_powder/best_runs',leaderboardRuns:'/endless_powder/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',legacyScores:'/endless_powder/scores'}),
     auth:Object.freeze({
       signUpEndpoint:'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
       refreshEndpoint:'https://securetoken.googleapis.com/v1/token',
@@ -475,6 +515,13 @@ const APP_CONFIG=Object.freeze({
         deathDepthMax:999999.9,deathDepthDistanceTolerance:4,deathThetaMin:-1.2,deathThetaMax:1.2,
         worldVersionMaxLength:64,timestampFloor:1735689600000,timestampFutureMs:60000})
     }),
+    arcadeRun:Object.freeze({
+      version:'arcade-runs-v1',
+      fields:Object.freeze(['runId','uid','initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions','deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp']),
+      runIdPattern:'^r_[a-z0-9]{8,12}_[a-f0-9]{24}$',
+      uidPattern:'^[A-Za-z0-9_-]{1,128}$'
+    }),
+    arcadeQueue:Object.freeze({version:'arcade-submit-queue-v1',maxPending:8,maxCompleted:64}),
     bestRunState:Object.freeze({version:'best-run-state-v1'}),
     bestRunBoard:Object.freeze({version:'best-run-board-v2'}),
     localDeath:Object.freeze({
@@ -487,14 +534,14 @@ const APP_CONFIG=Object.freeze({
   storage:Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',bestRunState:'ep_best_run_submit_v5c2',
-    bestRunBoard:'ep_best_run_board_v5c3',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
+    bestRunBoard:'ep_best_run_board_v5c3',arcadeQueue:'ep_arcade_submit_queue_v7a',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a']),
-    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag',unique:'ep_unique_diag_v6f'}),
+    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag',unique:'ep_unique_diag_v6f',arcade:'ep_arcade_diag_v7a'}),
     probes:Object.freeze({bestReload:'ep_bestcheck_reload_v5c4',bestQueue:'ep_bestcheck_queue_probe_v5c4',
       memorialCache:'ep_memorialcheck_cache_probe_v5d4',reconciliation:'ep_reconcilecheck_probe_v5e4'})
   }),
   diagnostics:Object.freeze({
-    query:Object.freeze({auth:'authcheck',best:'bestcheck',memorial:'memorialcheck',reconciliation:'reconcilecheck',performance:'perfcheck',shared:'sharedcheck',unique:'uniquecheck'})
+    query:Object.freeze({auth:'authcheck',best:'bestcheck',memorial:'memorialcheck',reconciliation:'reconcilecheck',performance:'perfcheck',shared:'sharedcheck',unique:'uniquecheck',arcade:'arcadecheck'})
   }),
   performance:Object.freeze({
     sampleEveryFrames:30,historySamples:120,memorialCacheEntries:64,
@@ -530,8 +577,16 @@ const INSTALL_ID_KEY=APP_CONFIG.storage.installId;
 const API_KEY_OVERRIDE_KEY=APP_CONFIG.storage.apiKeyOverride;
 const AUTH_VERIFY_KEY=APP_CONFIG.storage.authVerify;
 const BEST_RUN_PATH=APP_CONFIG.firebase.paths.bestRuns;
+const ARCADE_RUN_PATH=APP_CONFIG.firebase.paths.leaderboardRuns;
+const INITIALS_BEST_PATH=APP_CONFIG.firebase.paths.initialsBests;
 const LEGACY_SCORE_PATH=APP_CONFIG.firebase.paths.legacyScores;
 const BEST_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.bestRun.version;
+const ARCADE_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeRun.version;
+const ARCADE_RUN_FIELDS=APP_CONFIG.schemas.arcadeRun.fields;
+const ARCADE_RUN_ID_RE=new RegExp(APP_CONFIG.schemas.arcadeRun.runIdPattern);
+const ARCADE_UID_RE=new RegExp(APP_CONFIG.schemas.arcadeRun.uidPattern);
+const ARCADE_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeQueue.version;
+const ARCADE_QUEUE_KEY=APP_CONFIG.storage.arcadeQueue;
 const BEST_RUN_STATE_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunState.version;
 const BEST_RUN_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunBoard.version;
 const BEST_RUN_FIELDS=APP_CONFIG.schemas.bestRun.fields;
@@ -559,8 +614,8 @@ const Configuration=Object.freeze({
   values:APP_CONFIG,
   audit:()=>Object.freeze({
     buildVersion:BUILD_VERSION,worldVersion:WORLD_VERSION,databaseUrl:FIREBASE_DB_URL,
-    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,bestRunPath:BEST_RUN_PATH,legacyScorePath:LEGACY_SCORE_PATH,
-    bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
+    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,bestRunPath:BEST_RUN_PATH,arcadeRunPath:ARCADE_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,legacyScorePath:LEGACY_SCORE_PATH,
+    bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,arcadeRunSchemaVersion:ARCADE_RUN_SCHEMA_VERSION,arcadeQueueSchemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
     bestRunBoardSchemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
     localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,localSharedReconciliationActive:LOCAL_SHARED_RECONCILIATION_ACTIVE,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_SCORE_FETCH,
     leaderboardRecentFetch:LB_RECENT_FETCH,leaderboardRefreshMs:LB_REFRESH,
@@ -1027,6 +1082,139 @@ const BestRuns=(()=>{
     return uid&&/^[A-Za-z0-9_-]{1,128}$/.test(uid)?BEST_RUN_PATH+'/'+uid:'';
   }
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
+})();
+/* ================= MODULE: IMMUTABLE ARCADE RUN IDENTITY =================
+   v7a assigns each completed run one opaque, Firebase-safe ID at death finalization.
+   The ID is carried unchanged through retries and future offline queue entries. */
+const ArcadeRunIdentity=(()=>{
+  const bytesToHex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  function entropy(){
+    const bytes=new Uint8Array(12);
+    try{if(globalThis.crypto&&typeof globalThis.crypto.getRandomValues==='function'){globalThis.crypto.getRandomValues(bytes);return bytesToHex(bytes);}}catch(e){}
+    for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);
+    return bytesToHex(bytes);
+  }
+  function create(timestamp){
+    const stamp=Math.max(0,Math.floor(Number.isFinite(+timestamp)?+timestamp:Date.now())).toString(36);
+    return'r_'+stamp+'_'+entropy();
+  }
+  function valid(runId){return typeof runId==='string'&&ARCADE_RUN_ID_RE.test(runId);}
+  function ensure(run){return valid(run&&run.runId)?run.runId:create(run&&run.timestamp);}
+  function attach(run){run=run&&typeof run==='object'?run:{};return Object.assign({},run,{runId:ensure(run)});}
+  function selfTest(){
+    const stamp=Date.now(),a=create(stamp),b=create(stamp),run=attach({timestamp:stamp,score:100}),again=attach(run);
+    return Object.freeze({passed:valid(a)&&valid(b)&&a!==b&&valid(run.runId)&&again.runId===run.runId,first:a,second:b,stable:again.runId===run.runId});
+  }
+  return Object.freeze({create,valid,ensure,attach,selfTest});
+})();
+/* ==================== MODULE: ARCADE RUN SCHEMA ====================
+   One immutable record represents one submitted run. UID remains authenticated metadata;
+   initials govern public identity and do not own or overwrite leaderboard slots. */
+const ArcadeRuns=(()=>{
+  const recordOf=e=>e?{initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+    attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+    deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+    worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  function build(initials,run,uid){
+    run=ArcadeRunIdentity.attach(run);const base=BestRuns.build(initials,run);
+    return Object.assign({runId:run.runId,uid:String(uid||'')},base);
+  }
+  function valid(e,clock){
+    if(!e||typeof e!=='object'||Array.isArray(e))return false;
+    const keys=Object.keys(e).sort(),expected=ARCADE_RUN_FIELDS.slice().sort();
+    if(keys.length!==expected.length||keys.some((k,i)=>k!==expected[i]))return false;
+    return ArcadeRunIdentity.valid(e.runId)&&ARCADE_UID_RE.test(e.uid)&&BestRuns.valid(recordOf(e),clock);
+  }
+  const compare=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.runId).localeCompare(String(b.runId));
+  function better(candidate,stored){return valid(candidate)&&(!stored||(valid(stored,Math.max(Date.now(),+stored.timestamp||0))&&compare(candidate,stored)<0));}
+  function leaderboardPath(runId){return ArcadeRunIdentity.valid(runId)?ARCADE_RUN_PATH+'/'+runId:'';}
+  function initialsPath(initials){initials=sanitizeInitials(initials);return /^[A-Z0-9]{3}$/.test(initials)&&!INITIALS_BAD.test(initials)?INITIALS_BEST_PATH+'/'+initials:'';}
+  function exactSame(a,b){if(!valid(a,Math.max(Date.now(),+(a&&a.timestamp)||0))||!valid(b,Math.max(Date.now(),+(b&&b.timestamp)||0)))return false;return ARCADE_RUN_FIELDS.every(k=>a[k]===b[k]);}
+  function deriveInitialsBests(source){
+    const map=new Map();for(const raw of Array.isArray(source)?source:[]){if(!valid(raw,Math.max(Date.now(),+(raw&&raw.timestamp)||0)))continue;const old=map.get(raw.initials);if(!old||better(raw,old))map.set(raw.initials,raw);}
+    return map;
+  }
+  return Object.freeze({version:ARCADE_RUN_SCHEMA_VERSION,fields:ARCADE_RUN_FIELDS,path:ARCADE_RUN_PATH,initialsPathRoot:INITIALS_BEST_PATH,
+    build,valid,compare,better,recordOf,leaderboardPath,initialsPath,exactSame,deriveInitialsBests});
+})();
+/* ================= MODULE: ARCADE SUBMISSION FOUNDATION =================
+   In v7a this API is intentionally not connected to the visible submit button. It defines
+   the durable envelope and network operations that v7b will activate. */
+const ArcadeFoundation=(()=>{
+  const MAX_PENDING=APP_CONFIG.schemas.arcadeQueue.maxPending,MAX_COMPLETED=APP_CONFIG.schemas.arcadeQueue.maxCompleted;
+  const allowedState=new Set(['pending','accepted','skipped','failed']);
+  const copy=o=>JSON.parse(JSON.stringify(o));
+  function envelope(payload){return{schemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,runId:payload.runId,payload:copy(payload),createdAt:Date.now(),
+    leaderboard:{state:'pending',attempts:0,lastError:''},initialsBest:{state:'pending',attempts:0,lastError:''}};}
+  function normalizeEnvelope(raw){
+    if(!raw||typeof raw!=='object'||raw.schemaVersion!==ARCADE_QUEUE_SCHEMA_VERSION||raw.runId!==raw.payload?.runId||!ArcadeRuns.valid(raw.payload,Math.max(Date.now(),+raw.payload?.timestamp||0)))return null;
+    const cleanPart=p=>({state:allowedState.has(p&&p.state)?p.state:'pending',attempts:Math.max(0,Math.floor(+(p&&p.attempts)||0)),lastError:typeof(p&&p.lastError)==='string'?p.lastError:''});
+    return{schemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,runId:raw.runId,payload:copy(raw.payload),createdAt:Number.isFinite(+raw.createdAt)?+raw.createdAt:Date.now(),leaderboard:cleanPart(raw.leaderboard),initialsBest:cleanPart(raw.initialsBest)};
+  }
+  function normalizeQueue(raw){
+    raw=raw&&typeof raw==='object'?raw:{};const seen=new Set(),items=[];
+    for(const candidate of Array.isArray(raw.items)?raw.items:[]){const e=normalizeEnvelope(candidate);if(!e||seen.has(e.runId))continue;seen.add(e.runId);items.push(e);if(items.length>=MAX_PENDING)break;}
+    const completed=[];for(const id of Array.isArray(raw.completed)?raw.completed:[]){if(ArcadeRunIdentity.valid(id)&&!completed.includes(id))completed.push(id);if(completed.length>=MAX_COMPLETED)break;}
+    return{schemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,items,completed,updatedAt:Number.isFinite(+raw.updatedAt)?+raw.updatedAt:Date.now()};
+  }
+  function inspectStored(){const read=Persistence.inspectJSON(ARCADE_QUEUE_KEY);return{read,state:normalizeQueue(read.ok&&read.exists?read.value:null)};}
+  function loadQueue(){return inspectStored().state;}
+  function saveQueue(state){state=normalizeQueue(state);Persistence.setJSON(ARCADE_QUEUE_KEY,state);return state;}
+  function reserve(initials,run,uid,state){
+    state=normalizeQueue(state);const payload=ArcadeRuns.build(initials,run,uid);if(!ArcadeRuns.valid(payload))return{ok:false,reason:'invalid',state,payload:null,envelope:null};
+    if(state.completed.includes(payload.runId))return{ok:true,reason:'already-completed',duplicate:true,state,payload,envelope:null};
+    const existing=state.items.find(e=>e.runId===payload.runId);if(existing)return{ok:true,reason:'already-pending',duplicate:true,state,payload,envelope:existing};
+    const created=envelope(payload);state.items.push(created);if(state.items.length>MAX_PENDING)state.items=state.items.slice(-MAX_PENDING);state.updatedAt=Date.now();
+    return{ok:true,reason:'reserved',duplicate:false,state,payload,envelope:created};
+  }
+  function complete(runId,state){state=normalizeQueue(state);state.items=state.items.filter(e=>e.runId!==runId);if(ArcadeRunIdentity.valid(runId)){state.completed.unshift(runId);state.completed=Array.from(new Set(state.completed)).slice(0,MAX_COMPLETED);}state.updatedAt=Date.now();return state;}
+  async function fetchTimed(url,options){let timer=0,controller=null;try{if(typeof AbortController!=='undefined'){controller=new AbortController();options=Object.assign({},options||{},{signal:controller.signal});timer=setTimeout(()=>controller.abort(),APP_CONFIG.network.requestTimeoutMs);}return await fetch(url,options||{});}finally{if(timer)clearTimeout(timer);}}
+  async function authFetch(path,options,query){let raw=FIREBASE_DB_URL+path+'.json'+(query||'');let url=await Identity.url(raw),r=await fetchTimed(url,options);if(r.status!==401)return r;await Identity.forceRefresh();url=await Identity.url(raw);return fetchTimed(url,options);}
+  async function readJSON(r){try{return{ok:true,value:await r.json()};}catch(e){return{ok:false,value:null,error:String((e&&e.message)||e)};}}
+  async function createLeaderboardRun(payload){
+    if(!ArcadeRuns.valid(payload))return{ok:false,status:0,result:'invalid'};const path=ArcadeRuns.leaderboardPath(payload.runId);if(!path)return{ok:false,status:0,result:'invalid-path'};
+    let r;try{r=await authFetch(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(e){return{ok:false,status:0,result:'network',error:String((e&&e.message)||e)};}
+    if(r.ok)return{ok:true,status:r.status,result:'created'};
+    if(r.status===403){try{const check=await authFetch(path,{cache:'no-store'}),parsed=await readJSON(check);if(check.ok&&parsed.ok&&ArcadeRuns.exactSame(parsed.value,payload))return{ok:true,status:check.status,result:'already-created'};}catch(e){}}
+    return{ok:false,status:r.status,result:'rejected'};
+  }
+  async function updateInitialsBest(payload,maxRetries){
+    if(!ArcadeRuns.valid(payload))return{ok:false,status:0,result:'invalid'};const path=ArcadeRuns.initialsPath(payload.initials);if(!path)return{ok:false,status:0,result:'invalid-path'};
+    const retries=Math.max(1,Math.min(6,Math.floor(+maxRetries||4)));
+    for(let attempt=1;attempt<=retries;attempt++){
+      let read;try{read=await authFetch(path,{cache:'no-store',headers:{'X-Firebase-ETag':'true'}});}catch(e){return{ok:false,status:0,result:'network-read',attempt,error:String((e&&e.message)||e)};}
+      if(!read.ok)return{ok:false,status:read.status,result:'read-rejected',attempt};
+      const parsed=await readJSON(read);if(!parsed.ok)return{ok:false,status:read.status,result:'invalid-json',attempt};
+      const stored=parsed.value;if(stored!==null&&!ArcadeRuns.valid(stored,Math.max(Date.now(),+stored.timestamp||0)))return{ok:false,status:read.status,result:'malformed-stored',attempt};
+      if(stored&&!ArcadeRuns.better(payload,stored))return{ok:true,status:read.status,result:'not-stronger',attempt,stored};
+      const etag=read.headers.get('etag');if(!etag)return{ok:false,status:read.status,result:'missing-etag',attempt};
+      let write;try{write=await authFetch(path,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(payload)});}catch(e){return{ok:false,status:0,result:'network-write',attempt,error:String((e&&e.message)||e)};}
+      if(write.ok)return{ok:true,status:write.status,result:stored?'replaced':'created',attempt};
+      if(write.status!==412)return{ok:false,status:write.status,result:'write-rejected',attempt};
+    }
+    return{ok:false,status:412,result:'retry-exhausted',attempt:retries};
+  }
+  async function probeReads(){
+    if(!FIREBASE_DB_URL||typeof fetch!=='function')return{ok:false,leaderboard:{ok:false,status:0},initials:{ok:false,status:0}};
+    const probe=async(path,orderBy)=>{try{const q='?orderBy=%22'+encodeURIComponent(orderBy)+'%22&limitToLast=1',r=await authFetch(path,{cache:'no-store'},q),parsed=await readJSON(r);return{ok:r.ok&&parsed.ok,status:r.status,empty:parsed.ok&&parsed.value===null,error:parsed.ok?'':parsed.error};}catch(e){return{ok:false,status:0,error:String((e&&e.message)||e)};}};
+    const [leaderboard,initials]=await Promise.all([probe(ARCADE_RUN_PATH,'score'),probe(INITIALS_BEST_PATH,'timestamp')]);return{ok:leaderboard.ok&&initials.ok,leaderboard,initials};
+  }
+  function selfTest(){
+    const now=Date.now(),uid='test_uid_v7a',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
+    const dan100=mk('DAN',100,-3000),bob50=mk('BOB',50,-2000),dan25=mk('DAN',25,-1000),dan125=mk('DAN',125,0);
+    const all=[dan100,bob50,dan25],leaderboard=all.slice().sort(ArcadeRuns.compare),bests=ArcadeRuns.deriveInitialsBests(all);
+    const first=reserve('DAN',dan100,uid,null),second=reserve('DAN',dan100,uid,first.state),roundtrip=normalizeQueue(copy(second.state));
+    const env=first.envelope,normalized=normalizeEnvelope(copy(env));
+    const ids=ArcadeRunIdentity.selfTest(),schema=all.every(e=>ArcadeRuns.valid(e)),sequence=leaderboard.map(e=>e.initials+':'+e.score).join('|')==='DAN:100|BOB:50|DAN:25';
+    const initials=bests.size===2&&bests.get('DAN')?.score===100&&bests.get('BOB')?.score===50;
+    const transaction=!ArcadeRuns.better(dan25,dan100)&&ArcadeRuns.better(dan125,dan100);
+    const queue=!!normalized&&roundtrip.items.length===1&&roundtrip.items[0].runId===dan100.runId;
+    const duplicate=second.duplicate===true&&second.state.items.length===1;
+    return Object.freeze({passed:ids.passed&&schema&&sequence&&initials&&transaction&&queue&&duplicate,ids:ids.passed,schema,sequence,initials,transaction,queue,duplicate,
+      leaderboard:leaderboard.map(e=>({initials:e.initials,score:e.score,runId:e.runId})),mountain:Array.from(bests.values()).sort(ArcadeRuns.compare).map(e=>({initials:e.initials,score:e.score,runId:e.runId}))});
+  }
+  return Object.freeze({queueKey:ARCADE_QUEUE_KEY,queueVersion:ARCADE_QUEUE_SCHEMA_VERSION,normalizeEnvelope,normalizeQueue,inspectStored,loadQueue,saveQueue,reserve,complete,
+    createLeaderboardRun,updateInitialsBest,probeReads,selfTest});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
    v6f keeps the read-only bridge between the selected unique-initial mountain records
@@ -2673,12 +2861,12 @@ function finalizePlayerDeath(){
   const newScore=score>oldScore,newDistance=dist>oldDistance;
   if(newScore){bestScore=score;store.setItem(APP_CONFIG.storage.bestScore,String(bestScore));}
   if(newDistance){longestDistance=dist;store.setItem(APP_CONFIG.storage.bestDistance,String(longestDistance));}
-  const run={score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions,
+  const run=ArcadeRunIdentity.attach({score,distance:dist,cleanFlags:S.cleanFlags,attemptedFlags:S.flagsAttempted,bestCombo:S.bestCombo,collisions:S.collisions,
     deathX:Math.round(clamp(Number.isFinite(S.deathX)?S.deathX:S.x,EDGE,LW-EDGE)*10)/10,
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
-    deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()};
-  lastFinishedRun=run; // complete death-aware payload used by the v5f.4 best-run submission and immediate memorial reconciliation
+    deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()});
+  lastFinishedRun=run; // v7a adds a stable runId while the visible v6f submission path remains active until v7b
   if(LB.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -4488,7 +4676,7 @@ function bindInput(){
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
   document.addEventListener('touchmove',e=>{
-    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show'):null;
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show,#arcadeDiag.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
@@ -4569,7 +4757,11 @@ function uniqueCheckRequested(){
   try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.unique)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.unique)==='1';}
   catch(e){return false;}
 }
-function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested()||performanceCheckRequested()||sharedCheckRequested()||uniqueCheckRequested();}
+function arcadeCheckRequested(){
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.arcade)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.arcade)==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested()||performanceCheckRequested()||sharedCheckRequested()||uniqueCheckRequested()||arcadeCheckRequested();}
 const BestCheck=(()=>{
   const RELOAD_KEY=APP_CONFIG.storage.probes.bestReload;
   const PROBE_KEY=APP_CONFIG.storage.probes.bestQueue;
@@ -5222,7 +5414,7 @@ const ReleaseCheck=(()=>{
       const onlineOK=authOK&&!!(best&&best.passed)&&!!(memorial&&memorial.passed)&&!!(reconciliation&&reconciliation.passed);
       const overall=$('sharedOverall');
       if(overall){
-        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v6f UNIQUE-INITIAL MOUNTAIN RELEASE PASSED';overall.className='authGood';}
+        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v7a PHASE-6 COMPATIBILITY PASSED';overall.className='authGood';}
         else if(deterministicOK&&authWaiting){overall.textContent='LIVE CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
         else if(deterministicOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
         else{overall.textContent='RELEASE VALIDATION NEEDS ATTENTION';overall.className='authBad';}
@@ -5332,7 +5524,7 @@ const UniqueMountainCheck=(()=>{
       const baseOK=deterministic&&liveUnique&&localHidden&&stateSafe&&spark&&legacy===0;
       const overall=$('uniqueOverall');
       if(overall){
-        if(baseOK&&authOK&&recentReady){overall.textContent='VERIFIED — v6f UNIQUE-INITIAL MOUNTAIN PASSED';overall.className='authGood';}
+        if(baseOK&&authOK&&recentReady){overall.textContent='VERIFIED — v7a UNIQUE-MOUNTAIN COMPATIBILITY PASSED';overall.className='authGood';}
         else if(baseOK&&authWaiting){overall.textContent='LOCAL CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
         else if(baseOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
         else if(baseOK&&!recentReady){overall.textContent='CORE CHECKS PASSED — RECENT QUERY NEEDS TIMESTAMP INDEX / NETWORK';overall.className='authWarn';}
@@ -5362,6 +5554,54 @@ const UniqueMountainCheck=(()=>{
     $('uniqueClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
   return Object.freeze({init,run,last:()=>lastReport,requested:uniqueCheckRequested,synthetic});
 })();
+/* =================== MODULE: ARCADE DATA FOUNDATION CHECK ===================
+   v7a validates the new schema and retry contract without writing Firebase or connecting
+   the production submit button to the new branches. */
+const ArcadeFoundationCheck=(()=>{
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood'),warn=(id,text)=>row(id,text||'CHECK','authWarn'),fail=(id,text)=>row(id,text||'FAIL','authBad');
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('arcadeRetry');if(btn)btn.textContent='RUNNING…';
+    ['arcadeAuth','arcadePaths','arcadeIds','arcadeSchema','arcadeQueue','arcadeDuplicate','arcadeSequence','arcadeInitials','arcadeTransaction','arcadeBoundary'].forEach(id=>row(id,'CHECKING','authNeutral'));
+    try{
+      const queueBefore=store.getItem(ARCADE_QUEUE_KEY),d=ArcadeFoundation.selfTest(),auth=Identity.status(),live=await ArcadeFoundation.probeReads(),queueAfter=store.getItem(ARCADE_QUEUE_KEY);
+      const stateSafe=queueBefore===queueAfter,authOK=auth.authenticated&&auth.tokenReady,authWaiting=authOK&&auth.verification&&auth.verification.phase==='reload-needed';
+      authOK?pass('arcadeAuth',authWaiting?'CONNECTED — RELOAD CHECK PENDING':'CONNECTED — ANONYMOUS UID'):warn('arcadeAuth','OFFLINE — LOCAL TESTS ONLY');
+      live.ok?pass('arcadePaths','READABLE + INDEXED'):fail('arcadePaths','PUBLISH v7a RULES');
+      d.ids?pass('arcadeIds','PASS — OPAQUE + STABLE'):fail('arcadeIds','FAIL');
+      d.schema?pass('arcadeSchema','PASS — 15 EXACT FIELDS'):fail('arcadeSchema','FAIL');
+      d.queue&&stateSafe?pass('arcadeQueue','PASS — RUN ID SURVIVES ROUNDTRIP'):fail('arcadeQueue','FAIL');
+      d.duplicate?pass('arcadeDuplicate','PASS — SAME RUN RESERVED ONCE'):fail('arcadeDuplicate','FAIL');
+      d.sequence?pass('arcadeSequence','DAN 100 · BOB 50 · DAN 25'):fail('arcadeSequence','FAIL');
+      d.initials?pass('arcadeInitials','DAN 100 · BOB 50'):fail('arcadeInitials','FAIL');
+      d.transaction?pass('arcadeTransaction','PASS — STRONGER ONLY + ETag READY'):fail('arcadeTransaction','FAIL');
+      pass('arcadeBoundary','PASS — CURRENT UI STILL USES best_runs');pass('arcadeScroll','READY — SWIPE TO REVIEW');
+      const localOK=d.passed&&stateSafe,overall=$('arcadeOverall');
+      if(overall){
+        if(localOK&&authOK&&live.ok){overall.textContent='VERIFIED — v7a ARCADE DATA FOUNDATION PASSED';overall.className='authGood';}
+        else if(localOK&&!authOK){overall.textContent='LOCAL FOUNDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else if(localOK&&!live.ok){overall.textContent='LOCAL FOUNDATION PASSED — PUBLISH v7a FIREBASE RULES';overall.className='authWarn';}
+        else{overall.textContent='ARCADE FOUNDATION VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const details=$('arcadeDetails');if(details)details.textContent=[
+        'Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,
+        'Append-only runs: '+ARCADE_RUN_PATH+'/{runId}','Initials bests: '+INITIALS_BEST_PATH+'/{INITIALS}',
+        'Arcade schema: '+ARCADE_RUN_SCHEMA_VERSION+'; exact fields: '+ARCADE_RUN_FIELDS.length,
+        'Queue schema: '+ARCADE_QUEUE_SCHEMA_VERSION+'; production queue active: NO',
+        'Leaderboard simulation: '+d.leaderboard.map(e=>e.initials+' '+e.score).join(' · '),
+        'Mountain simulation: '+d.mountain.map(e=>e.initials+' '+e.score).join(' · '),
+        'Leaderboard read status: '+live.leaderboard.status+'; initials read status: '+live.initials.status,
+        'Visible submission switched: NO — scheduled for v7b','Firebase diagnostic writes: NONE','Queue storage unchanged: '+(stateSafe?'YES':'NO')
+      ].join('\n');
+      lastReport={passed:localOK&&authOK&&live.ok,localPassed:localOK,deterministic:d,auth:authOK,live,stateSafe};
+    }catch(e){const overall=$('arcadeOverall');if(overall){overall.textContent='ARCADE FOUNDATION VALIDATION ERROR';overall.className='authBad';}const details=$('arcadeDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};}
+    finally{running=false;if(btn)btn.textContent='RUN FOUNDATION CHECK';}
+    return lastReport;
+  }
+  function init(){const box=$('arcadeDiag');if(!box||!arcadeCheckRequested())return;box.classList.add('show');$('arcadeRetry').addEventListener('click',e=>{e.stopPropagation();run();});$('arcadeClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
+  return Object.freeze({init,run,last:()=>lastReport,requested:arcadeCheckRequested});
+})();
 
 Input.bind();
 initAuthDiag();
@@ -5371,6 +5611,7 @@ ReconciliationCheck.init();
 PerformanceCheck.init();
 ReleaseCheck.init();
 UniqueMountainCheck.init();
+ArcadeFoundationCheck.init();
 Identity.start().finally(async()=>{
   Identity.verify();MountainPopulation.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
   if(bestCheckRequested())await BestCheck.run();
@@ -5379,6 +5620,7 @@ Identity.start().finally(async()=>{
   if(performanceCheckRequested())await PerformanceCheck.run();
   if(sharedCheckRequested())await ReleaseCheck.run();
   if(uniqueCheckRequested())await UniqueMountainCheck.run();
+  if(arcadeCheckRequested())await ArcadeFoundationCheck.run();
   if(!diagnosticRequested())Leaderboard.drain();
 });
 /* tune sliders */
@@ -5415,7 +5657,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -5437,7 +5679,7 @@ requestAnimationFrame(frame);
 window.__EP={
   config:Configuration,recovery:DataRecovery,modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
