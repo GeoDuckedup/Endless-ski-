@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v7b</title>
+<title>ENDLESS POWDER v7c</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -297,7 +297,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v7b</div>
+    <div class="version">v7c</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -329,7 +329,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v7b submits completed runs to the new arcade branches while the visible board and mountain remain on the Phase 6 read layer until the next cutovers.</div>
+    <div class="authSub">v7c submits immutable completed runs and reads the visible traditional top 10 from leaderboard_runs. The mountain remains on its interim Phase 6 bridge until v7d.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -464,20 +464,20 @@
 
 
   <div id="arcadeDiag" aria-live="polite">
-    <h2>ARCADE SUBMISSION CUTOVER CHECK</h2>
-    <div class="arcadeSub">Read-only Firebase probes plus deterministic tests for the active append-only submission queue, partial retry handling, duplicate-submit prevention and retirement of legacy personal-best writes. The diagnostic performs no Firebase writes.</div>
+    <h2>ARCADE LEADERBOARD CUTOVER CHECK</h2>
+    <div class="arcadeSub">Read-only Firebase probes plus deterministic tests for immutable arcade submissions and the visible traditional top-10 read cutover. Duplicate initials and multiple runs from one browser must remain independent. The diagnostic performs no Firebase writes.</div>
     <div class="arcadeRow"><span>Authentication</span><b id="arcadeAuth" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>New Firebase paths</span><b id="arcadePaths" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Stable run IDs</span><b id="arcadeIds" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Payload schema</span><b id="arcadeSchema" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Active retry queue</span><b id="arcadeQueue" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Duplicate guard</span><b id="arcadeDuplicate" class="authNeutral">CHECKING</b></div>
-    <div class="arcadeRow"><span>Arcade sequence</span><b id="arcadeSequence" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Traditional top 10</span><b id="arcadeSequence" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Initials best</span><b id="arcadeInitials" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Partial-write recovery</span><b id="arcadeTransaction" class="authNeutral">CHECKING</b></div>
-    <div class="arcadeRow"><span>Legacy write retirement</span><b id="arcadeBoundary" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Visible read cutover</span><b id="arcadeBoundary" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Mobile scrolling</span><b id="arcadeScroll" class="authNeutral">READY</b></div>
-    <div id="arcadeOverall">Running v7b submission-cutover validation…</div>
+    <div id="arcadeOverall">Running v7c leaderboard-cutover validation…</div>
     <div id="arcadeDetails"></div>
     <div id="arcadeActions"><button class="primary" id="arcadeRetry" type="button">RUN CUTOVER CHECK</button><button id="arcadeClose" type="button">CLOSE</button></div>
   </div>
@@ -489,11 +489,11 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v7b activates immutable arcade submissions on top of the stable Phase 6 read layer.
-   The visible leaderboard and mountain remain on best_runs until their dedicated read cutovers.
+   v7c keeps immutable arcade submissions and switches the visible top 10 to leaderboard_runs.
+   The mountain remains on the retired best_runs read bridge only until the v7d initials_bests cutover.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v7b',channel:'arcade-submission-cutover'}),
+  build:Object.freeze({version:'v7c',channel:'arcade-leaderboard-read-cutover'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -522,6 +522,7 @@ const APP_CONFIG=Object.freeze({
       uidPattern:'^[A-Za-z0-9_-]{1,128}$'
     }),
     arcadeQueue:Object.freeze({version:'arcade-submit-queue-v1',maxPending:8,maxCompleted:64}),
+    arcadeBoard:Object.freeze({version:'arcade-leaderboard-board-v1'}),
     bestRunState:Object.freeze({version:'best-run-state-v1'}),
     bestRunBoard:Object.freeze({version:'best-run-board-v2'}),
     localDeath:Object.freeze({
@@ -534,9 +535,9 @@ const APP_CONFIG=Object.freeze({
   storage:Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',bestRunState:'ep_best_run_submit_v5c2',
-    bestRunBoard:'ep_best_run_board_v5c3',arcadeQueue:'ep_arcade_submit_queue_v7a',arcadeInitials:'ep_arcade_initials_v7b',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
+    bestRunBoard:'ep_best_run_board_v5c3',arcadeQueue:'ep_arcade_submit_queue_v7a',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_v7c',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a']),
-    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag',unique:'ep_unique_diag_v6f',arcade:'ep_arcade_diag_v7b'}),
+    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag',unique:'ep_unique_diag_v6f',arcade:'ep_arcade_diag_v7c'}),
     probes:Object.freeze({bestReload:'ep_bestcheck_reload_v5c4',bestQueue:'ep_bestcheck_queue_probe_v5c4',
       memorialCache:'ep_memorialcheck_cache_probe_v5d4',reconciliation:'ep_reconcilecheck_probe_v5e4'})
   }),
@@ -588,6 +589,8 @@ const ARCADE_UID_RE=new RegExp(APP_CONFIG.schemas.arcadeRun.uidPattern);
 const ARCADE_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeQueue.version;
 const ARCADE_QUEUE_KEY=APP_CONFIG.storage.arcadeQueue;
 const ARCADE_INITIALS_KEY=APP_CONFIG.storage.arcadeInitials;
+const ARCADE_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeBoard.version;
+const ARCADE_BOARD_KEY=APP_CONFIG.storage.arcadeBoard;
 const LEGACY_BEST_WRITES_ACTIVE=false;
 const BEST_RUN_STATE_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunState.version;
 const BEST_RUN_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.bestRunBoard.version;
@@ -620,7 +623,7 @@ const Configuration=Object.freeze({
     bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,arcadeRunSchemaVersion:ARCADE_RUN_SCHEMA_VERSION,arcadeQueueSchemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
     bestRunBoardSchemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
     localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,localSharedReconciliationActive:LOCAL_SHARED_RECONCILIATION_ACTIVE,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_SCORE_FETCH,
-    leaderboardRecentFetch:LB_RECENT_FETCH,leaderboardRefreshMs:LB_REFRESH,
+    leaderboardRecentFetch:LB_RECENT_FETCH,leaderboardRefreshMs:LB_REFRESH,arcadeBoardKey:ARCADE_BOARD_KEY,arcadeBoardSchema:ARCADE_BOARD_SCHEMA_VERSION,
     memorialLimit:SHARED_MEMORIAL_LIMIT,matchDepth:LOCAL_SHARED_DEPTH_TOLERANCE,matchX:LOCAL_SHARED_X_TOLERANCE,
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
     maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
@@ -1086,7 +1089,7 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ================= MODULE: IMMUTABLE ARCADE RUN IDENTITY =================
-   v7b keeps the v7a opaque, Firebase-safe run ID assigned at death finalization.
+   v7c keeps the v7a opaque, Firebase-safe run ID assigned at death finalization.
    The ID is carried unchanged through retries and future offline queue entries. */
 const ArcadeRunIdentity=(()=>{
   const bytesToHex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
@@ -1141,7 +1144,7 @@ const ArcadeRuns=(()=>{
     build,valid,compare,strengthCompare,better,recordOf,leaderboardPath,initialsPath,exactSame,deriveInitialsBests});
 })();
 /* ================= MODULE: ARCADE SUBMISSION FOUNDATION =================
-   v7b connects this durable envelope and its network operations to the real submit button.
+   v7c retains this durable envelope and its network operations to the real submit button.
    Every accepted run keeps its original runId across retries and partial writes. */
 const ArcadeFoundation=(()=>{
   const MAX_PENDING=APP_CONFIG.schemas.arcadeQueue.maxPending,MAX_COMPLETED=APP_CONFIG.schemas.arcadeQueue.maxCompleted;
@@ -1204,7 +1207,7 @@ const ArcadeFoundation=(()=>{
     const [leaderboard,initials]=await Promise.all([probe(ARCADE_RUN_PATH,'score'),probe(INITIALS_BEST_PATH,'timestamp')]);return{ok:leaderboard.ok&&initials.ok,leaderboard,initials};
   }
   function selfTest(){
-    const now=Date.now(),uid='test_uid_v7b',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
+    const now=Date.now(),uid='test_uid_v7c',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
     const dan100=mk('DAN',100,-3000),bob50=mk('BOB',50,-2000),dan25=mk('DAN',25,-1000),dan125=mk('DAN',125,0);
     const all=[dan100,bob50,dan25],leaderboard=all.slice().sort(ArcadeRuns.compare),bests=ArcadeRuns.deriveInitialsBests(all);
     const first=reserve('DAN',dan100,uid,null),second=reserve('DAN',dan100,uid,first.state),roundtrip=normalizeQueue(copy(second.state));
@@ -1220,10 +1223,11 @@ const ArcadeFoundation=(()=>{
   return Object.freeze({queueKey:ARCADE_QUEUE_KEY,queueVersion:ARCADE_QUEUE_SCHEMA_VERSION,maxPending:MAX_PENDING,maxCompleted:MAX_COMPLETED,normalizeEnvelope,normalizeQueue,inspectStored,loadQueue,saveQueue,reserve,complete,
     createLeaderboardRun,updateInitialsBest,probeReads,selfTest});
 })();
+let arcadeLeaderboardAccepted=()=>false;
 /* ================= MODULE: ACTIVE ARCADE SUBMISSION =================
-   v7b cuts real submissions over to leaderboard_runs/{runId} plus
-   initials_bests/{INITIALS}. The visible leaderboard and mountain still read
-   best_runs until v7c/v7d; no production code writes best_runs after this point. */
+   v7c retains the append-only write cutover. Each accepted leaderboard write is
+   immediately overlaid into the visible arcade board while initials_bests remains
+   the future v7d mountain source. */
 const ArcadeSubmission=(()=>{
   const PHASES=Object.freeze({IDLE:'idle',QUEUED:'queued',SUBMITTING:'submitting',ACCEPTED:'accepted',PARTIAL:'partial',OFFLINE:'offline',FAILED:'failed',DUPLICATE:'duplicate'});
   const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
@@ -1279,6 +1283,7 @@ const ArcadeSubmission=(()=>{
       const result=await ArcadeFoundation.createLeaderboardRun(env.payload);
       if(!result.ok){env.leaderboard.lastError=result.result+(result.status?' '+result.status:'');return retain(env,PHASES.FAILED,'RUN RETAINED — LEADERBOARD WRITE WILL RETRY',env.leaderboard.lastError);}
       env.leaderboard.state='accepted';env.leaderboard.lastError='';save();
+      arcadeLeaderboardAccepted(env.payload);
     }
     if(!terminal(env.initialsBest)){
       env.initialsBest.state='pending';env.initialsBest.attempts++;env.initialsBest.lastError='';save();
@@ -1321,6 +1326,85 @@ const ArcadeSubmission=(()=>{
   if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);}
   return Object.freeze({phases:PHASES,qualifies,submit,drain,status,records,initials,remember,identityChanged,selfTest});
 })();
+/* ================= MODULE: TRADITIONAL ARCADE LEADERBOARD =================
+   v7c reads immutable leaderboard_runs records. Records are keyed and deduplicated
+   only by runId—not UID or initials—so one browser and one initials set may occupy
+   several independent leaderboard positions. The mountain remains on the legacy
+   Phase 6 bridge until v7d. */
+const ArcadeLeaderboard=(()=>{
+  const FETCH_LIMIT=APP_CONFIG.leaderboard.scoreFetchRecords,TOP_LIMIT=APP_CONFIG.leaderboard.visibleRows;
+  const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
+  let cache={schemaVersion:ARCADE_BOARD_SCHEMA_VERSION,records:[],top:[],updatedAt:0,lastRefreshResult:'cache'};
+  let lastRefresh=0,refreshPromise=null,refreshSeq=0,appliedSeq=0;
+  const on=()=>!!FIREBASE_DB_URL&&typeof fetch==='function';
+  function exact(raw,runId){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw)||raw.runId!==runId)return null;
+    return ArcadeRuns.valid(raw,Math.max(Date.now(),+raw.timestamp||0))?Object.freeze(Object.assign({},raw)):null;
+  }
+  function normalizeRows(source,origin,limit){
+    source=Array.isArray(source)?source:[];const byRun=new Map();let invalid=0,duplicates=0;
+    for(const raw of source){const runId=String(raw&&raw.runId||''),item=exact(raw,runId);if(!item){invalid++;continue;}if(byRun.has(runId)){duplicates++;continue;}byRun.set(runId,item);}
+    if(invalid)DataRecovery.note((origin||'arcade-board')+'-invalid-records',invalid);
+    if(duplicates)DataRecovery.note((origin||'arcade-board')+'-duplicate-runids',duplicates);
+    return Array.from(byRun.values()).sort(ArcadeRuns.compare).slice(0,Math.max(0,Math.floor(+limit||FETCH_LIMIT)));
+  }
+  function normalizePayload(payload){
+    if(payload===null)return{ok:true,rows:[],empty:true};
+    if(!payload||typeof payload!=='object'||Array.isArray(payload))return{ok:false,rows:[],empty:false};
+    const rows=[];for(const [runId,raw] of Object.entries(payload)){const item=exact(raw,runId);if(item)rows.push(item);else DataRecovery.note('arcade-board-firebase-invalid-record');}
+    return{ok:true,rows:normalizeRows(rows,'arcade-board-firebase',FETCH_LIMIT),empty:Object.keys(payload).length===0};
+  }
+  function sync(){cache.records=normalizeRows(cache.records,'arcade-board-runtime',FETCH_LIMIT);cache.top=cache.records.slice(0,TOP_LIMIT);return cache.top;}
+  function save(){Persistence.setJSON(ARCADE_BOARD_KEY,{schemaVersion:ARCADE_BOARD_SCHEMA_VERSION,records:cache.records,updatedAt:cache.updatedAt});}
+  {
+    const read=Persistence.inspectJSON(ARCADE_BOARD_KEY),raw=read.value;
+    if(!read.ok){DataRecovery.note('arcade-board-cache-corrupt',1,read.error);Persistence.remove(ARCADE_BOARD_KEY);}
+    else if(read.exists&&raw&&typeof raw==='object'&&!Array.isArray(raw)&&Array.isArray(raw.records)){
+      if(raw.schemaVersion!==ARCADE_BOARD_SCHEMA_VERSION)DataRecovery.note('arcade-board-cache-migrated');
+      cache.records=normalizeRows(raw.records,'arcade-board-cache',FETCH_LIMIT);cache.updatedAt=Math.max(0,+raw.updatedAt||0);sync();
+    }else if(read.exists){DataRecovery.note('arcade-board-cache-invalid');Persistence.remove(ARCADE_BOARD_KEY);}
+    save();
+  }
+  async function fetchTimed(url,options){let timer=0,controller=null;try{if(typeof AbortController!=='undefined'){controller=new AbortController();options=Object.assign({},options||{},{signal:controller.signal});timer=setTimeout(()=>controller.abort(),APP_CONFIG.network.requestTimeoutMs);}return await fetch(url,options||{});}finally{if(timer)clearTimeout(timer);}}
+  async function readJSON(response){try{return{ok:true,value:await response.json()};}catch(e){return{ok:false,value:null,error:String((e&&e.message)||e)};}}
+  async function fetchBoard(){
+    const raw=FIREBASE_DB_URL+ARCADE_RUN_PATH+'.json?orderBy=%22score%22&limitToLast='+FETCH_LIMIT;
+    try{const url=await Identity.url(raw),response=await fetchTimed(url,{cache:'no-store'});if(!response.ok)return{ok:false,status:response.status,rows:[],error:'HTTP '+response.status};
+      const parsed=await readJSON(response);if(!parsed.ok)return{ok:false,status:response.status,rows:[],error:'invalid JSON'};
+      const normalized=normalizePayload(parsed.value);if(!normalized.ok)return{ok:false,status:response.status,rows:[],error:'invalid response shape'};
+      return{ok:true,status:response.status,rows:normalized.rows,empty:normalized.empty,error:''};
+    }catch(e){return{ok:false,status:0,rows:[],error:String((e&&e.message)||e)};}
+  }
+  function submissionOwnsStatus(){const s=ArcadeSubmission.status();return !!(s&&s.detail&&s.phase!==ArcadeSubmission.phases.IDLE);}
+  async function refresh(force){
+    if(!on())return'unavailable';if(!force&&Date.now()-lastRefresh<LB_REFRESH)return'throttled';
+    if(refreshPromise&&!force)return refreshPromise;lastRefresh=Date.now();const seq=++refreshSeq;
+    refreshPromise=(async()=>{const result=await fetchBoard();if(seq<appliedSeq)return'stale';
+      if(!result.ok){cache.lastRefreshResult='failed';if(!submissionOwnsStatus())lbStatus(cache.top.length?'leaderboard offline — showing cached runs':'leaderboard offline');return'failed';}
+      appliedSeq=seq;cache.records=result.rows;cache.updatedAt=Date.now();cache.lastRefreshResult='score';sync();save();renderBoard();if(!submissionOwnsStatus())lbStatus('');return'score';
+    })().finally(()=>{refreshPromise=null;});return refreshPromise;
+  }
+  function ingestAccepted(payload){
+    const item=exact(payload,String(payload&&payload.runId||''));if(!item)return false;
+    cache.records=cache.records.filter(e=>e.runId!==item.runId).concat(item);cache.updatedAt=Date.now();cache.lastRefreshResult='accepted-overlay';sync();save();renderBoard();
+    setTimeout(()=>refresh(true),0);return true;
+  }
+  function rankOf(runId){const i=cache.top.findIndex(e=>e.runId===runId);return i<0?0:i+1;}
+  function selfTest(){
+    const now=Date.now(),uid='same_browser_uid_v7c',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
+    const dan100=mk('DAN',100,-3000),bob50=mk('BOB',50,-2000),dan25=mk('DAN',25,-1000),rows=normalizeRows([dan25,dan100,bob50],'arcade-board-self',FETCH_LIMIT);
+    const sequence=rows.map(e=>e.initials+':'+e.score).join('|')==='DAN:100|BOB:50|DAN:25';
+    const sameUid=rows.length===3&&new Set(rows.map(e=>e.uid)).size===1,duplicateInitials=rows.filter(e=>e.initials==='DAN').length===2;
+    const malformed=normalizePayload({wrong_key:dan100}).rows.length===0;
+    const many=[];for(let i=0;i<14;i++)many.push(mk(String(i).padStart(3,'0'),200-i,-10000-i));const capped=normalizeRows(many,'arcade-board-cap',FETCH_LIMIT).slice(0,TOP_LIMIT).length===10;
+    return Object.freeze({passed:sequence&&sameUid&&duplicateInitials&&malformed&&capped,sequence,sameUid,duplicateInitials,malformed,capped,rows:rows.map(e=>({runId:e.runId,uid:e.uid,initials:e.initials,score:e.score}))});
+  }
+  async function probeRead(){return fetchBoard();}
+  function stats(){return Object.freeze({source:ARCADE_RUN_PATH,records:cache.records.length,top:cache.top.length,updatedAt:cache.updatedAt,lastRefreshResult:cache.lastRefreshResult,fetchLimit:FETCH_LIMIT,visibleRows:TOP_LIMIT,refreshThrottleMs:LB_REFRESH});}
+  if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',()=>refresh(true));}
+  return Object.freeze({on,refresh,ingestAccepted,rankOf,selfTest,probeRead,stats,records:()=>cache.records.slice(),top:()=>cache.top.slice(),cache:()=>cache});
+})();
+arcadeLeaderboardAccepted=payload=>ArcadeLeaderboard.ingestAccepted(payload);
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
    v6f keeps the read-only bridge between the selected unique-initial mountain records
    and the world-space memorial renderer. It performs no network request; compatible
@@ -1637,10 +1721,9 @@ const MountainPopulation=(()=>{
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,derive,setOwner,records,view,stats,byInitials,selfTest});
 })();
 
-/* ==================== ONLINE BEST RUN + INCLUSIVE RECORD POOLS ====================
-   v6f reads the configured best-run path twice: a score-ordered pool for the
-   unchanged UID-based top 10 and a timestamp-ordered pool for recent unique initials. Both are limited, cached and merged by UID. The legacy /scores
-   collection remains isolated. */
+/* ================= LEGACY PHASE-6 MOUNTAIN READ BRIDGE =================
+   v7c keeps this best_runs score-plus-recent loader only to preserve the interim
+   mountain until v7d. It no longer owns the visible leaderboard UI. */
 // Current best-run state and cached board keys are defined in APP_CONFIG.storage.
 const LB_BAD=INITIALS_BAD;
 const LB=(()=>{
@@ -1877,7 +1960,7 @@ const LB=(()=>{
     if(seq<appliedRefreshSeq)return'stale';
     if(!score.ok&&!recent.ok){
       cache.lastRefreshResult='failed';
-      if(!lastNotice)lbStatus(cache.top.length?'board offline — showing cached best runs':'board offline');
+      // v7c: the legacy mountain bridge does not own visible leaderboard status.
       return'failed';
     }
     appliedRefreshSeq=seq;
@@ -1893,11 +1976,7 @@ const LB=(()=>{
     if(cache.remoteUid&&cache.remoteUid!==uid){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-identity-change');}
     cache.lastRefreshResult=score.ok&&recent.ok?'score+recent':score.ok?'score-only':'recent-only';
     save();renderBoard();
-    if(!lastNotice){
-      if(!score.ok)lbStatus('top-score pool unavailable — showing cached leaderboard');
-      else if(!recent.ok)lbStatus('recent-player pool unavailable — publish the timestamp index');
-      else lbStatus('');
-    }
+    // v7c: visible status belongs to ArcadeLeaderboard; this refresh is mountain-only.
     return cache.lastRefreshResult;
   }
   function retainFailure(p,message,error){
@@ -2067,10 +2146,10 @@ identityOwnerChanged=(nextUid,previousUid)=>{Leaderboard.identityChanged(nextUid
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList');if(!list)return;
-  const top=LB.cache().top,myUid=String(Identity.status().uid||''),ls=LB.lastSub();
-  if(!top.length){list.innerHTML='<div class="lbEmpty">NO BEST RUNS YET</div>';return;}
+  const top=ArcadeLeaderboard.top(),myUid=String(Identity.status().uid||''),lastRunId=String(ArcadeSubmission.status().runId||'');
+  if(!top.length){list.innerHTML='<div class="lbEmpty">NO RUNS YET</div>';return;}
   list.innerHTML=top.map((e,i)=>{
-    const mine=(myUid&&e.uid===myUid)||(!myUid&&ls&&ls.uid&&e.uid===ls.uid);
+    const mine=(myUid&&e.uid===myUid)||(!myUid&&lastRunId&&e.runId===lastRunId);
     return '<div class="lbRow'+(mine?' mine':'')+'"><span>'+(i+1)+'</span><b>'+e.initials+'</b><i><strong>'+fmtNum(e.score)+'</strong> pts<small>'+fmtNum(e.distance)+' m</small></i></div>';
   }).join('');
 }
@@ -2974,14 +3053,14 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()});
-  lastFinishedRun=run; // v7b submits this stable runId through the active append-only arcade queue
-  if(LB.on()){
+  lastFinishedRun=run; // v7c submits this stable runId through the active append-only arcade queue
+  if(ArcadeLeaderboard.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
     const q=ArcadeSubmission.qualifies(run);
     $('lbEntry').style.display=q?'flex':'none';
     if(q){$('lbInit').value=ArcadeSubmission.initials();$('lbGo').textContent='SUBMIT RUN';}
-    renderBoard();LB.refresh();ArcadeSubmission.drain();
+    renderBoard();ArcadeLeaderboard.refresh();LB.refresh();ArcadeSubmission.drain();
   }else{
     $('lbWrap').style.display='none';
     $('lbRunSummary').textContent='Online leaderboard unavailable';
@@ -4774,7 +4853,7 @@ function beginRun(){Generation.fresh();if(lastDeathReal)S.speed=17;
   S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');el.leaderboard.classList.add('hide');Audio.ac();}
 function showLeaderboard(){
   el.results.classList.add('hide');el.leaderboard.classList.remove('hide');
-  renderBoard();LB.refresh();ArcadeSubmission.drain();
+  renderBoard();ArcadeLeaderboard.refresh();LB.refresh();ArcadeSubmission.drain();
 }
 function showResults(){el.leaderboard.classList.add('hide');el.results.classList.remove('hide');}
 let inputBound=false;
@@ -4821,7 +4900,7 @@ function renderAuthDiag(){
   else if(s.tokenReady){tok.textContent='INVALID OR MISMATCHED';authClass('authToken','authBad');}
   else{tok.textContent='NO ACTIVE TOKEN';authClass('authToken','authWarn');}
   if(v.phase==='verified'){per.textContent='VERIFIED';authClass('authPersistence','authGood');
-    hint.textContent='PASS: anonymous authentication is active and stable. '+BUILD_VERSION+' writes immutable runs at '+ARCADE_RUN_PATH+'/{runId} and initials bests at '+INITIALS_BEST_PATH+'/{INITIALS}.';}
+    hint.textContent='PASS: anonymous authentication is active and stable. '+BUILD_VERSION+' writes and reads immutable runs at '+ARCADE_RUN_PATH+'/{runId} and initials bests at '+INITIALS_BEST_PATH+'/{INITIALS}.';}
   else if(v.phase==='reload-needed'){per.textContent='RELOAD REQUIRED';authClass('authPersistence','authWarn');
     hint.textContent='Authentication and token validation passed. Reload this same page once; the diagnostic will confirm that the UID survives the reload.';}
   else if(v.phase==='uid-changed'){per.textContent='UID CHANGED';authClass('authPersistence','authBad');
@@ -5522,7 +5601,7 @@ const ReleaseCheck=(()=>{
       const onlineOK=authOK&&!!(best&&best.passed)&&!!(memorial&&memorial.passed)&&!!(reconciliation&&reconciliation.passed);
       const overall=$('sharedOverall');
       if(overall){
-        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v7b PHASE-6 READ COMPATIBILITY PASSED';overall.className='authGood';}
+        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v7c PHASE-6 MOUNTAIN-BRIDGE COMPATIBILITY PASSED';overall.className='authGood';}
         else if(deterministicOK&&authWaiting){overall.textContent='LIVE CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
         else if(deterministicOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
         else{overall.textContent='RELEASE VALIDATION NEEDS ATTENTION';overall.className='authBad';}
@@ -5632,7 +5711,7 @@ const UniqueMountainCheck=(()=>{
       const baseOK=deterministic&&liveUnique&&localHidden&&stateSafe&&spark&&legacy===0;
       const overall=$('uniqueOverall');
       if(overall){
-        if(baseOK&&authOK&&recentReady){overall.textContent='VERIFIED — v7b UNIQUE-MOUNTAIN READ COMPATIBILITY PASSED';overall.className='authGood';}
+        if(baseOK&&authOK&&recentReady){overall.textContent='VERIFIED — v7c UNIQUE-MOUNTAIN READ COMPATIBILITY PASSED';overall.className='authGood';}
         else if(baseOK&&authWaiting){overall.textContent='LOCAL CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
         else if(baseOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
         else if(baseOK&&!recentReady){overall.textContent='CORE CHECKS PASSED — RECENT QUERY NEEDS TIMESTAMP INDEX / NETWORK';overall.className='authWarn';}
@@ -5662,9 +5741,9 @@ const UniqueMountainCheck=(()=>{
     $('uniqueClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
   return Object.freeze({init,run,last:()=>lastReport,requested:uniqueCheckRequested,synthetic});
 })();
-/* =================== MODULE: ARCADE DATA FOUNDATION CHECK ===================
-   v7b validates the active queue and cutover contract without creating diagnostic scores.
-   Production submissions now use the new branches; the check itself remains read-only. */
+/* ================= MODULE: ARCADE LEADERBOARD CUTOVER CHECK =================
+   v7c validates active immutable submissions plus the traditional visible top-10
+   read path without creating diagnostic scores. */
 const ArcadeFoundationCheck=(()=>{
   let running=false,lastReport=null;
   const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
@@ -5673,24 +5752,24 @@ const ArcadeFoundationCheck=(()=>{
     if(running)return lastReport;running=true;const btn=$('arcadeRetry');if(btn)btn.textContent='RUNNING…';
     ['arcadeAuth','arcadePaths','arcadeIds','arcadeSchema','arcadeQueue','arcadeDuplicate','arcadeSequence','arcadeInitials','arcadeTransaction','arcadeBoundary'].forEach(id=>row(id,'CHECKING','authNeutral'));
     try{
-      const queueBefore=store.getItem(ARCADE_QUEUE_KEY),d=ArcadeFoundation.selfTest(),cut=ArcadeSubmission.selfTest(),auth=Identity.status(),live=await ArcadeFoundation.probeReads(),queueAfter=store.getItem(ARCADE_QUEUE_KEY);
-      const stateSafe=queueBefore===queueAfter,authOK=auth.authenticated&&auth.tokenReady,authWaiting=authOK&&auth.verification&&auth.verification.phase==='reload-needed';
+      const queueBefore=store.getItem(ARCADE_QUEUE_KEY),boardBefore=store.getItem(ARCADE_BOARD_KEY),d=ArcadeFoundation.selfTest(),cut=ArcadeSubmission.selfTest(),board=ArcadeLeaderboard.selfTest(),auth=Identity.status(),live=await ArcadeFoundation.probeReads(),queueAfter=store.getItem(ARCADE_QUEUE_KEY),boardAfter=store.getItem(ARCADE_BOARD_KEY);
+      const stateSafe=queueBefore===queueAfter&&boardBefore===boardAfter,authOK=auth.authenticated&&auth.tokenReady,authWaiting=authOK&&auth.verification&&auth.verification.phase==='reload-needed';
       authOK?pass('arcadeAuth',authWaiting?'CONNECTED — RELOAD CHECK PENDING':'CONNECTED — ANONYMOUS UID'):warn('arcadeAuth','OFFLINE — LOCAL TESTS ONLY');
-      live.ok?pass('arcadePaths','READABLE + INDEXED'):fail('arcadePaths','PUBLISH v7b RULES');
+      live.ok?pass('arcadePaths','READABLE + INDEXED'):fail('arcadePaths','PUBLISH v7c RULES');
       d.ids?pass('arcadeIds','PASS — OPAQUE + STABLE'):fail('arcadeIds','FAIL');
       d.schema?pass('arcadeSchema','PASS — 15 EXACT FIELDS'):fail('arcadeSchema','FAIL');
       d.queue&&cut.queued===3&&stateSafe?pass('arcadeQueue','ACTIVE — THREE RUNS RETAINED'):fail('arcadeQueue','FAIL');
       d.duplicate&&cut.duplicate?pass('arcadeDuplicate','PASS — SAME RUN ACCEPTED ONCE'):fail('arcadeDuplicate','FAIL');
-      d.sequence&&cut.sequence?pass('arcadeSequence','DAN 100 · BOB 50 · DAN 25'):fail('arcadeSequence','FAIL');
+      d.sequence&&cut.sequence&&board.sequence&&board.sameUid&&board.duplicateInitials?pass('arcadeSequence','DAN 100 · BOB 50 · DAN 25'):fail('arcadeSequence','FAIL');
       d.initials&&cut.mountain?pass('arcadeInitials','DAN 100 · BOB 50'):fail('arcadeInitials','FAIL');
       d.transaction&&cut.partialSafe?pass('arcadeTransaction','PASS — PARTIAL RETRY + STRONGER ONLY'):fail('arcadeTransaction','FAIL');
-      !cut.legacyBestWrites?pass('arcadeBoundary','ACTIVE — OLD best_runs WRITES RETIRED'):fail('arcadeBoundary','FAIL');pass('arcadeScroll','READY — SWIPE TO REVIEW');
-      const localOK=d.passed&&cut.passed&&stateSafe,overall=$('arcadeOverall');
+      !cut.legacyBestWrites&&board.passed?pass('arcadeBoundary','VISIBLE BOARD = leaderboard_runs'):fail('arcadeBoundary','FAIL');pass('arcadeScroll','READY — SWIPE TO REVIEW');
+      const localOK=d.passed&&cut.passed&&board.passed&&stateSafe,overall=$('arcadeOverall');
       if(overall){
-        if(localOK&&authOK&&live.ok){overall.textContent='VERIFIED — v7b ARCADE SUBMISSION CUTOVER PASSED';overall.className='authGood';}
-        else if(localOK&&!authOK){overall.textContent='LOCAL CUTOVER PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
-        else if(localOK&&!live.ok){overall.textContent='LOCAL CUTOVER PASSED — PUBLISH v7b FIREBASE RULES';overall.className='authWarn';}
-        else{overall.textContent='ARCADE SUBMISSION CUTOVER NEEDS ATTENTION';overall.className='authBad';}
+        if(localOK&&authOK&&live.ok){overall.textContent='VERIFIED — v7c ARCADE LEADERBOARD CUTOVER PASSED';overall.className='authGood';}
+        else if(localOK&&!authOK){overall.textContent='LOCAL LEADERBOARD CUTOVER PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else if(localOK&&!live.ok){overall.textContent='LOCAL LEADERBOARD CUTOVER PASSED — PUBLISH v7c FIREBASE RULES';overall.className='authWarn';}
+        else{overall.textContent='ARCADE LEADERBOARD CUTOVER NEEDS ATTENTION';overall.className='authBad';}
       }
       const details=$('arcadeDetails');if(details)details.textContent=[
         'Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,
@@ -5698,14 +5777,15 @@ const ArcadeFoundationCheck=(()=>{
         'Arcade schema: '+ARCADE_RUN_SCHEMA_VERSION+'; exact fields: '+ARCADE_RUN_FIELDS.length,
         'Queue schema: '+ARCADE_QUEUE_SCHEMA_VERSION+'; production queue active: YES',
         'Legacy best_runs writes active: '+(LEGACY_BEST_WRITES_ACTIVE?'YES':'NO'),
-        'Visible board read source: '+BEST_RUN_PATH+' until v7c',
-        'Leaderboard simulation: '+d.leaderboard.map(e=>e.initials+' '+e.score).join(' · '),
+        'Visible board read source: '+ARCADE_RUN_PATH+' (traditional immutable runs)',
+        'Leaderboard simulation: '+board.rows.map(e=>e.initials+' '+e.score).join(' · '),
         'Mountain simulation: '+d.mountain.map(e=>e.initials+' '+e.score).join(' · '),
         'Leaderboard read status: '+live.leaderboard.status+'; initials read status: '+live.initials.status,
-        'Visible submission switched: YES — append-only writes active','Firebase diagnostic writes: NONE','Queue storage unchanged: '+(stateSafe?'YES':'NO')
+        'Same browser may occupy multiple rows: '+(board.sameUid?'YES':'NO'),'Duplicate initials remain independent: '+(board.duplicateInitials?'YES':'NO'),
+        'Mountain read source remains interim: '+BEST_RUN_PATH+' until v7d','Firebase diagnostic writes: NONE','Queue and board caches unchanged: '+(stateSafe?'YES':'NO')
       ].join('\n');
-      lastReport={passed:localOK&&authOK&&live.ok,localPassed:localOK,deterministic:d,auth:authOK,live,stateSafe};
-    }catch(e){const overall=$('arcadeOverall');if(overall){overall.textContent='ARCADE SUBMISSION CUTOVER ERROR';overall.className='authBad';}const details=$('arcadeDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};}
+      lastReport={passed:localOK&&authOK&&live.ok,localPassed:localOK,deterministic:d,board,auth:authOK,live,stateSafe};
+    }catch(e){const overall=$('arcadeOverall');if(overall){overall.textContent='ARCADE LEADERBOARD CUTOVER ERROR';overall.className='authBad';}const details=$('arcadeDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};}
     finally{running=false;if(btn)btn.textContent='RUN CUTOVER CHECK';}
     return lastReport;
   }
@@ -5723,7 +5803,7 @@ ReleaseCheck.init();
 UniqueMountainCheck.init();
 ArcadeFoundationCheck.init();
 Identity.start().finally(async()=>{
-  Identity.verify();MountainPopulation.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
+  Identity.verify();MountainPopulation.setOwner(Identity.status().uid);renderAuthDiag();await Promise.all([ArcadeLeaderboard.refresh(),Leaderboard.refresh()]);
   if(bestCheckRequested())await BestCheck.run();
   if(memorialCheckRequested())await MemorialCheck.run();
   if(reconcileCheckRequested())await ReconciliationCheck.run();
@@ -5767,8 +5847,8 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
-  audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
+  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeLeaderboard:ArcadeLeaderboard,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  audio:Audio,leaderboard:ArcadeLeaderboard,legacyMountainRead:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -5789,7 +5869,7 @@ requestAnimationFrame(frame);
 window.__EP={
   config:Configuration,recovery:DataRecovery,modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  lb:ArcadeLeaderboard,legacyMountainRead:Leaderboard,identity:Identity,bestRuns:BestRuns,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeLeaderboard:ArcadeLeaderboard,arcadeFoundationCheck:ArcadeFoundationCheck,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
