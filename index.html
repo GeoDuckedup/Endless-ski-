@@ -15,6 +15,9 @@
     --safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);
     --safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);
     overflow:hidden;background:#05070c;isolation:isolate}
+  /* Gameplay steering owns the entire visible playfield, including the lower safe-area region.
+     The class is enabled only during an active run so instruction-panel scrolling remains intact. */
+  #stage.gameplay-input{touch-action:none;overscroll-behavior:none}
   /* Desktop browsers use a centered phone-shaped playfield. Touch devices retain the full viewport. */
   @media (min-width:700px) and (min-aspect-ratio:4/3){
     #wrap{display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
@@ -112,10 +115,8 @@
   #ovIntro .version{position:static;margin-top:max(9px,calc(12*var(--u)));font-size:max(10px,calc(13*var(--u)));color:rgba(220,232,244,.38)}
 
   #introHowPreview{
-    position:absolute;inset:0;z-index:3;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
-    display:flex;align-items:center;justify-content:center;
-    padding:calc(var(--safe-top) + 52px) calc(var(--safe-right) + 22px)
-      calc(var(--safe-bottom) + 24px) calc(var(--safe-left) + 22px);
+    position:absolute;inset:0;z-index:3;box-sizing:border-box;overflow:hidden;overscroll-behavior:contain;
+    display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0;
     background:linear-gradient(180deg,rgba(3,7,12,.89),rgba(3,6,10,.97));
     color:#edf4f8;text-align:left;
     opacity:0;visibility:hidden;pointer-events:none;transform:translateY(calc(8*var(--u)));
@@ -129,7 +130,22 @@
     content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
     background:linear-gradient(180deg,rgba(6,13,21,.10),rgba(2,5,8,.52))
   }
+  .howContent{
+    flex:1 1 auto;min-height:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;align-items:center;justify-content:center;
+    padding:calc(var(--safe-top) + 52px) calc(var(--safe-right) + 22px)
+      max(18px,calc(24*var(--u))) calc(var(--safe-left) + 22px)
+  }
   .howCard{width:min(88%,calc(520*var(--u)));margin:auto;display:flex;flex-direction:column;align-items:stretch}
+  .howActions{
+    position:relative;flex:0 0 auto;min-height:max(178px,calc(285*var(--u)));width:100%;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:calc(20*var(--u)) calc(var(--safe-right) + 24px)
+      calc(var(--safe-bottom) + 22px) calc(var(--safe-left) + 24px);
+    background:linear-gradient(180deg,#07101a 0%,#05070c 60%,#030407 100%);
+    box-shadow:0 calc(-18*var(--u)) calc(36*var(--u)) rgba(3,5,9,.78)
+  }
+  .howVersionSpacer{visibility:hidden}
   #introHowPreview h2{
     margin:0 0 max(20px,calc(28*var(--u)));text-align:center;
     font:850 max(24px,calc(34*var(--u)))/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -147,25 +163,24 @@
     display:block;font:500 max(14px,calc(20*var(--u)))/1.34 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     color:rgba(237,244,248,.76)
   }
-  #introHowPreview .introBtn{align-self:center;max-width:calc(390*var(--u))}
+  #introHowPreview .introBtn{align-self:center}
 
   @media (max-height:700px){
-    #introPrompt{min-height:max(164px,calc(var(--safe-bottom) + 152px));padding-top:12px;padding-bottom:calc(var(--safe-bottom) + 12px)}
+    #introPrompt,.howActions{min-height:max(164px,calc(var(--safe-bottom) + 152px));padding-top:12px;padding-bottom:calc(var(--safe-bottom) + 12px)}
     .introBtn{min-height:50px}
     #ovIntro .version{margin-top:7px}
-    #introHowPreview{align-items:flex-start;padding-top:calc(var(--safe-top) + 42px);padding-bottom:calc(var(--safe-bottom) + 16px)}
+    .howContent{align-items:flex-start;padding-top:calc(var(--safe-top) + 42px);padding-bottom:14px}
     #introHowPreview h2{margin-bottom:16px}
     .howList{gap:10px}
     .howItem{padding-bottom:9px}
   }
   @media (max-height:620px){
-    #introPrompt{min-height:max(150px,calc(var(--safe-bottom) + 142px));padding-top:9px;padding-bottom:calc(var(--safe-bottom) + 9px)}
+    #introPrompt,.howActions{min-height:max(150px,calc(var(--safe-bottom) + 142px));padding-top:9px;padding-bottom:calc(var(--safe-bottom) + 9px)}
     .introView{width:min(88%,calc(520*var(--u)))}
     .introBtn{min-height:46px}
-    #introHowPreview{padding-top:calc(var(--safe-top) + 28px);padding-bottom:calc(var(--safe-bottom) + 10px)}
+    .howContent{padding-top:calc(var(--safe-top) + 28px);padding-bottom:10px}
     #introHowPreview h2{font-size:max(21px,calc(31*var(--u)));margin-bottom:12px}
     .howList{gap:7px}.howItem{padding-bottom:7px}.howItem span{font-size:max(12px,calc(18*var(--u)));line-height:1.25}
-    .introBtn.quiet{margin-top:4px}
   }
   @media (prefers-reduced-motion:reduce){
     #ovIntro,#introPoster,#introMenu,#introHowPreview,#introBoot{transition-duration:.001ms!important;animation-duration:.001ms!important}
@@ -307,16 +322,23 @@
       </div>
     </div>
     <section id="introHowPreview" aria-hidden="true" aria-labelledby="introHowTitle">
-      <div class="howCard">
-        <h2 id="introHowTitle">HOW TO PLAY</h2>
-        <div class="howList">
-          <div class="howItem"><b>CARVE</b><span>Drag left and right to steer.</span></div>
-          <div class="howItem"><b>PASS THE FLAGS</b><span>Cross each flag on its marked side. Clean passes build speed and score.</span></div>
-          <div class="howItem"><b>AVOID DISASTER</b><span>Trees, boulders, and the slope edge end the run.</span></div>
-          <div class="howItem"><b>OUTRUN THE YETI</b><span>Miss flags or lose speed and it closes in.</span></div>
+      <div class="howContent">
+        <div class="howCard">
+          <h2 id="introHowTitle">HOW TO PLAY</h2>
+          <div class="howList">
+            <div class="howItem"><b>CARVE</b><span>Drag left and right to steer.</span></div>
+            <div class="howItem"><b>PASS THE FLAGS</b><span>Cross each flag on its marked side. Clean passes build speed and score.</span></div>
+            <div class="howItem"><b>AVOID DISASTER</b><span>Trees, boulders, and the slope edge end the run.</span></div>
+            <div class="howItem"><b>OUTRUN THE YETI</b><span>Miss flags or lose speed and it closes in.</span></div>
+          </div>
         </div>
-        <button class="introBtn primary" id="introHowStart" type="button">START RUN</button>
-        <button class="introBtn quiet" id="introBack" type="button">BACK</button>
+      </div>
+      <div class="howActions">
+        <div class="introView">
+          <button class="introBtn primary" id="introHowStart" type="button">START RUN</button>
+          <button class="introBtn secondary" id="introBack" type="button">BACK</button>
+          <div class="version howVersionSpacer" aria-hidden="true">v8e</div>
+        </div>
       </div>
     </section>
   </div>
@@ -2461,6 +2483,7 @@ function lungeMiss(){ // committed dive hit empty snow
 }
 function die(cause,spot){
   if(S.mode!=='play')return;
+  stage.classList.remove('gameplay-input');pup();
   S.cause=cause;
   S.deathX=spot&&Number.isFinite(spot.x)?spot.x:S.x;
   S.deathDepth=spot&&Number.isFinite(spot.d)?spot.d:S.depth;
@@ -4270,12 +4293,13 @@ function prepareIntro(){
 }
 let anchor=null;
 const keys={};
-function toLogical(e){const r=cv.getBoundingClientRect();return (e.clientX-r.left)/r.width*LW;}
+function toLogical(e){const r=stage.getBoundingClientRect();return (e.clientX-r.left)/r.width*LW;}
 function pdown(e){
-  if(S.mode==='intro'||S.mode==='starting'||S.mode==='dead')return;
+  if(S.mode!=='play')return;
+  if(e.isPrimary===false||(e.pointerType==='mouse'&&e.button!==0))return;
   Audio.ac();
   e.preventDefault();
-  try{cv.setPointerCapture(e.pointerId);}catch(err){}
+  try{stage.setPointerCapture(e.pointerId);}catch(err){}
   anchor=toLogical(e);S.active=false;S.steer=0;
 }
 function pmove(e){
@@ -4300,7 +4324,7 @@ function setIntroStartDisabled(disabled){
 function introStartAllowed(mode=S.mode,pending=introStartPending){return mode!=='starting'&&!pending;}
 function finishRunStart(){
   if(introStartTimer){clearTimeout(introStartTimer);introStartTimer=0;}
-  stage.classList.remove('intro-active','intro-leaving');
+  stage.classList.remove('intro-active','intro-leaving');stage.classList.add('gameplay-input');
   setIntroView('menu');S.mode='play';introStartPending=false;setIntroStartDisabled(false);
 }
 function beginRun(){
@@ -4314,7 +4338,7 @@ function beginRun(){
     introStartPending=true;setIntroStartDisabled(true);S.mode='starting';stage.classList.add('intro-leaving');el.intro.classList.add('hide');
     if(INTRO_EXIT_MS)introStartTimer=setTimeout(finishRunStart,INTRO_EXIT_MS);else queueMicrotask(finishRunStart);
   }else{
-    stage.classList.remove('intro-active','intro-leaving');setIntroView('menu');S.mode='play';el.intro.classList.add('hide');
+    stage.classList.remove('intro-active','intro-leaving');stage.classList.add('gameplay-input');setIntroView('menu');S.mode='play';el.intro.classList.add('hide');
   }
   return true;
 }
@@ -4327,8 +4351,12 @@ let inputBound=false;
 function bindInput(){
   if(inputBound){PerformanceStability.noteInputBind(true);return false;}
   inputBound=true;PerformanceStability.noteInputBind(false);
-  cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
-  cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+  // Bind to the stage rather than the canvas so the entire playfield—including the
+  // bottom safe-area and any transparent presentation layers—remains a steering surface.
+  stage.addEventListener('pointerdown',pdown,{passive:false});
+  stage.addEventListener('pointermove',pmove,{passive:false});
+  window.addEventListener('pointerup',pup,{passive:true});
+  window.addEventListener('pointercancel',pup,{passive:true});
   document.addEventListener('touchmove',e=>{
     const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#arcadeDiag.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
@@ -4353,7 +4381,7 @@ function bindInput(){
   $('bSound').addEventListener('click',function(e){e.stopPropagation();this.style.opacity=Audio.toggle()?'1':'0.4';});
   return true;
 }
-const Input=Object.freeze({bind:bindInput,beginRun,pdown,pmove,pup,kb,introStatus:()=>Object.freeze({mode:S.mode,pending:introStartPending,startAllowed:introStartAllowed(),focusSerial:introViewSerial,focusTimerActive:!!introFocusTimer,audioRequested:introAudioRequested})});
+const Input=Object.freeze({bind:bindInput,beginRun,pdown,pmove,pup,kb,steeringStatus:()=>Object.freeze({surface:'stage',wholeViewport:true,gameplayClass:stage.classList.contains('gameplay-input'),active:S.active,steer:S.steer}),introStatus:()=>Object.freeze({mode:S.mode,pending:introStartPending,startAllowed:introStartAllowed(),focusSerial:introViewSerial,focusTimerActive:!!introFocusTimer,audioRequested:introAudioRequested})});
 function authDiagRequested(){
   try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.auth)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.auth)==='1';}
   catch(e){return false;}
@@ -4401,6 +4429,9 @@ const IntroReleaseValidation=(()=>{
     const splash=IntroSplash.status(),menu=IntroMenu.status(),life=IntroLifecycle.status(),input=Input.introStatus();
     const panel=$('introHowPreview'),start=$('introStart'),how=$('introHow'),howStart=$('introHowStart'),back=$('introBack'),poster=$('introPoster');
     const target=n=>{if(!n)return 0;const r=n.getBoundingClientRect();return Math.min(r.width,r.height);};
+    const bounds=n=>{if(!n)return null;const r=n.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height};};
+    const alignedPair=(a,b)=>!!a&&!!b&&Math.abs(a.left-b.left)<=1.5&&Math.abs(a.top-b.top)<=1.5&&Math.abs(a.width-b.width)<=1.5&&Math.abs(a.height-b.height)<=1.5;
+    const controlsAligned=alignedPair(bounds(start),bounds(howStart))&&alignedPair(bounds(how),bounds(back));
     const instructionsFit=!!panel&&panel.scrollHeight<=panel.clientHeight+2;
     const touchTargets=[start,how,howStart,back].every(n=>target(n)>=44);
     const posterPassive=!!poster&&getComputedStyle(poster).pointerEvents==='none'&&!poster.onclick;
@@ -4409,9 +4440,9 @@ const IntroReleaseValidation=(()=>{
     const noLegacyCopy=!($('ovIntro')&&$('ovIntro').innerText||'').includes('TAP TO SKI');
     const startGuard=introStartAllowed('intro',false)&&!introStartAllowed('starting',false)&&!introStartAllowed('intro',true);
     const lifecycle=splash.predecodedBeforeReveal&&life.safeAreaAware&&life.controlsInside&&life.readyClass&&!life.loadingClass;
-    const controls=menu.startPresent&&menu.howPresent&&menu.howStartPresent&&menu.backPresent&&menu.instructionCount===4&&copyExact&&touchTargets&&instructionsFit;
+    const controls=menu.startPresent&&menu.howPresent&&menu.howStartPresent&&menu.backPresent&&menu.instructionCount===4&&copyExact&&touchTargets&&instructionsFit&&controlsAligned;
     const safety=posterPassive&&noLegacyCopy&&startGuard&&typeof input.focusSerial==='number';
-    return Object.freeze({passed:splash.embedded&&splash.naturalWidth===720&&splash.naturalHeight===1080&&lifecycle&&controls&&safety,splash,menu,life,input,instructionsFit,touchTargets,posterPassive,copyExact,noLegacyCopy,startGuard,lifecycle,controls,safety});
+    return Object.freeze({passed:splash.embedded&&splash.naturalWidth===720&&splash.naturalHeight===1080&&lifecycle&&controls&&safety,splash,menu,life,input,instructionsFit,touchTargets,controlsAligned,posterPassive,copyExact,noLegacyCopy,startGuard,lifecycle,controls,safety});
   }
   function selfTest(){
     const original=introView;setIntroView('menu');const menuTest=IntroMenu.selfTest(),splashTest=IntroSplash.selfTest(),lifeTest=IntroLifecycle.selfTest();setIntroView(original);
