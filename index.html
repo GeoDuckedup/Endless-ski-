@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v5f.4</title>
+<title>ENDLESS POWDER v6b</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -256,7 +256,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v5f.4</div>
+    <div class="version">v6b</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -288,7 +288,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v5f.4 stabilizes frame-time, bounded effect memory, repeated-run cleanup and shared-memorial rendering while preserving offline play.</div>
+    <div class="authSub">v6b loads a cached score pool plus a recent-player pool for future unique-initial mountain selection while preserving the current leaderboard and memorial rendering.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -410,7 +410,7 @@ const D2R=Math.PI/180;
    diagnostics and performance policy derive from this one immutable block.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v5f.4',channel:'shared-mountain-stable'}),
+  build:Object.freeze({version:'v6b',channel:'inclusive-record-loading'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -433,7 +433,7 @@ const APP_CONFIG=Object.freeze({
         worldVersionMaxLength:64,timestampFloor:1735689600000,timestampFutureMs:60000})
     }),
     bestRunState:Object.freeze({version:'best-run-state-v1'}),
-    bestRunBoard:Object.freeze({version:'best-run-board-v1'}),
+    bestRunBoard:Object.freeze({version:'best-run-board-v2'}),
     localDeath:Object.freeze({
       version:'local-deaths-v1',
       fields:Object.freeze(['deathId','depth','x','theta','cause','timestamp','worldVersion']),
@@ -460,7 +460,7 @@ const APP_CONFIG=Object.freeze({
   }),
   network:Object.freeze({requestTimeoutMs:6500,authTimeoutMs:6000,refreshSkewMs:60000,
     retryBaseMs:900,retryMaxMs:6000,maxAutomaticRetries:3}),
-  leaderboard:Object.freeze({visibleRows:10,fetchRecords:50,refreshMs:30000}),
+  leaderboard:Object.freeze({visibleRows:10,scoreFetchRecords:75,recentFetchRecords:75,refreshMs:300000}),
   localDeaths:Object.freeze({maxRecords:50}),
   memorials:Object.freeze({
     loadedRecords:50,labelRange:12.5,labelFullRange:6.5,groupX:24,groupDepth:3,
@@ -507,7 +507,8 @@ const MEMORIAL_QUALITY=APP_CONFIG.memorials.quality;
 const PERFORMANCE_CONFIG=APP_CONFIG.performance;
 let FIREBASE_DB_URL=APP_CONFIG.firebase.databaseUrl; // mutable only for isolated test harnesses
 const LB_PATH=BEST_RUN_PATH,LB_SIZE=APP_CONFIG.leaderboard.visibleRows,
-  LB_FETCH=APP_CONFIG.leaderboard.fetchRecords,LB_REFRESH=APP_CONFIG.leaderboard.refreshMs;
+  LB_SCORE_FETCH=APP_CONFIG.leaderboard.scoreFetchRecords,LB_RECENT_FETCH=APP_CONFIG.leaderboard.recentFetchRecords,
+  LB_FETCH=LB_SCORE_FETCH,LB_MERGED_FETCH=LB_SCORE_FETCH+LB_RECENT_FETCH,LB_REFRESH=APP_CONFIG.leaderboard.refreshMs;
 const Configuration=Object.freeze({
   values:APP_CONFIG,
   audit:()=>Object.freeze({
@@ -515,7 +516,8 @@ const Configuration=Object.freeze({
     configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,bestRunPath:BEST_RUN_PATH,legacyScorePath:LEGACY_SCORE_PATH,
     bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
     bestRunBoardSchemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
-    localDeathKey:LOCAL_DEATH_KEY,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_FETCH,
+    localDeathKey:LOCAL_DEATH_KEY,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_SCORE_FETCH,
+    leaderboardRecentFetch:LB_RECENT_FETCH,leaderboardRefreshMs:LB_REFRESH,
     memorialLimit:SHARED_MEMORIAL_LIMIT,matchDepth:LOCAL_SHARED_DEPTH_TOLERANCE,matchX:LOCAL_SHARED_X_TOLERANCE,
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
     maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
@@ -1072,10 +1074,58 @@ const SharedMemorials=(()=>{
     samples:lastRender.samples.map(e=>Object.assign({},e))};}
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,view,stats,byUid,current,noteRender,renderStats});
 })();
-/* ==================== ONLINE BEST RUN + BEST-RUN BOARD ====================
-   v5f.4 reads and writes only the configured best-run path during normal gameplay. Firebase returns the highest score
-   records; the client then applies the full ranking order: score, distance,
-   clean flags, fewer collisions. The legacy /scores collection is isolated. */
+/* ================= MODULE: UNIQUE-INITIAL AGGREGATION =================
+   v6b continues deriving a second, read-only view from the merged validated best-run
+   records. The normal leaderboard remains UID-based. This canonical initials
+   view retains only the strongest loaded record for each three-character name.
+   It performs no network requests and does not yet alter mountain rendering. */
+const compareBestRunEntries=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.uid).localeCompare(String(b.uid));
+const UniqueInitials=(()=>{
+  let rows=[];
+  let report=Object.freeze({source:0,accepted:0,unique:0,duplicateInitials:0,replacements:0,invalid:0,updatedAt:0});
+  const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
+  const recordOf=e=>e?{initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+    attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+    deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+    worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  function derive(source){
+    source=Array.isArray(source)?source:[];
+    const byInitials=new Map();let accepted=0,duplicateInitials=0,replacements=0,invalid=0;
+    for(const raw of source){
+      const uid=String(raw&&raw.uid||''),record=recordOf(raw);
+      if(!uidOK(uid)||!record||!BestRuns.valid(record,Math.max(Date.now(),+record.timestamp||0))){invalid++;continue;}
+      accepted++;
+      const item=Object.freeze(Object.assign({uid},record));
+      const previous=byInitials.get(item.initials);
+      if(previous){
+        duplicateInitials++;
+        if(compareBestRunEntries(item,previous)<0){byInitials.set(item.initials,item);replacements++;}
+      }else byInitials.set(item.initials,item);
+    }
+    const canonical=Array.from(byInitials.values()).sort(compareBestRunEntries);
+    return{rows:canonical,report:{source:source.length,accepted,unique:canonical.length,duplicateInitials,replacements,invalid,updatedAt:Date.now()}};
+  }
+  function ingest(source){const next=derive(source);rows=next.rows;report=Object.freeze(next.report);return rows.length;}
+  function records(){return rows.slice();}
+  function view(){return rows;}
+  function byInitials(initials){initials=String(initials||'').toUpperCase();return rows.find(e=>e.initials===initials)||null;}
+  function stats(){return Object.assign({},report);}
+  function selfTest(){
+    const base={distance:100,cleanFlags:5,attemptedFlags:6,bestCombo:3,collisions:1,deathX:360,deathDepth:100,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:Date.now()-1000};
+    const make=(uid,initials,score,extra)=>Object.assign({uid,initials,score},base,extra||{});
+    const sample=[make('uid-dan-low','DAN',100),make('uid-bob','BOB',130),make('uid-dan-high','DAN',140),make('uid-dan-tie','DAN',140,{distance:120,deathDepth:120}),make('uid-sam','SAM',90)];
+    const d=derive(sample),dan=d.rows.find(e=>e.initials==='DAN');
+    return Object.freeze({passed:d.rows.length===3&&!!dan&&dan.uid==='uid-dan-tie'&&d.report.duplicateInitials===2,
+      unique:d.rows.length,danUid:dan&&dan.uid,duplicateInitials:d.report.duplicateInitials,source:d.report.source});
+  }
+  return Object.freeze({ingest,derive,records,view,byInitials,stats,selfTest});
+})();
+
+/* ==================== ONLINE BEST RUN + INCLUSIVE RECORD POOLS ====================
+   v6b reads the configured best-run path twice: a score-ordered pool for the
+   unchanged top-10/legacy memorial view and a timestamp-ordered pool for recent
+   unique initials. Both are limited, cached and merged by UID. The legacy /scores
+   collection remains isolated. */
 // Current best-run state and cached board keys are defined in APP_CONFIG.storage.
 const LB_BAD=INITIALS_BAD;
 const LB=(()=>{
@@ -1102,7 +1152,8 @@ const LB=(()=>{
       uid:raw&&typeof raw.uid==='string'?raw.uid:'',updatedAt,
       attempts:Math.max(0,Math.floor(+(raw&&raw.attempts)||0)),error:raw&&typeof raw.error==='string'?raw.error:''};
   };
-  let cache={initials:'AAA',top:[],records:[],pending:null,remoteBest:null,remoteUid:'',submission:null};
+  let cache={initials:'AAA',top:[],records:[],scoreRecords:[],recentRecords:[],pending:null,remoteBest:null,remoteUid:'',submission:null,
+    scoreUpdatedAt:0,recentUpdatedAt:0,lastRefreshResult:'cache'};
   {
     const read=Persistence.inspectJSON(BEST_RUN_STATE_KEY),s=read.value;
     if(!read.ok){DataRecovery.note('best-state-cache-corrupt',1,read.error);Persistence.remove(BEST_RUN_STATE_KEY);}
@@ -1130,7 +1181,7 @@ const LB=(()=>{
   const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
   const sanit=sanitizeInitials;
   const validStored=e=>BestRuns.valid(e,Math.max(Date.now(),+(e&&e.timestamp)||0));
-  const cmp=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.uid).localeCompare(String(b.uid));
+  const cmp=compareBestRunEntries;
   const itemOf=(uid,e)=>{
     if(!uidOK(uid)||!validStored(e))return null;
     return{uid:String(uid),initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
@@ -1151,13 +1202,13 @@ const LB=(()=>{
     if(!item){acceptedLive=null;return records;}
     return records.filter(e=>e.uid!==item.uid).concat(item);
   }
-  function acknowledgeAcceptedOverlay(remoteRows){
+  function acknowledgeAcceptedOverlay(remoteRows,authoritativeComplete){
     if(!acceptedLive||!Array.isArray(remoteRows))return;
     const server=remoteRows.find(e=>e.uid===acceptedLive.uid);
     if(server&&server.score>=acceptedLive.record.score)acceptedLive=null;
-    else if(remoteRows.length<LB_FETCH){DataRecovery.note('accepted-overlay-cleared-authoritative-absence');acceptedLive=null;}
+    else if(!server&&authoritativeComplete){DataRecovery.note('accepted-overlay-cleared-authoritative-absence');acceptedLive=null;}
   }
-  function normalizeRows(source,origin){
+  function dedupeRows(source,origin){
     source=Array.isArray(source)?source:[];
     const byUid=new Map();let invalid=0,duplicateUid=0;
     for(const raw of source){
@@ -1169,35 +1220,65 @@ const LB=(()=>{
     }
     if(invalid)DataRecovery.note((origin||'records')+'-invalid-records',invalid);
     if(duplicateUid)DataRecovery.note((origin||'records')+'-duplicate-uids',duplicateUid);
-    return Array.from(byUid.values()).sort(cmp).slice(0,LB_FETCH);
+    return Array.from(byUid.values());
+  }
+  function normalizeRows(source,origin,limit){
+    const rows=dedupeRows(source,origin).sort(cmp);
+    return rows.slice(0,Math.max(0,Number.isFinite(+limit)?Math.floor(+limit):LB_SCORE_FETCH));
+  }
+  function normalizeRecentRows(source,origin,limit){
+    const rows=dedupeRows(source,origin).sort((a,b)=>b.timestamp-a.timestamp||cmp(a,b));
+    return rows.slice(0,Math.max(0,Number.isFinite(+limit)?Math.floor(+limit):LB_RECENT_FETCH));
+  }
+  function mergePools(scoreRows,recentRows){
+    return normalizeRows([].concat(scoreRows||[],recentRows||[]),'merged-pools',LB_MERGED_FETCH);
   }
   const syncTop=ownerOverride=>{
-    cache.records=normalizeRows(applyAcceptedOverlay(cache.records),'runtime-board');
-    cache.top=cache.records.slice(0,LB_SIZE);
-    SharedMemorials.ingest(cache.records,ownerOverride===undefined?Identity.status().uid:ownerOverride);
+    cache.scoreRecords=normalizeRows(applyAcceptedOverlay(cache.scoreRecords),'runtime-score-pool',LB_SCORE_FETCH);
+    cache.recentRecords=normalizeRecentRows(applyAcceptedOverlay(cache.recentRecords),'runtime-recent-pool',LB_RECENT_FETCH);
+    cache.records=mergePools(cache.scoreRecords,cache.recentRecords);
+    cache.top=cache.scoreRecords.slice(0,LB_SIZE);
+    UniqueInitials.ingest(cache.records);
+    // v6b preserves the v5 mountain population until v6c switches it to unique initials.
+    SharedMemorials.ingest(cache.scoreRecords,ownerOverride===undefined?Identity.status().uid:ownerOverride);
   };
-  const normPayload=p=>{
+  const normPayload=(p,origin,mode)=>{
     if(p===null)return{ok:true,rows:[],empty:true};
     if(!p||typeof p!=='object'||Array.isArray(p))return{ok:false,rows:[],empty:false};
     const rows=[];
     for(const [uid,e] of Object.entries(p)){const item=itemOf(uid,e);if(item)rows.push(item);else DataRecovery.note('firebase-invalid-record');}
-    return{ok:true,rows:normalizeRows(rows,'firebase-board'),empty:Object.keys(p).length===0};
+    return{ok:true,rows:mode==='recent'?normalizeRecentRows(rows,origin||'firebase-recent',LB_RECENT_FETCH):normalizeRows(rows,origin||'firebase-score',LB_SCORE_FETCH),empty:Object.keys(p).length===0};
   };
   {
     const read=Persistence.inspectJSON(BEST_RUN_BOARD_KEY),b=read.value;
     if(!read.ok){DataRecovery.note('board-cache-corrupt',1,read.error);Persistence.remove(BEST_RUN_BOARD_KEY);}
     else if(read.exists){
-      if(!b||typeof b!=='object'||Array.isArray(b)||!Array.isArray(b.records)){
+      if(!b||typeof b!=='object'||Array.isArray(b)){
         DataRecovery.note('board-cache-invalid');Persistence.remove(BEST_RUN_BOARD_KEY);
+      }else if(Array.isArray(b.scoreRecords)||Array.isArray(b.recentRecords)){
+        if(!Array.isArray(b.scoreRecords)||!Array.isArray(b.recentRecords)){
+          DataRecovery.note('board-cache-invalid');Persistence.remove(BEST_RUN_BOARD_KEY);
+        }else{
+          if(b.schemaVersion!==BEST_RUN_BOARD_SCHEMA_VERSION)DataRecovery.note('board-cache-migrated');
+          cache.scoreRecords=normalizeRows(b.scoreRecords,'score-pool-cache',LB_SCORE_FETCH);
+          cache.recentRecords=normalizeRecentRows(b.recentRecords,'recent-pool-cache',LB_RECENT_FETCH);
+          cache.scoreUpdatedAt=Math.max(0,+b.scoreUpdatedAt||0);cache.recentUpdatedAt=Math.max(0,+b.recentUpdatedAt||0);
+          syncTop();
+        }
+      }else if(Array.isArray(b.records)){
+        // Migrate the v5/v6a score-only envelope without discarding its cached board.
+        DataRecovery.note('board-cache-migrated-score-only');
+        cache.scoreRecords=normalizeRows(b.records,'legacy-score-pool-cache',LB_SCORE_FETCH);
+        cache.recentRecords=[];cache.scoreUpdatedAt=Math.max(0,+b.updatedAt||0);syncTop();
       }else{
-        if(b.schemaVersion!==BEST_RUN_BOARD_SCHEMA_VERSION)DataRecovery.note('board-cache-migrated');
-        cache.records=normalizeRows(b.records,'board-cache');syncTop();
+        DataRecovery.note('board-cache-invalid');Persistence.remove(BEST_RUN_BOARD_KEY);
       }
     }
   }
   const save=()=>{
     Persistence.setJSON(BEST_RUN_STATE_KEY,{schemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,initials:cache.initials,pending:cache.pending,remoteBest:cache.remoteBest,remoteUid:cache.remoteUid,submission:cache.submission});
-    Persistence.setJSON(BEST_RUN_BOARD_KEY,{schemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,records:cache.records});
+    Persistence.setJSON(BEST_RUN_BOARD_KEY,{schemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,scoreRecords:cache.scoreRecords,
+      recentRecords:cache.recentRecords,records:cache.records,scoreUpdatedAt:cache.scoreUpdatedAt,recentUpdatedAt:cache.recentUpdatedAt});
   };
   // Persist the sanitized canonical envelopes immediately after startup recovery.
   save();
@@ -1222,7 +1303,9 @@ const LB=(()=>{
   }
   function mergeRecord(uid,record,paint=true){
     const item=itemOf(uid,record);if(!item)return false;
-    cache.records=cache.records.filter(e=>e.uid!==item.uid);cache.records.push(item);syncTop();
+    cache.scoreRecords=cache.scoreRecords.filter(e=>e.uid!==item.uid);cache.scoreRecords.push(item);
+    cache.recentRecords=cache.recentRecords.filter(e=>e.uid!==item.uid);cache.recentRecords.push(item);
+    cache.scoreUpdatedAt=Date.now();cache.recentUpdatedAt=cache.scoreUpdatedAt;syncTop();
     if(uid===ownerHint()){cache.remoteBest=recordOf(item);cache.remoteUid=uid;}
     save();if(paint)renderBoard();return true;
   }
@@ -1252,29 +1335,51 @@ const LB=(()=>{
     url=await Identity.url(rawUrl);return fetchTimed(url,options);
   }
   async function readJSONResult(response){try{return{ok:true,value:await response.json()};}catch(e){return{ok:false,value:null,error:String((e&&e.message)||e)};}}
-  async function refresh(force){
-    if(!on())return;
-    if(!force&&Date.now()-lastRefresh<LB_REFRESH)return;
-    lastRefresh=Date.now();const seq=++refreshSeq;
+  async function fetchPool(orderBy,limit,mode){
+    const raw=FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22'+encodeURIComponent(orderBy)+'%22&limitToLast='+limit;
     try{
-      const url=await Identity.url(FIREBASE_DB_URL+LB_PATH+'.json?orderBy=%22score%22&limitToLast='+LB_FETCH);
-      const r=await fetchTimed(url,{cache:'no-store'});
-      if(r.ok){
-        const parsed=await readJSONResult(r);
-        if(!parsed.ok){DataRecovery.note('firebase-board-json-invalid',1,parsed.error);if(!lastNotice)lbStatus('board response invalid — showing cached best runs');return;}
-        const normalized=normPayload(parsed.value);
-        if(!normalized.ok){DataRecovery.note('firebase-board-shape-invalid');if(!lastNotice)lbStatus('board response invalid — showing cached best runs');return;}
-        const remoteRows=normalized.rows;
-        if(seq<appliedRefreshSeq)return;
-        appliedRefreshSeq=seq;acknowledgeAcceptedOverlay(remoteRows);
-        cache.records=remoteRows;syncTop();
-        const uid=ownerHint(),own=uid&&cache.records.find(e=>e.uid===uid);
-        if(own){cache.remoteBest=recordOf(own);cache.remoteUid=uid;}
-        else if(uid&&cache.remoteUid===uid&&remoteRows.length<LB_FETCH){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-authoritative-absence');}
-        if(cache.remoteUid&&cache.remoteUid!==uid){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-identity-change');}
-        save();renderBoard();if(!lastNotice)lbStatus('');
-      }else if(!lastNotice)lbStatus('board unreachable ('+r.status+') — showing cached best runs');
-    }catch(e){if(!lastNotice)lbStatus(cache.top.length?'board offline — showing cached best runs':'board offline');}
+      const url=await Identity.url(raw),r=await fetchTimed(url,{cache:'no-store'});
+      if(!r.ok)return{ok:false,status:r.status,rows:[],empty:false,error:'HTTP '+r.status,mode};
+      const parsed=await readJSONResult(r);
+      if(!parsed.ok){DataRecovery.note('firebase-'+mode+'-json-invalid',1,parsed.error);return{ok:false,status:r.status,rows:[],empty:false,error:'invalid JSON',mode};}
+      const normalized=normPayload(parsed.value,'firebase-'+mode,mode);
+      if(!normalized.ok){DataRecovery.note('firebase-'+mode+'-shape-invalid');return{ok:false,status:r.status,rows:[],empty:false,error:'invalid response shape',mode};}
+      return{ok:true,status:r.status,rows:normalized.rows,empty:normalized.empty,error:'',mode};
+    }catch(e){return{ok:false,status:0,rows:[],empty:false,error:String((e&&e.message)||e),mode};}
+  }
+  async function refresh(force){
+    if(!on())return'unavailable';
+    if(!force&&Date.now()-lastRefresh<LB_REFRESH)return'throttled';
+    lastRefresh=Date.now();const seq=++refreshSeq;
+    const [score,recent]=await Promise.all([
+      fetchPool('score',LB_SCORE_FETCH,'score'),
+      fetchPool('timestamp',LB_RECENT_FETCH,'recent')
+    ]);
+    if(seq<appliedRefreshSeq)return'stale';
+    if(!score.ok&&!recent.ok){
+      cache.lastRefreshResult='failed';
+      if(!lastNotice)lbStatus(cache.top.length?'board offline — showing cached best runs':'board offline');
+      return'failed';
+    }
+    appliedRefreshSeq=seq;
+    if(score.ok){cache.scoreRecords=score.rows;cache.scoreUpdatedAt=Date.now();}
+    if(recent.ok){cache.recentRecords=recent.rows;cache.recentUpdatedAt=Date.now();}
+    const seen=mergePools(score.ok?score.rows:[],recent.ok?recent.rows:[]);
+    const authoritativeComplete=score.ok&&recent.ok&&score.rows.length<LB_SCORE_FETCH&&recent.rows.length<LB_RECENT_FETCH;
+    acknowledgeAcceptedOverlay(seen,authoritativeComplete);
+    syncTop();
+    const uid=ownerHint(),own=uid&&cache.records.find(e=>e.uid===uid);
+    if(own){cache.remoteBest=recordOf(own);cache.remoteUid=uid;}
+    else if(uid&&cache.remoteUid===uid&&authoritativeComplete){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-authoritative-absence');}
+    if(cache.remoteUid&&cache.remoteUid!==uid){cache.remoteBest=null;cache.remoteUid='';DataRecovery.note('remote-best-cleared-identity-change');}
+    cache.lastRefreshResult=score.ok&&recent.ok?'score+recent':score.ok?'score-only':'recent-only';
+    save();renderBoard();
+    if(!lastNotice){
+      if(!score.ok)lbStatus('top-score pool unavailable — showing cached leaderboard');
+      else if(!recent.ok)lbStatus('recent-player pool unavailable — publish the timestamp index');
+      else lbStatus('');
+    }
+    return cache.lastRefreshResult;
   }
   function retainFailure(p,message,error){
     if(!currentPending(p))return false;
@@ -1410,13 +1515,30 @@ const LB=(()=>{
     DataRecovery.note('anonymous-uid-changed',1,previousUid?'stored owner replaced':'owner initialized');
     return true;
   }
+  function inclusive(){return Object.freeze({scoreRecords:cache.scoreRecords.length,recentRecords:cache.recentRecords.length,
+    mergedRecords:cache.records.length,uniqueInitials:UniqueInitials.stats().unique,scoreFetchLimit:LB_SCORE_FETCH,
+    recentFetchLimit:LB_RECENT_FETCH,refreshThrottleMs:LB_REFRESH,scoreUpdatedAt:cache.scoreUpdatedAt,
+    recentUpdatedAt:cache.recentUpdatedAt,lastRefreshResult:cache.lastRefreshResult});}
+  function inclusiveSelfTest(){
+    const now=Date.now(),base={distance:40,cleanFlags:2,attemptedFlags:3,bestCombo:2,collisions:0,deathX:360,deathDepth:40,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION};
+    const make=(uid,initials,score,timestamp,extra)=>Object.assign({uid,initials,score,timestamp},base,extra||{});
+    const score=normalizeRows([make('uid-dan-high','DAN',500,now-5000),make('uid-bob','BOB',450,now-4000)],'inclusive-self-score',LB_SCORE_FETCH);
+    const recent=normalizeRecentRows([make('uid-new','NEW',5,now-10),make('uid-dan-low','DAN',300,now-20),make('uid-bob','BOB',450,now-4000)],'inclusive-self-recent',LB_RECENT_FETCH);
+    const merged=mergePools(score,recent),unique=UniqueInitials.derive(merged),dan=unique.rows.find(e=>e.initials==='DAN');
+    return Object.freeze({passed:score[0]&&score[0].uid==='uid-dan-high'&&recent[0]&&recent[0].uid==='uid-new'&&
+      merged.length===4&&unique.rows.length===3&&dan&&dan.uid==='uid-dan-high',score:score.length,recent:recent.length,
+      merged:merged.length,unique:unique.rows.length,canonicalDan:dan&&dan.uid});
+  }
   if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);}
   return{on,refresh,drain,qualifies,submit,sanit,cache:()=>cache,lastSub:()=>lastSub,records:()=>cache.records.slice(),
+    scoreRecords:()=>cache.scoreRecords.slice(),recentRecords:()=>cache.recentRecords.slice(),inclusive,inclusiveSelfTest,
     compare:cmp,notice:()=>lastNotice,submission,phases:PHASES,identityChanged,
     acceptedLive:()=>acceptedLive?{uid:acceptedLive.uid,record:Object.assign({},acceptedLive.record),source:acceptedLive.source,acceptedAt:acceptedLive.acceptedAt}:null,
     _setUrl:u=>{FIREBASE_DB_URL=u;},_clearRetry:clearRetry};
 })();
 const Leaderboard=LB;
+const InclusiveLoading=Object.freeze({stats:()=>Leaderboard.inclusive(),selfTest:()=>Leaderboard.inclusiveSelfTest(),
+  scoreRecords:()=>Leaderboard.scoreRecords(),recentRecords:()=>Leaderboard.recentRecords(),mergedRecords:()=>Leaderboard.records()});
 identityOwnerChanged=(nextUid,previousUid)=>Leaderboard.identityChanged(nextUid,previousUid);
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
@@ -2335,7 +2457,7 @@ function finalizePlayerDeath(){
     const q=score>0&&LB.qualifies(run);
     $('lbEntry').style.display=q?'flex':'none';
     if(q){$('lbInit').value=LB.cache().initials;$('lbGo').textContent='SUBMIT BEST';}
-    renderBoard();LB.refresh(true);LB.drain();
+    renderBoard();LB.refresh();LB.drain();
   }else{
     $('lbWrap').style.display='none';
     $('lbRunSummary').textContent='Online leaderboard unavailable';
@@ -4121,7 +4243,7 @@ function beginRun(){Generation.fresh();if(lastDeathReal)S.speed=17;
   S.mode='play';el.intro.classList.add('hide');el.results.classList.add('hide');el.leaderboard.classList.add('hide');Audio.ac();}
 function showLeaderboard(){
   el.results.classList.add('hide');el.leaderboard.classList.remove('hide');
-  renderBoard();LB.refresh(true);LB.drain();
+  renderBoard();LB.refresh();LB.drain();
 }
 function showResults(){el.leaderboard.classList.add('hide');el.results.classList.remove('hide');}
 let inputBound=false;
@@ -4935,7 +5057,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -4957,7 +5079,7 @@ requestAnimationFrame(frame);
 window.__EP={
   config:Configuration,recovery:DataRecovery,modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
