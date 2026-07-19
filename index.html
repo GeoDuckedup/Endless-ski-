@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v7e</title>
+<title>ENDLESS POWDER v7f</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -177,7 +177,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v7e</div>
+    <div class="version">v7f</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -209,7 +209,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v7e uses only immutable leaderboard_runs and initials-governed initials_bests. Retired score systems and compatibility diagnostics have been removed.</div>
+    <div class="authSub">v7f uses only immutable leaderboard_runs and initials-governed initials_bests. Retired score systems and compatibility diagnostics have been removed.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -222,7 +222,7 @@
 
 
   <div id="arcadeDiag" aria-live="polite">
-    <h2>ARCADE RELEASE CHECK</h2>
+    <h2>FINAL ARCADE RELEASE CHECK</h2>
     <div class="arcadeSub">Read-only Firebase probes plus deterministic tests for immutable arcade submissions, the traditional top 10, the initials-governed mountain, and retired-system cleanup. The diagnostic performs no Firebase writes.</div>
     <div class="arcadeRow"><span>Authentication</span><b id="arcadeAuth" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>New Firebase paths</span><b id="arcadePaths" class="authNeutral">CHECKING</b></div>
@@ -234,11 +234,14 @@
     <div class="arcadeRow"><span>Initials best</span><b id="arcadeInitials" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Partial-write recovery</span><b id="arcadeTransaction" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Leaderboard + mountain</span><b id="arcadeBoundary" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Bounded reads + throttle</span><b id="arcadeBounds" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Capacity + filtering</span><b id="arcadeCapacity" class="authNeutral">CHECKING</b></div>
+    <div class="arcadeRow"><span>Private local ledger</span><b id="arcadeLocal" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Legacy runtime removed</span><b id="arcadeCleanup" class="authNeutral">CHECKING</b></div>
     <div class="arcadeRow"><span>Mobile scrolling</span><b id="arcadeScroll" class="authNeutral">READY</b></div>
-    <div id="arcadeOverall">Running v7e arcade release validation…</div>
+    <div id="arcadeOverall">Running v7f arcade release validation…</div>
     <div id="arcadeDetails"></div>
-    <div id="arcadeActions"><button class="primary" id="arcadeRetry" type="button">RUN CUTOVER CHECK</button><button id="arcadeClose" type="button">CLOSE</button></div>
+    <div id="arcadeActions"><button class="primary" id="arcadeRetry" type="button">RUN RELEASE CHECK</button><button id="arcadeClose" type="button">CLOSE</button></div>
   </div>
 </div></div>
 <script>
@@ -248,11 +251,11 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v7e is the active arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
+   v7f is the active arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
    Retired personal-best paths, schemas, caches, queues, and compatibility diagnostics are removed from the runtime.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v7e',channel:'arcade-cutover-cleanup'}),
+  build:Object.freeze({version:'v7f',channel:'arcade-release-validation'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -294,8 +297,8 @@ const APP_CONFIG=Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',
     arcadeQueue:'ep_arcade_submit_queue_v7a',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_v7c',initialsMountain:'ep_initials_mountain_v7e',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
-    retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a','ep_best_run_submit_v5c2','ep_best_run_board_v5c3','ep_best_diag','ep_memorial_diag','ep_reconcile_diag','ep_performance_diag','ep_shared_diag','ep_unique_diag_v6f','ep_bestcheck_reload_v5c4','ep_bestcheck_queue_probe_v5c4','ep_memorialcheck_cache_probe_v5d4','ep_reconcilecheck_probe_v5e4']),
-    diagnostics:Object.freeze({auth:'ep_auth_diag',arcade:'ep_arcade_diag_v7e'})
+    retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a','ep_best_run_submit_v5c2','ep_best_run_board_v5c3','ep_best_diag','ep_memorial_diag','ep_reconcile_diag','ep_performance_diag','ep_shared_diag','ep_unique_diag_v6f','ep_bestcheck_reload_v5c4','ep_bestcheck_queue_probe_v5c4','ep_memorialcheck_cache_probe_v5d4','ep_reconcilecheck_probe_v5e4','ep_arcade_diag_v7e']),
+    diagnostics:Object.freeze({auth:'ep_auth_diag',arcade:'ep_arcade_diag_v7f'})
   }),
   diagnostics:Object.freeze({
     query:Object.freeze({auth:'authcheck',arcade:'arcadecheck'})
@@ -497,7 +500,7 @@ const Persistence=(()=>{
   return Object.freeze({store,getJSON,setJSON,inspectJSON,remove});
 })();
 /* ====================== MODULE: DATA RECOVERY ======================
-   v7e records non-fatal sanitation and recovery decisions. It contains no
+   v7f records non-fatal sanitation and recovery decisions. It contains no
    player-facing identity or score payloads; it exists so compatibility behavior
    can be inspected and release-tested without turning bad cache data into crashes. */
 const DataRecovery=(()=>{
@@ -829,7 +832,7 @@ const RunRecord=(()=>{
   return Object.freeze({version:RUN_RECORD_SCHEMA_VERSION,fields:RUN_RECORD_FIELDS,build,valid});
 })();
 /* ================= MODULE: IMMUTABLE ARCADE RUN IDENTITY =================
-   v7e keeps the opaque, Firebase-safe run ID assigned at death finalization.
+   v7f keeps the opaque, Firebase-safe run ID assigned at death finalization.
    The ID is carried unchanged through retries and future offline queue entries. */
 const ArcadeRunIdentity=(()=>{
   const bytesToHex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
@@ -884,7 +887,7 @@ const ArcadeRuns=(()=>{
     build,valid,compare,strengthCompare,better,recordOf,leaderboardPath,initialsPath,exactSame,deriveInitialsBests});
 })();
 /* ================= MODULE: ARCADE SUBMISSION FOUNDATION =================
-   v7e retains this durable envelope and its network operations to the real submit button.
+   v7f retains this durable envelope and its network operations to the real submit button.
    Every accepted run keeps its original runId across retries and partial writes. */
 const ArcadeFoundation=(()=>{
   const MAX_PENDING=APP_CONFIG.schemas.arcadeQueue.maxPending,MAX_COMPLETED=APP_CONFIG.schemas.arcadeQueue.maxCompleted;
@@ -947,7 +950,7 @@ const ArcadeFoundation=(()=>{
     const [leaderboard,initials]=await Promise.all([probe(ARCADE_RUN_PATH,'score'),probe(INITIALS_BEST_PATH,'timestamp')]);return{ok:leaderboard.ok&&initials.ok,leaderboard,initials};
   }
   function selfTest(){
-    const now=Date.now(),uid='test_uid_v7e',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
+    const now=Date.now(),uid='test_uid_v7f',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
     const dan100=mk('DAN',100,-3000),bob50=mk('BOB',50,-2000),dan25=mk('DAN',25,-1000),dan125=mk('DAN',125,0);
     const all=[dan100,bob50,dan25],leaderboard=all.slice().sort(ArcadeRuns.compare),bests=ArcadeRuns.deriveInitialsBests(all);
     const first=reserve('DAN',dan100,uid,null),second=reserve('DAN',dan100,uid,first.state),roundtrip=normalizeQueue(copy(second.state));
@@ -957,7 +960,10 @@ const ArcadeFoundation=(()=>{
     const transaction=!ArcadeRuns.better(dan25,dan100)&&ArcadeRuns.better(dan125,dan100);
     const queue=!!normalized&&roundtrip.items.length===1&&roundtrip.items[0].runId===dan100.runId;
     const duplicate=second.duplicate===true&&second.state.items.length===1;
-    return Object.freeze({passed:ids.passed&&schema&&sequence&&initials&&transaction&&queue&&duplicate,ids:ids.passed,schema,sequence,initials,transaction,queue,duplicate,
+    let capacityState=normalizeQueue(null),capacity=true,overflow=null;
+    for(let i=0;i<MAX_PENDING+1;i++){const r=reserve(String(i).padStart(3,'0'),mk(String(i).padStart(3,'0'),10+i,-50000+i),uid,capacityState);if(i<MAX_PENDING){capacity=capacity&&r.ok&&!r.duplicate;capacityState=r.state;}else overflow=r;}
+    capacity=capacity&&capacityState.items.length===MAX_PENDING&&overflow&&!overflow.ok&&overflow.reason==='queue-full';
+    return Object.freeze({passed:ids.passed&&schema&&sequence&&initials&&transaction&&queue&&duplicate&&capacity,ids:ids.passed,schema,sequence,initials,transaction,queue,duplicate,capacity,
       leaderboard:leaderboard.map(e=>({initials:e.initials,score:e.score,runId:e.runId})),mountain:Array.from(bests.values()).sort(ArcadeRuns.compare).map(e=>({initials:e.initials,score:e.score,runId:e.runId}))});
   }
   return Object.freeze({queueKey:ARCADE_QUEUE_KEY,queueVersion:ARCADE_QUEUE_SCHEMA_VERSION,maxPending:MAX_PENDING,maxCompleted:MAX_COMPLETED,normalizeEnvelope,normalizeQueue,inspectStored,loadQueue,saveQueue,reserve,complete,
@@ -965,9 +971,9 @@ const ArcadeFoundation=(()=>{
 })();
 let arcadeLeaderboardAccepted=()=>false,initialsMountainAccepted=()=>false,initialsMountainBoardChanged=()=>false;
 /* ================= MODULE: ACTIVE ARCADE SUBMISSION =================
-   v7e retains the append-only write cutover. Each accepted leaderboard write is
+   v7f retains the append-only write cutover. Each accepted leaderboard write is
    immediately overlaid into the visible arcade board while initials_bests remains
-   the future v7e mountain source. */
+   the future v7f mountain source. */
 const ArcadeSubmission=(()=>{
   const PHASES=Object.freeze({IDLE:'idle',QUEUED:'queued',SUBMITTING:'submitting',ACCEPTED:'accepted',PARTIAL:'partial',OFFLINE:'offline',FAILED:'failed',DUPLICATE:'duplicate'});
   const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
@@ -1068,9 +1074,9 @@ const ArcadeSubmission=(()=>{
   return Object.freeze({phases:PHASES,qualifies,submit,drain,status,records,initials,remember,identityChanged,selfTest});
 })();
 /* ================= MODULE: TRADITIONAL ARCADE LEADERBOARD =================
-   v7e reads immutable leaderboard_runs records. Records are keyed and deduplicated
+   v7f reads immutable leaderboard_runs records. Records are keyed and deduplicated
    only by runId—not UID or initials—so one browser and one initials set may occupy
-   several independent leaderboard positions. The mountain reads initials_bests through the v7e cutover loader. */
+   several independent leaderboard positions. The mountain reads initials_bests through the v7f cutover loader. */
 const ArcadeLeaderboard=(()=>{
   const FETCH_LIMIT=APP_CONFIG.leaderboard.scoreFetchRecords,TOP_LIMIT=APP_CONFIG.leaderboard.visibleRows;
   const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
@@ -1131,7 +1137,7 @@ const ArcadeLeaderboard=(()=>{
   }
   function rankOf(runId){const i=cache.top.findIndex(e=>e.runId===runId);return i<0?0:i+1;}
   function selfTest(){
-    const now=Date.now(),uid='same_browser_uid_v7e',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
+    const now=Date.now(),uid='same_browser_uid_v7f',mk=(initials,score,offset)=>ArcadeRuns.build(initials,ArcadeRunIdentity.attach({score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset}),uid);
     const dan100=mk('DAN',100,-3000),bob50=mk('BOB',50,-2000),dan25=mk('DAN',25,-1000),rows=normalizeRows([dan25,dan100,bob50],'arcade-board-self',FETCH_LIMIT);
     const sequence=rows.map(e=>e.initials+':'+e.score).join('|')==='DAN:100|BOB:50|DAN:25';
     const sameUid=rows.length===3&&new Set(rows.map(e=>e.uid)).size===1,duplicateInitials=rows.filter(e=>e.initials==='DAN').length===2;
@@ -1231,7 +1237,7 @@ const SharedMemorials=(()=>{
 })();
 const compareMountainEntries=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.uid).localeCompare(String(b.uid));
 /* ============== MODULE: LEADERBOARD / MOUNTAIN INTEGRATION ==============
-   v7e preserves two public views without duplicating bodies. The top-10 board ranks
+   v7f preserves two public views without duplicating bodies. The top-10 board ranks
    immutable run IDs. A unique-initial mountain body receives rank metadata only when
    that exact canonical run is also present in the top 10. Duplicate initials elsewhere
    in the top 10 never create additional mountain bodies. */
@@ -1292,7 +1298,7 @@ const LeaderboardMountainIntegration=(()=>{
   return Object.freeze({ingest,derive,rankForUid,rankForInitials,rankFor,labelFor,stats,records,selfTest});
 })();
 /* ================= MODULE: UNIQUE MOUNTAIN POPULATION =================
-   v7e converts the merged score-plus-recent initials pool into the shared-mountain
+   v7f converts the merged score-plus-recent initials pool into the shared-mountain
    population. The results leaderboard remains UID-based and may contain duplicate
    initials. The mountain is compatible-world only and contains at most one canonical
    body per initials set: top-10 initials first, recent unique initials next, then
@@ -1399,17 +1405,20 @@ const MountainPopulation=(()=>{
     const recent=[make('new','NEW',20,now-10),make('dan-recent','DAN',200,now-20),make('liz','LIZ',15,now-30),make('bad-world','BAD',9999,now-5,{worldVersion:'other-world'})];
     const merged=top.concat(recent),d=derive(top,recent,merged,'new');
     const initials=d.rows.map(e=>e.initials),dan=d.rows.find(e=>e.initials==='DAN');
+    const many=[];for(let i=0;i<65;i++){const initialsId=i.toString(36).toUpperCase().padStart(3,'0');many.push(make('cap-'+i,initialsId,5000-i,now-20000+i));}
+    const capped=derive(many.slice(0,10),many.slice().reverse(),many,'');
+    const cap50=capped.rows.length===SHARED_MEMORIAL_LIMIT&&new Set(capped.rows.map(e=>e.initials)).size===SHARED_MEMORIAL_LIMIT;
     return Object.freeze({passed:d.rows.length===5&&new Set(initials).size===d.rows.length&&dan&&dan.uid==='dan-high'&&
       initials[0]==='DAN'&&initials[1]==='BOB'&&initials.includes('NEW')&&initials.includes('LIZ')&&!initials.includes('BAD')&&
-      d.report.topTenUnique===3&&d.report.worldMismatch===1,
+      d.report.topTenUnique===3&&d.report.worldMismatch===1&&cap50,
       selected:d.rows.length,initials,canonicalDan:dan&&dan.uid,topTenIncluded:d.report.topTenIncluded,
-      recentIncluded:d.report.recentIncluded,worldMismatch:d.report.worldMismatch});
+      recentIncluded:d.report.recentIncluded,worldMismatch:d.report.worldMismatch,cap50,capSelected:capped.rows.length});
   }
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,derive,setOwner,records,view,stats,byInitials,selfTest});
 })();
 
 /* ================= MODULE: INITIALS-GOVERNED MOUNTAIN LOADER =================
-   v7e reads initials_bests twice: strongest records and most recent records. Each
+   v7f reads initials_bests twice: strongest records and most recent records. Each
    Firebase child is keyed by initials and contains the exact immutable arcade run
    that currently governs that name's mountain body. The renderer receives a compact
    compatibility item whose internal uid is the immutable runId, allowing exact-run
@@ -1510,7 +1519,7 @@ const InitialsMountain=(()=>{
   function syncTopTen(){sync();save();return MountainPopulation.stats().topTenIncluded;}
   function setOwner(runId){cache.ownerRunId=ownerRunId(runId);sync(cache.ownerRunId);save();return MountainPopulation.stats().ownerPresent;}
   function selfTest(){
-    const now=Date.now(),uid='same_browser_uid_v7e';
+    const now=Date.now(),uid='same_browser_uid_v7f';
     const mk=(id,initials,score,offset,extra)=>Object.assign(ArcadeRuns.build(initials,{runId:id,score,distance:score,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION,timestamp:now+offset},uid),extra||{});
     const dan100=mk('r_m0000001_111111111111111111111111','DAN',100,-3000),bob50=mk('r_m0000002_222222222222222222222222','BOB',50,-2000),dan25=mk('r_m0000003_333333333333333333333333','DAN',25,-1000);
     const payload={DAN:dan100,BOB:bob50},score=normalizePayload(payload,'score',FETCH_LIMIT),recent=normalizePayload(payload,'recent',RECENT_LIMIT),merged=mergePools(score.rows,recent.rows);
@@ -1607,6 +1616,22 @@ function recordLocalDeath(){
   Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
   return true;
 }
+/* ================= MODULE: LOCAL HISTORY RELEASE VALIDATION =================
+   Pure regression checks for the private rolling ledger. No test record is written. */
+const LocalHistoryValidation=(()=>{
+  function selfTest(){
+    const now=Date.now(),source=[];
+    for(let i=0;i<55;i++)source.push({deathId:'local-test-'+i,depth:i+1,x:EDGE+20+(i%20),theta:0,cause:'caught',timestamp:now-60000+i,worldVersion:WORLD_VERSION});
+    const normalized=source.map(normalizeLocalDeath).filter(Boolean),capped=normalized.slice(-C.localDeathCap);
+    const wrongWorld=normalizeLocalDeath(Object.assign({},source[0],{worldVersion:'other-world'}))===null;
+    const malformed=normalizeLocalDeath(Object.assign({},source[0],{x:-1}))===null;
+    const exact=capped.every(validLocalDeath),newest=capped.length===C.localDeathCap&&capped[0].deathId==='local-test-5'&&capped[capped.length-1].deathId==='local-test-54';
+    const hidden=!LOCAL_DEATHS_VISIBLE;
+    return Object.freeze({passed:normalized.length===55&&exact&&newest&&wrongWorld&&malformed&&hidden,source:source.length,retained:capped.length,cap:C.localDeathCap,exact,newest,wrongWorld,malformed,hidden});
+  }
+  function stats(){return Object.freeze({stored:localDeaths.length,cap:C.localDeathCap,visible:LOCAL_DEATHS_VISIBLE,key:LOCAL_DEATH_KEY});}
+  return Object.freeze({selfTest,stats});
+})();
 /* ============================ STATE ============================ */
 let R=mulberry32(C.SEED), S=null;
 let gates=[],obs=[],npcs=[],edgeT=[],balls=[],parts=[],spray=[],sluff=[],floaters=[],snow=[],rings=[],corDbg=[],smears=[],carveSegs=[];
@@ -2320,7 +2345,7 @@ function finalizePlayerDeath(){
     deathDepth:Math.round(clamp(Number.isFinite(S.deathDepth)?S.deathDepth:S.depth,0,999999)*10)/10,
     deathTheta:Math.round(clamp(Number.isFinite(S.deathTheta)?S.deathTheta:S.theta,-1.2,1.2)*1000)/1000,
     deathCause:String(S.cause||'caught'),worldVersion:WORLD_VERSION,timestamp:Date.now()});
-  lastFinishedRun=run; // v7e submits this stable runId through the active append-only arcade queue
+  lastFinishedRun=run; // v7f submits this stable runId through the active append-only arcade queue
   if(ArcadeLeaderboard.on()){
     $('lbWrap').style.display='block';
     $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m';
@@ -3157,7 +3182,7 @@ function drawCarvePlume(pal,front){
 }
 
 /* ====================== SHARED MEMORIAL RENDERING ======================
-   v7e renders compatible initials-best records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
+   v7f renders compatible initials-best records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
    UID-derived outfits, deterministic overlap groups, distance-based detail and
    performance budgets require no added Firebase fields. The matching current-user
    local stain is suppressed in the private-history layer immediately below. */
@@ -4144,18 +4169,31 @@ function arcadeCheckRequested(){
   catch(e){return false;}
 }
 function diagnosticRequested(){return authDiagRequested()||arcadeCheckRequested();}
+const ArcadeReleaseValidation=(()=>{
+  function selfTest(){
+    const audit=Configuration.audit(),foundation=ArcadeFoundation.selfTest(),submission=ArcadeSubmission.selfTest(),board=ArcadeLeaderboard.selfTest(),mountain=InitialsMountain.selfTest(),population=MountainPopulation.selfTest(),integration=LeaderboardMountainIntegration.selfTest(),local=LocalHistoryValidation.selfTest();
+    const boardStats=ArcadeLeaderboard.stats(),mountainStats=InitialsMountain.stats();
+    const bounded=boardStats.fetchLimit===75&&boardStats.visibleRows===10&&mountainStats.scoreFetchLimit===75&&mountainStats.recentFetchLimit===75&&audit.memorialLimit===50;
+    const throttle=boardStats.refreshThrottleMs===300000&&mountainStats.refreshThrottleMs===300000;
+    const capacity=foundation.capacity&&board.capped&&population.cap50;
+    const filtering=board.malformed&&population.worldMismatch===1&&population.passed;
+    const activeOnly=audit.activePathsOnly&&audit.frozen;
+    return Object.freeze({passed:foundation.passed&&submission.passed&&board.passed&&mountain.passed&&population.passed&&integration.passed&&local.passed&&bounded&&throttle&&capacity&&filtering&&activeOnly,foundation,submission,board,mountain,population,integration,local,bounded,throttle,capacity,filtering,activeOnly});
+  }
+  return Object.freeze({selfTest});
+})();
 const ArcadeFoundationCheck=(()=>{
   let running=false,lastReport=null;
   const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
   const pass=(id,text)=>row(id,text||'PASS','authGood'),warn=(id,text)=>row(id,text||'CHECK','authWarn'),fail=(id,text)=>row(id,text||'FAIL','authBad');
   async function run(){
     if(running)return lastReport;running=true;const btn=$('arcadeRetry');if(btn)btn.textContent='RUNNING…';
-    ['arcadeAuth','arcadePaths','arcadeIds','arcadeSchema','arcadeQueue','arcadeDuplicate','arcadeSequence','arcadeInitials','arcadeTransaction','arcadeBoundary','arcadeCleanup'].forEach(id=>row(id,'CHECKING','authNeutral'));
+    ['arcadeAuth','arcadePaths','arcadeIds','arcadeSchema','arcadeQueue','arcadeDuplicate','arcadeSequence','arcadeInitials','arcadeTransaction','arcadeBoundary','arcadeBounds','arcadeCapacity','arcadeLocal','arcadeCleanup'].forEach(id=>row(id,'CHECKING','authNeutral'));
     try{
-      const queueBefore=store.getItem(ARCADE_QUEUE_KEY),boardBefore=store.getItem(ARCADE_BOARD_KEY),mountainBefore=store.getItem(INITIALS_MOUNTAIN_KEY),d=ArcadeFoundation.selfTest(),cut=ArcadeSubmission.selfTest(),board=ArcadeLeaderboard.selfTest(),mountain=InitialsMountain.selfTest(),auth=Identity.status(),live=await ArcadeFoundation.probeReads(),mountainLive=await InitialsMountain.probeRead(),queueAfter=store.getItem(ARCADE_QUEUE_KEY),boardAfter=store.getItem(ARCADE_BOARD_KEY),mountainAfter=store.getItem(INITIALS_MOUNTAIN_KEY);
+      const queueBefore=store.getItem(ARCADE_QUEUE_KEY),boardBefore=store.getItem(ARCADE_BOARD_KEY),mountainBefore=store.getItem(INITIALS_MOUNTAIN_KEY),release=ArcadeReleaseValidation.selfTest(),d=release.foundation,cut=release.submission,board=release.board,mountain=release.mountain,population=release.population,local=release.local,auth=Identity.status(),live=await ArcadeFoundation.probeReads(),mountainLive=await InitialsMountain.probeRead(),queueAfter=store.getItem(ARCADE_QUEUE_KEY),boardAfter=store.getItem(ARCADE_BOARD_KEY),mountainAfter=store.getItem(INITIALS_MOUNTAIN_KEY);
       const stateSafe=queueBefore===queueAfter&&boardBefore===boardAfter&&mountainBefore===mountainAfter,authOK=auth.authenticated&&auth.tokenReady,authWaiting=authOK&&auth.verification&&auth.verification.phase==='reload-needed';
       authOK?pass('arcadeAuth',authWaiting?'CONNECTED — RELOAD CHECK PENDING':'CONNECTED — ANONYMOUS UID'):warn('arcadeAuth','OFFLINE — LOCAL TESTS ONLY');
-      live.ok?pass('arcadePaths','READABLE + INDEXED'):fail('arcadePaths','VERIFY v7e RULES');
+      live.ok?pass('arcadePaths','READABLE + INDEXED'):fail('arcadePaths','VERIFY v7f RULES');
       d.ids?pass('arcadeIds','PASS — OPAQUE + STABLE'):fail('arcadeIds','FAIL');
       d.schema?pass('arcadeSchema','PASS — 15 EXACT FIELDS'):fail('arcadeSchema','FAIL');
       d.queue&&cut.queued===3&&stateSafe?pass('arcadeQueue','ACTIVE — THREE RUNS RETAINED'):fail('arcadeQueue','FAIL');
@@ -4164,14 +4202,17 @@ const ArcadeFoundationCheck=(()=>{
       d.initials&&cut.mountain?pass('arcadeInitials','DAN 100 · BOB 50'):fail('arcadeInitials','FAIL');
       d.transaction&&cut.partialSafe?pass('arcadeTransaction','PASS — PARTIAL RETRY + STRONGER ONLY'):fail('arcadeTransaction','FAIL');
       board.passed&&mountain.passed?pass('arcadeBoundary','BOARD = RUNS · MOUNTAIN = INITIALS'):fail('arcadeBoundary','FAIL');
+      release.bounded&&release.throttle?pass('arcadeBounds','75 + 75 · 5 MIN THROTTLE'):fail('arcadeBounds','FAIL');
+      release.capacity&&release.filtering?pass('arcadeCapacity','TOP 10 · 50 BODIES · FILTERED'):fail('arcadeCapacity','FAIL');
+      local.passed?pass('arcadeLocal','HIDDEN · NEWEST 50 RETAINED'):fail('arcadeLocal','FAIL');
       const cleanup=Configuration.audit().activePathsOnly&&typeof window.__EP.retiredBestRuns==='undefined'&&typeof window.__EP.bestRuns==='undefined'&&typeof window.__EP.uniqueInitials==='undefined'&&typeof window.__EP.localSharedMatch==='undefined';
       cleanup?pass('arcadeCleanup','REMOVED'):fail('arcadeCleanup','LEGACY SYMBOL FOUND');pass('arcadeScroll','READY — SWIPE TO REVIEW');
-      const localOK=d.passed&&cut.passed&&board.passed&&mountain.passed&&cleanup&&stateSafe,overall=$('arcadeOverall');
+      const localOK=release.passed&&cleanup&&stateSafe,overall=$('arcadeOverall');
       if(overall){
-        if(localOK&&authOK&&live.ok&&mountainLive.ok){overall.textContent='VERIFIED — v7e ARCADE RELEASE PASSED';overall.className='authGood';}
-        else if(localOK&&!authOK){overall.textContent='LOCAL v7e RELEASE PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
-        else if(localOK&&(!live.ok||!mountainLive.ok)){overall.textContent='LOCAL v7e RELEASE PASSED — PUBLISH v7e FIREBASE RULES';overall.className='authWarn';}
-        else{overall.textContent='v7e ARCADE RELEASE NEEDS ATTENTION';overall.className='authBad';}
+        if(localOK&&authOK&&live.ok&&mountainLive.ok){overall.textContent='VERIFIED — v7f ARCADE RELEASE PASSED';overall.className='authGood';}
+        else if(localOK&&!authOK){overall.textContent='LOCAL v7f RELEASE PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else if(localOK&&(!live.ok||!mountainLive.ok)){overall.textContent='LOCAL v7f RELEASE PASSED — PUBLISH v7f FIREBASE RULES';overall.className='authWarn';}
+        else{overall.textContent='v7f ARCADE RELEASE NEEDS ATTENTION';overall.className='authBad';}
       }
       const details=$('arcadeDetails');if(details)details.textContent=[
         'Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,
@@ -4186,11 +4227,16 @@ const ArcadeFoundationCheck=(()=>{
         'Leaderboard read status: '+live.leaderboard.status+'; initials read status: '+live.initials.status,
         'Same browser may occupy multiple rows: '+(board.sameUid?'YES':'NO'),'Duplicate initials remain independent: '+(board.duplicateInitials?'YES':'NO'),
         'Mountain read source: '+INITIALS_BEST_PATH+' (one strongest run per initials)','Exact canonical DAN rank: #'+mountain.danRank+'; weaker DAN rank transferred: '+(mountain.weakerDanRank?'YES':'NO'),
-        'Initials score read status: '+mountainLive.score.status+'; recent read status: '+mountainLive.recent.status,'Firebase diagnostic writes: NONE','Queue, board and mountain caches unchanged: '+(stateSafe?'YES':'NO')
+        'Initials score read status: '+mountainLive.score.status+'; recent read status: '+mountainLive.recent.status,
+        'Read bounds: leaderboard 75; mountain 75 score + 75 recent; throttle 300000 ms',
+        'Capacity checks: top 10 = '+(board.capped?'PASS':'FAIL')+'; mountain 50 = '+(population.cap50?'PASS':'FAIL'),
+        'Filtering checks: malformed leaderboard = '+(board.malformed?'REJECTED':'FAIL')+'; wrong-world mountain = '+(population.worldMismatch===1?'REJECTED':'FAIL'),
+        'Local ledger: visible '+(local.hidden?'NO':'YES')+'; retained '+local.retained+'/'+local.cap+' newest records',
+        'Firebase diagnostic writes: NONE','Queue, board and mountain caches unchanged: '+(stateSafe?'YES':'NO')
       ].join('\n');
-      lastReport={passed:localOK&&authOK&&live.ok&&mountainLive.ok,localPassed:localOK,deterministic:d,board,mountain,cleanup,auth:authOK,live,mountainLive,stateSafe};
-    }catch(e){const overall=$('arcadeOverall');if(overall){overall.textContent='v7e ARCADE RELEASE ERROR';overall.className='authBad';}const details=$('arcadeDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};}
-    finally{running=false;if(btn)btn.textContent='RUN CUTOVER CHECK';}
+      lastReport={passed:localOK&&authOK&&live.ok&&mountainLive.ok,localPassed:localOK,release,deterministic:d,board,mountain,population,local,cleanup,auth:authOK,live,mountainLive,stateSafe};
+    }catch(e){const overall=$('arcadeOverall');if(overall){overall.textContent='v7f ARCADE RELEASE ERROR';overall.className='authBad';}const details=$('arcadeDetails');if(details)details.textContent=(e&&e.message)||String(e);lastReport={passed:false,error:(e&&e.message)||String(e)};}
+    finally{running=false;if(btn)btn.textContent='RUN RELEASE CHECK';}
     return lastReport;
   }
   function init(){const box=$('arcadeDiag');if(!box||!arcadeCheckRequested())return;box.classList.add('show');$('arcadeRetry').addEventListener('click',e=>{e.stopPropagation();run();});$('arcadeClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
@@ -4267,7 +4313,7 @@ window.__EP={
   arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
   lb:ArcadeLeaderboard,identity:Identity,runRecord:RunRecord,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,
   arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeLeaderboard:ArcadeLeaderboard,
-  initialsMountain:InitialsMountain,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
+  initialsMountain:InitialsMountain,arcadeReleaseValidation:ArcadeReleaseValidation,localHistoryValidation:LocalHistoryValidation,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
   leaderboardMountainIntegration:LeaderboardMountainIntegration,performanceStability:PerformanceStability,
   sharedMemorials:SharedMemorials,lastRun:()=>lastFinishedRun,def:DEF,
   difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
