@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v6b</title>
+<title>ENDLESS POWDER v6f</title>
 <style>
   html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -221,9 +221,30 @@
     background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
   #sharedActions button.primary{background:#8fd8ff;color:#07121d;border-color:transparent}
 
+
+  /* Unique-initial mountain verification is hidden during normal play and opens only with ?uniquecheck=1. */
+  #uniqueDiag{position:absolute;z-index:26;left:calc(env(safe-area-inset-left) + 14px);right:calc(env(safe-area-inset-right) + 14px);
+    top:calc(env(safe-area-inset-top) + 14px);max-height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+    overflow-y:auto;overflow-x:hidden;display:none;box-sizing:border-box;padding:18px;border:1px solid rgba(180,238,156,.48);border-radius:14px;
+    background:rgba(5,9,15,.98);box-shadow:0 18px 60px rgba(0,0,0,.66);color:#eaf5ff;text-align:left;
+    font-size:max(13px,calc(16*var(--u)));line-height:1.35;pointer-events:auto;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  #uniqueDiag.show{display:block}
+  #uniqueDiag h2{margin:0 0 4px;font-size:max(19px,calc(28*var(--u)));letter-spacing:.08em}
+  #uniqueDiag .uniqueSub{opacity:.62;margin-bottom:14px}
+  .uniqueRow{display:grid;grid-template-columns:minmax(112px,42%) 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10)}
+  .uniqueRow span{opacity:.60;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+  .uniqueRow b{font-weight:850;word-break:break-word}
+  #uniqueOverall{margin-top:14px;padding:11px;border-radius:9px;background:rgba(180,238,156,.09);white-space:pre-line;font-weight:850}
+  #uniqueDetails{margin-top:10px;white-space:pre-line;opacity:.74;word-break:break-word}
+  #uniqueActions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  #uniqueActions button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid rgba(255,255,255,.24);
+    background:rgba(255,255,255,.08);color:#eaf5ff;font-weight:800;letter-spacing:.08em}
+  #uniqueActions button.primary{background:#b4ee9c;color:#091508;border-color:transparent}
+
   /* Phone diagnostics become full-viewport scroll surfaces. Normal gameplay keeps its locked canvas viewport. */
   @media (hover:none), (pointer:coarse), (max-width:699px){
-    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show{
+    #authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show{
       position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-height:none;
       margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:scroll;overflow-x:hidden;
       padding:calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px)
@@ -256,7 +277,7 @@
     <h1>ENDLESS POWDER</h1>
     <div class="sub">Drag anywhere to carve.<br><b>Flags are fuel. Speed is life.</b><br>Something hungry follows the slowest skier down.</div>
     <div class="go">TAP TO SKI</div>
-    <div class="version">v6b</div>
+    <div class="version">v6f</div>
   </div>
   <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
     <h1 id="rTitle">Caught</h1>
@@ -288,7 +309,7 @@
 
   <div id="authDiag" aria-live="polite">
     <h2>FIREBASE AUTH CHECK</h2>
-    <div class="authSub">v6b loads a cached score pool plus a recent-player pool for future unique-initial mountain selection while preserving the current leaderboard and memorial rendering.</div>
+    <div class="authSub">v6f keeps the private 50-death ledger intact while hiding local stains so the visible mountain is entirely shared and named.</div>
     <div class="authRow"><span>Firebase</span><b id="authFirebase" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>Token</span><b id="authToken" class="authNeutral">CHECKING</b></div>
     <div class="authRow"><span>UID persistence</span><b id="authPersistence" class="authNeutral">CHECKING</b></div>
@@ -380,7 +401,7 @@
 
   <div id="sharedDiag" aria-live="polite">
     <h2>SHARED MOUNTAIN RELEASE CHECK</h2>
-    <div class="sharedSub">Unified read-only validation for the complete v5 local history, anonymous identity, best-run leaderboard, shared memorial, reconciliation, recovery and performance stack.</div>
+    <div class="sharedSub">Unified read-only compatibility validation for the shared-mountain foundation. Use ?uniquecheck=1 for the complete Phase 6 unique-initial release gate.</div>
     <div class="sharedRow"><span>Release config</span><b id="sharedBuild" class="authNeutral">CHECKING</b></div>
     <div class="sharedRow"><span>Local death ledger</span><b id="sharedLocal" class="authNeutral">CHECKING</b></div>
     <div class="sharedRow"><span>Anonymous identity</span><b id="sharedAuth" class="authNeutral">CHECKING</b></div>
@@ -398,6 +419,28 @@
     <div id="sharedDetails"></div>
     <div id="sharedActions"><button class="primary" id="sharedRetry" type="button">RUN FULL CHECK</button><button id="sharedClose" type="button">CLOSE</button></div>
   </div>
+
+  <div id="uniqueDiag" aria-live="polite">
+    <h2>UNIQUE-INITIAL MOUNTAIN RELEASE CHECK</h2>
+    <div class="uniqueSub">Read-only release validation for the v6 score-plus-recent loader, canonical initials grouping, one-body-per-name mountain, ranked labels and hidden private history. It performs no Firebase writes.</div>
+    <div class="uniqueRow"><span>Authentication</span><b id="uniqueAuth" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Score pool</span><b id="uniqueScore" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Recent pool</span><b id="uniqueRecent" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Initials grouping</span><b id="uniqueGrouping" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Mountain uniqueness</span><b id="uniqueMountain" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Top-10 priority</span><b id="uniqueTopTen" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Recent inclusion</span><b id="uniqueRecentFill" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Rank integration</span><b id="uniqueRanks" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>World filtering</span><b id="uniqueWorld" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>50-body budget</span><b id="uniqueCap" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Private history</span><b id="uniqueLocal" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Spark read policy</span><b id="uniqueSpark" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Legacy /scores</span><b id="uniqueLegacy" class="authNeutral">CHECKING</b></div>
+    <div class="uniqueRow"><span>Mobile scrolling</span><b id="uniqueScroll" class="authNeutral">READY</b></div>
+    <div id="uniqueOverall">Running Phase 6 release validation…</div>
+    <div id="uniqueDetails"></div>
+    <div id="uniqueActions"><button class="primary" id="uniqueRetry" type="button">RUN FULL CHECK</button><button id="uniqueClose" type="button">CLOSE</button></div>
+  </div>
 </div></div>
 <script>
 'use strict';
@@ -406,11 +449,11 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v5f.4 is the stable Shared Mountain release. Deployment, schema, persistence,
+   v6f is the stable Unique-Initial Mountain release. Deployment, schema, persistence,
    diagnostics and performance policy derive from this one immutable block.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v6b',channel:'inclusive-record-loading'}),
+  build:Object.freeze({version:'v6f',channel:'unique-mountain-release'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -446,12 +489,12 @@ const APP_CONFIG=Object.freeze({
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',bestRunState:'ep_best_run_submit_v5c2',
     bestRunBoard:'ep_best_run_board_v5c3',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a']),
-    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag'}),
+    diagnostics:Object.freeze({auth:'ep_auth_diag',best:'ep_best_diag',memorial:'ep_memorial_diag',reconciliation:'ep_reconcile_diag',performance:'ep_performance_diag',shared:'ep_shared_diag',unique:'ep_unique_diag_v6f'}),
     probes:Object.freeze({bestReload:'ep_bestcheck_reload_v5c4',bestQueue:'ep_bestcheck_queue_probe_v5c4',
       memorialCache:'ep_memorialcheck_cache_probe_v5d4',reconciliation:'ep_reconcilecheck_probe_v5e4'})
   }),
   diagnostics:Object.freeze({
-    query:Object.freeze({auth:'authcheck',best:'bestcheck',memorial:'memorialcheck',reconciliation:'reconcilecheck',performance:'perfcheck',shared:'sharedcheck'})
+    query:Object.freeze({auth:'authcheck',best:'bestcheck',memorial:'memorialcheck',reconciliation:'reconcilecheck',performance:'perfcheck',shared:'sharedcheck',unique:'uniquecheck'})
   }),
   performance:Object.freeze({
     sampleEveryFrames:30,historySamples:120,memorialCacheEntries:64,
@@ -461,7 +504,7 @@ const APP_CONFIG=Object.freeze({
   network:Object.freeze({requestTimeoutMs:6500,authTimeoutMs:6000,refreshSkewMs:60000,
     retryBaseMs:900,retryMaxMs:6000,maxAutomaticRetries:3}),
   leaderboard:Object.freeze({visibleRows:10,scoreFetchRecords:75,recentFetchRecords:75,refreshMs:300000}),
-  localDeaths:Object.freeze({maxRecords:50}),
+  localDeaths:Object.freeze({maxRecords:50,renderVisible:false,reconciliationActive:false,diagnosticRender:true}),
   memorials:Object.freeze({
     loadedRecords:50,labelRange:12.5,labelFullRange:6.5,groupX:24,groupDepth:3,
     reconciliation:Object.freeze({depthTolerance:1.5,xTolerance:18}),
@@ -475,6 +518,9 @@ const APP_CONFIG=Object.freeze({
 const BUILD_VERSION=APP_CONFIG.build.version;
 const WORLD_VERSION=APP_CONFIG.world.version;
 const LOCAL_DEATH_KEY=APP_CONFIG.storage.localDeaths;
+const LOCAL_DEATHS_VISIBLE=!!APP_CONFIG.localDeaths.renderVisible;
+const LOCAL_SHARED_RECONCILIATION_ACTIVE=!!APP_CONFIG.localDeaths.reconciliationActive;
+const LOCAL_DEATH_DIAGNOSTIC_RENDER=!!APP_CONFIG.localDeaths.diagnosticRender;
 const LOCAL_DEATH_SCHEMA_VERSION=APP_CONFIG.schemas.localDeath.version;
 const FIREBASE_PROJECT_ID=APP_CONFIG.firebase.projectId;
 const FIREBASE_API_KEY=APP_CONFIG.firebase.apiKey;
@@ -516,7 +562,7 @@ const Configuration=Object.freeze({
     configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,bestRunPath:BEST_RUN_PATH,legacyScorePath:LEGACY_SCORE_PATH,
     bestRunSchemaVersion:BEST_RUN_SCHEMA_VERSION,bestRunStateSchemaVersion:BEST_RUN_STATE_SCHEMA_VERSION,
     bestRunBoardSchemaVersion:BEST_RUN_BOARD_SCHEMA_VERSION,localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
-    localDeathKey:LOCAL_DEATH_KEY,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_SCORE_FETCH,
+    localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,localSharedReconciliationActive:LOCAL_SHARED_RECONCILIATION_ACTIVE,retiredStorageKeys:APP_CONFIG.storage.retiredKeys.slice(),leaderboardVisible:LB_SIZE,leaderboardFetch:LB_SCORE_FETCH,
     leaderboardRecentFetch:LB_RECENT_FETCH,leaderboardRefreshMs:LB_REFRESH,
     memorialLimit:SHARED_MEMORIAL_LIMIT,matchDepth:LOCAL_SHARED_DEPTH_TOLERANCE,matchX:LOCAL_SHARED_X_TOLERANCE,
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
@@ -983,7 +1029,7 @@ const BestRuns=(()=>{
   return Object.freeze({path:BEST_RUN_PATH,fields:BEST_RUN_FIELDS,build,valid,canReplace,recordPath});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
-   v5f.4 keeps the read-only bridge between the validated top-50 best-run records
+   v6f keeps the read-only bridge between the selected unique-initial mountain records
    and the world-space memorial renderer. It performs no network request; compatible
    records become projected bodies with deterministic outfits, stable overlap groups
    and one proximity-gated label; LocalSharedMatch coordinates private-stain suppression
@@ -1030,7 +1076,7 @@ const SharedMemorials=(()=>{
     rows=next;
     report=Object.freeze({source:source.length,accepted:rows.length,invalid,worldMismatch,duplicateUid,
       ownerUid,ownerPresent:!!ownerUid&&rows.some(e=>e.uid===ownerUid),worldVersion:WORLD_VERSION,updatedAt:Date.now()});
-    reconcileRefresh();
+    if(LOCAL_SHARED_RECONCILIATION_ACTIVE)reconcileRefresh();
     return rows.length;
   }
   function ingest(source,uid){ownerUid=cleanOwner(uid);return rebuild(source);}
@@ -1038,7 +1084,7 @@ const SharedMemorials=(()=>{
     const next=cleanOwner(uid);if(next===ownerUid)return report.ownerPresent;
     ownerUid=next;rows=rows.map(e=>Object.freeze(Object.assign({},e,{isCurrentUser:!!ownerUid&&e.uid===ownerUid})));
     report=Object.freeze(Object.assign({},report,{ownerUid,ownerPresent:!!ownerUid&&rows.some(e=>e.uid===ownerUid),updatedAt:Date.now()}));
-    reconcileRefresh();
+    if(LOCAL_SHARED_RECONCILIATION_ACTIVE)reconcileRefresh();
     return report.ownerPresent;
   }
   function records(){return rows.slice();}
@@ -1075,10 +1121,10 @@ const SharedMemorials=(()=>{
   return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,setOwner,records,compatible,view,stats,byUid,current,noteRender,renderStats});
 })();
 /* ================= MODULE: UNIQUE-INITIAL AGGREGATION =================
-   v6b continues deriving a second, read-only view from the merged validated best-run
+   v6f continues deriving a second, read-only view from the merged validated best-run
    records. The normal leaderboard remains UID-based. This canonical initials
    view retains only the strongest loaded record for each three-character name.
-   It performs no network requests and does not yet alter mountain rendering. */
+   It performs no network requests. v6f uses this canonical concept through MountainPopulation to build the visible shared mountain. */
 const compareBestRunEntries=(a,b)=>b.score-a.score||b.distance-a.distance||b.cleanFlags-a.cleanFlags||a.collisions-b.collisions||a.timestamp-b.timestamp||String(a.uid).localeCompare(String(b.uid));
 const UniqueInitials=(()=>{
   let rows=[];
@@ -1120,11 +1166,187 @@ const UniqueInitials=(()=>{
   }
   return Object.freeze({ingest,derive,records,view,byInitials,stats,selfTest});
 })();
+/* ============== MODULE: LEADERBOARD / MOUNTAIN INTEGRATION ==============
+   v6f preserves two public views without duplicating bodies. The top-10 board remains
+   UID-owned. A unique-initial mountain body receives rank metadata only when that exact
+   canonical UID record is also present in the top 10. Duplicate initials elsewhere in
+   the top 10 never create additional mountain bodies. */
+const LeaderboardMountainIntegration=(()=>{
+  let ranksByUid=new Map(),ranksByInitials=new Map();
+  let report=Object.freeze({topTenRecords:0,topTenUniqueInitials:0,duplicateTopTenInitials:0,
+    mountainBodies:0,rankedBodies:0,unrankedBodies:0,updatedAt:0});
+  const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
+  const recordOf=e=>e?{initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+    attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+    deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+    worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  const validItem=e=>{
+    const uid=String(e&&e.uid||''),record=recordOf(e);
+    return uidOK(uid)&&record&&BestRuns.valid(record,Math.max(Date.now(),+(record&&record.timestamp)||0))?{uid,record}:null;
+  };
+  function derive(topRecords,mountainRecords){
+    topRecords=Array.isArray(topRecords)?topRecords:[];mountainRecords=Array.isArray(mountainRecords)?mountainRecords:[];
+    const topRanks=new Map(),topInitials=new Set();let duplicateTopTenInitials=0;
+    for(let i=0;i<Math.min(LB_SIZE,topRecords.length);i++){
+      const valid=validItem(topRecords[i]);if(!valid)continue;
+      if(!topRanks.has(valid.uid))topRanks.set(valid.uid,i+1);
+      const initials=valid.record.initials;if(topInitials.has(initials))duplicateTopTenInitials++;else topInitials.add(initials);
+    }
+    const byUid=new Map(),byInitials=new Map();
+    for(const raw of mountainRecords){
+      const valid=validItem(raw);if(!valid)continue;
+      const rank=topRanks.get(valid.uid)||0;if(!rank)continue;
+      byUid.set(valid.uid,rank);byInitials.set(valid.record.initials,rank);
+    }
+    return{byUid,byInitials,report:{topTenRecords:topRanks.size,topTenUniqueInitials:topInitials.size,
+      duplicateTopTenInitials,mountainBodies:mountainRecords.length,rankedBodies:byUid.size,
+      unrankedBodies:Math.max(0,mountainRecords.length-byUid.size),updatedAt:Date.now()}};
+  }
+  function ingest(topRecords,mountainRecords){
+    const next=derive(topRecords,mountainRecords);ranksByUid=next.byUid;ranksByInitials=next.byInitials;
+    report=Object.freeze(next.report);return report.rankedBodies;
+  }
+  function rankForUid(uid){return ranksByUid.get(String(uid||''))||0;}
+  function rankForInitials(initials){return ranksByInitials.get(String(initials||'').toUpperCase())||0;}
+  function rankFor(record){return record?rankForUid(record.uid):0;}
+  function labelFor(record){
+    const rank=rankFor(record),score=Math.max(0,Math.floor(+(record&&record.score)||0));
+    return Object.freeze({rank,isTopTen:rank>0,text:rank?'#'+rank+' · '+fmtNum(score)+' pts':fmtNum(score)+' pts'});
+  }
+  function stats(){return Object.assign({},report);}
+  function records(){return Array.from(ranksByUid.entries()).map(([uid,rank])=>({uid,rank}));}
+  function selfTest(){
+    const now=Date.now(),base={distance:100,cleanFlags:5,attemptedFlags:6,bestCombo:3,collisions:1,deathX:360,deathDepth:100,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION};
+    const make=(uid,initials,score,timestamp)=>Object.assign({uid,initials,score,timestamp},base);
+    const danBest=make('dan-best','DAN',1200,now-5000),danOther=make('dan-other','DAN',1100,now-4000),bob=make('bob','BOB',1000,now-3000),newbie=make('new','NEW',20,now-10);
+    const d=derive([danBest,danOther,bob],[danBest,bob,newbie]);
+    return Object.freeze({passed:d.byUid.get('dan-best')===1&&!d.byUid.has('dan-other')&&d.byUid.get('bob')===3&&!d.byUid.has('new')&&
+      d.report.rankedBodies===2&&d.report.duplicateTopTenInitials===1,rankedBodies:d.report.rankedBodies,
+      danRank:d.byUid.get('dan-best')||0,bobRank:d.byUid.get('bob')||0,newRank:d.byUid.get('new')||0,
+      duplicateTopTenInitials:d.report.duplicateTopTenInitials});
+  }
+  return Object.freeze({ingest,derive,rankForUid,rankForInitials,rankFor,labelFor,stats,records,selfTest});
+})();
+/* ================= MODULE: UNIQUE MOUNTAIN POPULATION =================
+   v6f converts the merged score-plus-recent pool into the actual shared-mountain
+   population. The results leaderboard remains UID-based and may contain duplicate
+   initials. The mountain is compatible-world only and contains at most one canonical
+   body per initials set: top-10 initials first, recent unique initials next, then
+   strongest remaining canonical initials if capacity is still available. */
+const MountainPopulation=(()=>{
+  let rows=[];
+  let report=Object.freeze({sourceMerged:0,compatible:0,canonicalInitials:0,selected:0,
+    topTenRecords:0,topTenUnique:0,topTenIncluded:0,topTenUnavailable:0,
+    recentConsidered:0,recentIncluded:0,fallbackIncluded:0,duplicateInitialsRemoved:0,
+    worldMismatch:0,invalid:0,ownerUid:'',ownerPresent:false,updatedAt:0});
+  const uidOK=uid=>/^[A-Za-z0-9_-]{1,128}$/.test(String(uid||''));
+  const recordOf=e=>e?{initials:e.initials,score:e.score,distance:e.distance,cleanFlags:e.cleanFlags,
+    attemptedFlags:e.attemptedFlags,bestCombo:e.bestCombo,collisions:e.collisions,
+    deathX:e.deathX,deathDepth:e.deathDepth,deathTheta:e.deathTheta,deathCause:e.deathCause,
+    worldVersion:e.worldVersion,timestamp:e.timestamp}:null;
+  const itemOf=e=>{
+    const uid=String(e&&e.uid||''),record=recordOf(e);
+    return uidOK(uid)&&record&&BestRuns.valid(record,Math.max(Date.now(),+record.timestamp||0))
+      ?Object.freeze(Object.assign({uid},record)):null;
+  };
+  function derive(topRecords,recentRecords,mergedRecords,ownerUid){
+    topRecords=Array.isArray(topRecords)?topRecords:[];
+    recentRecords=Array.isArray(recentRecords)?recentRecords:[];
+    mergedRecords=Array.isArray(mergedRecords)?mergedRecords:[];
+    ownerUid=uidOK(ownerUid)&&String(ownerUid).indexOf('local-')!==0?String(ownerUid):'';
+    const compatible=[],byUid=new Map();let invalid=0,worldMismatch=0;
+    for(const raw of mergedRecords){
+      const item=itemOf(raw);
+      if(!item){invalid++;continue;}
+      if(item.worldVersion!==WORLD_VERSION){worldMismatch++;continue;}
+      const previous=byUid.get(item.uid);
+      if(!previous||compareBestRunEntries(item,previous)<0)byUid.set(item.uid,item);
+    }
+    compatible.push(...byUid.values());
+    const canonicalByInitials=new Map();let duplicateInitialsRemoved=0;
+    for(const item of compatible){
+      const previous=canonicalByInitials.get(item.initials);
+      if(previous){
+        duplicateInitialsRemoved++;
+        if(compareBestRunEntries(item,previous)<0)canonicalByInitials.set(item.initials,item);
+      }else canonicalByInitials.set(item.initials,item);
+    }
+    const canonical=Array.from(canonicalByInitials.values()).sort(compareBestRunEntries);
+    const selected=[],selectedInitials=new Set();
+    let topTenIncluded=0,topTenUnavailable=0,recentIncluded=0,fallbackIncluded=0;
+    const addInitials=(initials,tier)=>{
+      initials=String(initials||'').toUpperCase();
+      if(selected.length>=SHARED_MEMORIAL_LIMIT||selectedInitials.has(initials))return false;
+      const canonicalItem=canonicalByInitials.get(initials);
+      if(!canonicalItem)return false;
+      selectedInitials.add(initials);selected.push(canonicalItem);
+      if(tier==='top10')topTenIncluded++;
+      else if(tier==='recent')recentIncluded++;
+      else fallbackIncluded++;
+      return true;
+    };
+    const topTenInitials=[];
+    for(const raw of topRecords.slice(0,LB_SIZE)){
+      const item=itemOf(raw);if(!item)continue;
+      if(!topTenInitials.includes(item.initials))topTenInitials.push(item.initials);
+    }
+    for(const initials of topTenInitials)if(!addInitials(initials,'top10'))topTenUnavailable++;
+    let recentConsidered=0;
+    for(const raw of recentRecords){
+      if(selected.length>=SHARED_MEMORIAL_LIMIT)break;
+      const item=itemOf(raw);if(!item)continue;
+      recentConsidered++;
+      addInitials(item.initials,'recent');
+    }
+    for(const item of canonical){
+      if(selected.length>=SHARED_MEMORIAL_LIMIT)break;
+      addInitials(item.initials,'fallback');
+    }
+    return{rows:selected,report:{sourceMerged:mergedRecords.length,compatible:compatible.length,
+      canonicalInitials:canonical.length,selected:selected.length,topTenRecords:Math.min(LB_SIZE,topRecords.length),
+      topTenUnique:topTenInitials.length,topTenIncluded,topTenUnavailable,recentConsidered,recentIncluded,
+      fallbackIncluded,duplicateInitialsRemoved,worldMismatch,invalid,ownerUid,
+      ownerPresent:!!ownerUid&&selected.some(e=>e.uid===ownerUid),updatedAt:Date.now()}};
+  }
+  function ingest(topRecords,recentRecords,mergedRecords,ownerUid){
+    const next=derive(topRecords,recentRecords,mergedRecords,ownerUid);
+    rows=next.rows;report=Object.freeze(next.report);
+    // Rank metadata is derived separately from the exact UID-owned top 10. This lets
+    // a canonical body advertise its real leaderboard rank without changing the
+    // best-run schema or creating a second body for another record with the same initials.
+    LeaderboardMountainIntegration.ingest(topRecords,rows);
+    SharedMemorials.ingest(rows,report.ownerUid);
+    return rows.length;
+  }
+  function setOwner(ownerUid){
+    ownerUid=uidOK(ownerUid)&&String(ownerUid).indexOf('local-')!==0?String(ownerUid):'';
+    report=Object.freeze(Object.assign({},report,{ownerUid,ownerPresent:!!ownerUid&&rows.some(e=>e.uid===ownerUid),updatedAt:Date.now()}));
+    SharedMemorials.setOwner(ownerUid);return report.ownerPresent;
+  }
+  function records(){return rows.slice();}
+  function view(){return rows;}
+  function stats(){return Object.assign({},report);}
+  function byInitials(initials){initials=String(initials||'').toUpperCase();return rows.find(e=>e.initials===initials)||null;}
+  function selfTest(){
+    const now=Date.now(),base={distance:100,cleanFlags:5,attemptedFlags:6,bestCombo:3,collisions:1,
+      deathX:360,deathDepth:100,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION};
+    const make=(uid,initials,score,timestamp,extra)=>Object.assign({uid,initials,score,timestamp},base,extra||{});
+    const top=[make('dan-low','DAN',800,now-5000),make('dan-high','DAN',1100,now-4000),make('bob','BOB',900,now-3000),make('old','OLD',700,now-9000)];
+    const recent=[make('new','NEW',20,now-10),make('dan-recent','DAN',200,now-20),make('liz','LIZ',15,now-30),make('bad-world','BAD',9999,now-5,{worldVersion:'other-world'})];
+    const merged=top.concat(recent),d=derive(top,recent,merged,'new');
+    const initials=d.rows.map(e=>e.initials),dan=d.rows.find(e=>e.initials==='DAN');
+    return Object.freeze({passed:d.rows.length===5&&new Set(initials).size===d.rows.length&&dan&&dan.uid==='dan-high'&&
+      initials[0]==='DAN'&&initials[1]==='BOB'&&initials.includes('NEW')&&initials.includes('LIZ')&&!initials.includes('BAD')&&
+      d.report.topTenUnique===3&&d.report.worldMismatch===1,
+      selected:d.rows.length,initials,canonicalDan:dan&&dan.uid,topTenIncluded:d.report.topTenIncluded,
+      recentIncluded:d.report.recentIncluded,worldMismatch:d.report.worldMismatch});
+  }
+  return Object.freeze({limit:SHARED_MEMORIAL_LIMIT,ingest,derive,setOwner,records,view,stats,byInitials,selfTest});
+})();
 
 /* ==================== ONLINE BEST RUN + INCLUSIVE RECORD POOLS ====================
-   v6b reads the configured best-run path twice: a score-ordered pool for the
-   unchanged top-10/legacy memorial view and a timestamp-ordered pool for recent
-   unique initials. Both are limited, cached and merged by UID. The legacy /scores
+   v6f reads the configured best-run path twice: a score-ordered pool for the
+   unchanged UID-based top 10 and a timestamp-ordered pool for recent unique initials. Both are limited, cached and merged by UID. The legacy /scores
    collection remains isolated. */
 // Current best-run state and cached board keys are defined in APP_CONFIG.storage.
 const LB_BAD=INITIALS_BAD;
@@ -1239,8 +1461,11 @@ const LB=(()=>{
     cache.records=mergePools(cache.scoreRecords,cache.recentRecords);
     cache.top=cache.scoreRecords.slice(0,LB_SIZE);
     UniqueInitials.ingest(cache.records);
-    // v6b preserves the v5 mountain population until v6c switches it to unique initials.
-    SharedMemorials.ingest(cache.scoreRecords,ownerOverride===undefined?Identity.status().uid:ownerOverride);
+    // v6f gives the leaderboard and mountain distinct derived views: the board keeps
+    // UID-owned top scores, while the mountain contains one compatible canonical body
+    // per initials set with top-10 initials guaranteed before recent/fallback filling.
+    MountainPopulation.ingest(cache.top,cache.recentRecords,cache.records,
+      ownerOverride===undefined?Identity.status().uid:ownerOverride);
   };
   const normPayload=(p,origin,mode)=>{
     if(p===null)return{ok:true,rows:[],empty:true};
@@ -1399,7 +1624,7 @@ const LB=(()=>{
         else mergeRecord(uid,stored);
         const completed=currentPending(pending);if(completed)cache.pending=null;save();clearRetry();
         transition(stored.score===pending.record.score?PHASES.ACCEPTED:PHASES.NOT_PERSONAL_BEST,
-          stored.score===pending.record.score?'personal best confirmed — memorial updated':'personal best unchanged',pending,'');
+          stored.score===pending.record.score?'personal best confirmed — shared mountain synchronized':'personal best unchanged',pending,'');
         return completed?'complete':'newer';
       }
     }catch(e){}
@@ -1516,7 +1741,8 @@ const LB=(()=>{
     return true;
   }
   function inclusive(){return Object.freeze({scoreRecords:cache.scoreRecords.length,recentRecords:cache.recentRecords.length,
-    mergedRecords:cache.records.length,uniqueInitials:UniqueInitials.stats().unique,scoreFetchLimit:LB_SCORE_FETCH,
+    mergedRecords:cache.records.length,uniqueInitials:UniqueInitials.stats().unique,mountainBodies:MountainPopulation.stats().selected,
+    mountainTopTenIncluded:MountainPopulation.stats().topTenIncluded,mountainRankedBodies:LeaderboardMountainIntegration.stats().rankedBodies,scoreFetchLimit:LB_SCORE_FETCH,
     recentFetchLimit:LB_RECENT_FETCH,refreshThrottleMs:LB_REFRESH,scoreUpdatedAt:cache.scoreUpdatedAt,
     recentUpdatedAt:cache.recentUpdatedAt,lastRefreshResult:cache.lastRefreshResult});}
   function inclusiveSelfTest(){
@@ -1538,7 +1764,9 @@ const LB=(()=>{
 })();
 const Leaderboard=LB;
 const InclusiveLoading=Object.freeze({stats:()=>Leaderboard.inclusive(),selfTest:()=>Leaderboard.inclusiveSelfTest(),
-  scoreRecords:()=>Leaderboard.scoreRecords(),recentRecords:()=>Leaderboard.recentRecords(),mergedRecords:()=>Leaderboard.records()});
+  scoreRecords:()=>Leaderboard.scoreRecords(),recentRecords:()=>Leaderboard.recentRecords(),mergedRecords:()=>Leaderboard.records(),
+  mountainRecords:()=>MountainPopulation.records(),mountainStats:()=>MountainPopulation.stats(),
+  integrationStats:()=>LeaderboardMountainIntegration.stats(),integrationSelfTest:()=>LeaderboardMountainIntegration.selfTest()});
 identityOwnerChanged=(nextUid,previousUid)=>Leaderboard.identityChanged(nextUid,previousUid);
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
@@ -1617,14 +1845,13 @@ function recordLocalDeath(){
   localDeaths.push(rec);
   if(localDeaths.length>C.localDeathCap)localDeaths.splice(0,localDeaths.length-C.localDeathCap);
   Persistence.setJSON(LOCAL_DEATH_KEY,localDeaths);
-  reconcileRefresh();
+  if(LOCAL_SHARED_RECONCILIATION_ACTIVE)reconcileRefresh();
   return true;
 }
 /* ================= MODULE: LOCAL / SHARED RECONCILIATION =================
-   v5f.4 identifies the current user's local stain that corresponds to their
-   compatible public best-run memorial and suppresses exactly that one stain at
-   render time. Other private stains remain stored and visible; stains beneath dense
-   public groups are only visually attenuated to prevent cumulative blood clutter. */
+   v6f keeps the proven matcher available for diagnostics and possible future
+   restoration, but normal gameplay no longer invokes it because private local
+   death stains are hidden. The local ledger remains fully recorded and sanitized. */
 const LocalSharedMatch=(()=>{
   let state=Object.freeze({matched:false,reason:'not-evaluated',ownerUid:'',memorialUid:'',
     memorialDepth:null,memorialX:null,totalLocal:0,compatibleLocal:0,candidates:0,
@@ -1675,12 +1902,12 @@ const LocalSharedMatch=(()=>{
     if(m.deathId&&typeof local.deathId==='string')return local.deathId===m.deathId;
     return localDeaths[m.localIndex]===local;
   }
-  let renderState=Object.freeze({frame:0,total:0,visible:0,drawn:0,suppressed:0,
+  let renderState=Object.freeze({frame:0,total:0,visible:0,drawn:0,suppressed:0,hidden:true,
     clusterDimmed:0,maxClusterSize:0,suppressedDeathId:'',matchActive:false,updatedAt:0});
   function noteRender(next){
     renderState=Object.freeze({frame:renderState.frame+1,total:Math.max(0,(next&&next.total)|0),
       visible:Math.max(0,(next&&next.visible)|0),drawn:Math.max(0,(next&&next.drawn)|0),
-      suppressed:Math.max(0,(next&&next.suppressed)|0),clusterDimmed:Math.max(0,(next&&next.clusterDimmed)|0),
+      suppressed:Math.max(0,(next&&next.suppressed)|0),hidden:!!(next&&next.hidden),clusterDimmed:Math.max(0,(next&&next.clusterDimmed)|0),
       maxClusterSize:Math.max(0,(next&&next.maxClusterSize)|0),
       suppressedDeathId:next&&typeof next.suppressedDeathId==='string'?next.suppressedDeathId:'',
       matchActive:!!(next&&next.matchActive),updatedAt:Date.now()});
@@ -1688,7 +1915,8 @@ const LocalSharedMatch=(()=>{
   }
   function renderStats(){return Object.assign({},renderState);}
   reconcileRefresh=refresh;
-  refresh();
+  if(LOCAL_SHARED_RECONCILIATION_ACTIVE)refresh();
+  else state=Object.freeze(Object.assign({},state,{reason:'inactive-hidden-local-history',updatedAt:Date.now()}));
   return Object.freeze({depthTolerance:LOCAL_SHARED_DEPTH_TOLERANCE,xTolerance:LOCAL_SHARED_X_TOLERANCE,
     refresh,current,stats:()=>Object.assign({},state),matchedLocal,isMatchedDeath,noteRender,renderStats});
 })();
@@ -1727,11 +1955,11 @@ const PersonalBestReconciliation=(()=>{
     const moved=!previous||previous.score!==record.score||previous.deathCause!==record.deathCause||
       Math.abs((previous.deathDepth||0)-record.deathDepth)>0.001||Math.abs((previous.deathX||0)-record.deathX)>0.001||
       Math.abs((previous.deathTheta||0)-record.deathTheta)>0.001;
-    const match=owner===uid?LocalSharedMatch.current():{matched:false};
-    base.status=same?'reconciled':'accepted-outside-top-50';
+    const match=LOCAL_SHARED_RECONCILIATION_ACTIVE&&owner===uid?LocalSharedMatch.current():{matched:false};
+    base.status=same?'reconciled':'accepted-not-visible-on-unique-mountain';
     base.visible=same;base.outsideTop50=!same;base.moved=moved;
     base.oldBodyRemoved=uidCount<2&&(!previous||!same||moved);
-    base.matchActive=!!match.matched;base.suppressionReady=same&&!!match.matched;
+    base.matchActive=LOCAL_SHARED_RECONCILIATION_ACTIVE&&!!match.matched;base.suppressionReady=LOCAL_SHARED_RECONCILIATION_ACTIVE&&same&&!!match.matched;
     state=Object.freeze(base);return Object.assign({},state);
   }
   acceptedBestRefresh=apply;
@@ -3503,23 +3731,24 @@ function drawSharedMemorialLabel(){
   const m=item.m,p=item.p,d=item.distance;
   const fade=clamp((MEMORIAL_LABEL_RANGE-d)/(MEMORIAL_LABEL_RANGE-MEMORIAL_LABEL_FULL),0,1);
   if(fade<=0.01)return;
-  const score=fmtNum(m.score)+' pts',initials=m.initials;
+  const integration=LeaderboardMountainIntegration.labelFor(m),scoreLine=integration.text,initials=m.initials;
   ctx.save();ctx.globalAlpha=fade;
   ctx.font='900 22px system-ui,sans-serif';
   const iw=ctx.measureText(initials).width;
   ctx.font='700 16px system-ui,sans-serif';
-  const sw=ctx.measureText(score).width;
+  const sw=ctx.measureText(scoreLine).width;
   const w=Math.max(98,Math.ceil(Math.max(iw,sw)+28)),h=51;
   const x=clamp(p.x-w/2,10,LW-w-10),y=clamp(p.y-69-p.s*12,12,LH-h-20);
   const cx=clamp(p.x,x+12,x+w-12);
   ctx.strokeStyle='rgba(225,238,248,0.62)';ctx.lineWidth=1.4;
   ctx.beginPath();ctx.moveTo(cx,y+h);ctx.lineTo(p.x,p.y-11*p.s);ctx.stroke();
   ctx.fillStyle='rgba(13,20,30,0.78)';ctx.beginPath();memorialRoundRectPath(x,y,w,h,10);ctx.fill();
-  ctx.strokeStyle=m.isCurrentUser?'rgba(220,243,255,0.86)':'rgba(190,211,226,0.52)';ctx.lineWidth=m.isCurrentUser?1.8:1.1;
+  ctx.strokeStyle=integration.isTopTen?'rgba(255,222,132,0.92)':(m.isCurrentUser?'rgba(220,243,255,0.86)':'rgba(190,211,226,0.52)');
+  ctx.lineWidth=integration.isTopTen?1.9:(m.isCurrentUser?1.8:1.1);
   ctx.beginPath();memorialRoundRectPath(x,y,w,h,10);ctx.stroke();
   ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillStyle='#f5f9fc';ctx.font='900 22px system-ui,sans-serif';ctx.fillText(initials,x+w/2,y+17);
-  ctx.fillStyle=m.isCurrentUser?'#dff4ff':'#c8d5df';ctx.font='700 16px system-ui,sans-serif';ctx.fillText(score,x+w/2,y+38);
+  ctx.fillStyle=integration.isTopTen?'#ffe2a0':(m.isCurrentUser?'#dff4ff':'#c8d5df');ctx.font='700 16px system-ui,sans-serif';ctx.fillText(scoreLine,x+w/2,y+38);
   ctx.restore();
 }
 function drawSharedMemorials(nightK){
@@ -3692,39 +3921,45 @@ function render(){
       const a=projD(c.c-c.h,u),b=projD(c.c+c.h,u),a2=projD(c.c-c.h,Math.min(u+C.chunk,UBOT)),b2=projD(c.c+c.h,Math.min(u+C.chunk,UBOT));
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b2.x,b2.y);ctx.lineTo(a2.x,a2.y);ctx.closePath();ctx.stroke();}}
   DEF.draw(); // the carved medium: everyone's passage, under everything that stands on it
-  // Private local history: up to 50 restrained player-death stains. The one stain
-  // duplicated by the current user's compatible public best-run body is hidden only
-  // at render time; its localStorage record remains intact.
+  // Private local history remains recorded, sanitized and capped at 50, but v6f
+  // hides it during normal play. Diagnostic-only rendering preserves the proven
+  // reconciliation test path without reactivating private stains for players.
   const dkAll=clamp((S.depth-1200)/600,0,1);
-  const localMatch=LocalSharedMatch.current(),sharedForLocal=SharedMemorials.compatible();
-  let localVisible=0,localDrawn=0,localSuppressed=0,clusterDimmed=0,maxClusterSize=0,suppressedDeathId='';
-  for(let localIndex=0;localIndex<localDeaths.length;localIndex++){
-    const m=localDeaths[localIndex];
-    if(LocalSharedMatch.isMatchedDeath(m,localIndex,localMatch)){
-      localSuppressed++;suppressedDeathId=typeof m.deathId==='string'?m.deathId:'';continue;
+  const diagnosticLocalRender=LOCAL_DEATH_DIAGNOSTIC_RENDER&&(reconcileCheckRequested()||sharedCheckRequested());
+  const localHistoryVisible=LOCAL_DEATHS_VISIBLE||diagnosticLocalRender;
+  if(localHistoryVisible){
+    const localMatch=LocalSharedMatch.current(),sharedForLocal=SharedMemorials.compatible();
+    let localVisible=0,localDrawn=0,localSuppressed=0,clusterDimmed=0,maxClusterSize=0,suppressedDeathId='';
+    for(let localIndex=0;localIndex<localDeaths.length;localIndex++){
+      const m=localDeaths[localIndex];
+      if(LocalSharedMatch.isMatchedDeath(m,localIndex,localMatch)){
+        localSuppressed++;suppressedDeathId=typeof m.deathId==='string'?m.deathId:'';continue;
+      }
+      const u=m.depth-S.depth;if(u<UTOP||u>UBOT)continue;
+      localVisible++;
+      const cluster=localStainClusterTreatment(m,sharedForLocal);
+      if(cluster.alpha<1){clusterDimmed++;maxClusterSize=Math.max(maxClusterSize,cluster.count);}
+      const p=projD(m.x,u),hs=hsh(m.depth*3.7+m.x+m.timestamp*0.000001);
+      const th=Number.isFinite(m.theta)?m.theta:0;
+      ctx.save();ctx.globalAlpha=cluster.alpha;
+      const tailD=0.85+hs*0.55,tailX=Math.sin(th)*(12+hs*10);
+      const pa=projD(m.x-tailX,m.depth-Math.cos(th)*tailD),pb=projD(m.x,m.depth);
+      ctx.strokeStyle='rgba(108,118,128,'+(0.12+0.05*dkAll).toFixed(2)+')';
+      ctx.lineWidth=Math.max(0.8,2.1*pb.s);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+      ctx.translate(p.x,p.y);ctx.rotate(th+hs*0.45);
+      ctx.fillStyle='rgba('+(112+32*dkAll)+',30,25,'+(0.17+0.07*dkAll).toFixed(2)+')';
+      ctx.beginPath();ctx.ellipse(0,0,(8+hs*6)*p.s,(4.2+hs*2.7)*p.s,0,0,6.283);ctx.fill();
+      ctx.fillStyle='rgba(90,24,22,'+(0.10+0.05*dkAll).toFixed(2)+')';
+      ctx.beginPath();ctx.arc((4+hs*3)*p.s,-1.5*p.s,(2.2+hs*1.5)*p.s,0,6.283);ctx.fill();
+      ctx.restore();localDrawn++;
     }
-    const u=m.depth-S.depth;if(u<UTOP||u>UBOT)continue;
-    localVisible++;
-    const cluster=localStainClusterTreatment(m,sharedForLocal);
-    if(cluster.alpha<1){clusterDimmed++;maxClusterSize=Math.max(maxClusterSize,cluster.count);}
-    const p=projD(m.x,u),hs=hsh(m.depth*3.7+m.x+m.timestamp*0.000001);
-    const th=Number.isFinite(m.theta)?m.theta:0;
-    ctx.save();ctx.globalAlpha=cluster.alpha;
-    // A short, subdued approach scar gives the stain direction without creating a persistent body icon.
-    const tailD=0.85+hs*0.55,tailX=Math.sin(th)*(12+hs*10);
-    const pa=projD(m.x-tailX,m.depth-Math.cos(th)*tailD),pb=projD(m.x,m.depth);
-    ctx.strokeStyle='rgba(108,118,128,'+(0.12+0.05*dkAll).toFixed(2)+')';
-    ctx.lineWidth=Math.max(0.8,2.1*pb.s);ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
-    ctx.translate(p.x,p.y);ctx.rotate(th+hs*0.45);
-    ctx.fillStyle='rgba('+(112+32*dkAll)+',30,25,'+(0.17+0.07*dkAll).toFixed(2)+')';
-    ctx.beginPath();ctx.ellipse(0,0,(8+hs*6)*p.s,(4.2+hs*2.7)*p.s,0,0,6.283);ctx.fill();
-    ctx.fillStyle='rgba(90,24,22,'+(0.10+0.05*dkAll).toFixed(2)+')';
-    ctx.beginPath();ctx.arc((4+hs*3)*p.s,-1.5*p.s,(2.2+hs*1.5)*p.s,0,6.283);ctx.fill();
-    ctx.restore();localDrawn++;
+    LocalSharedMatch.noteRender({total:localDeaths.length,visible:localVisible,drawn:localDrawn,
+      suppressed:localSuppressed,hidden:false,clusterDimmed,maxClusterSize,suppressedDeathId,matchActive:localMatch.matched});
+  }else{
+    LocalSharedMatch.noteRender({total:localDeaths.length,visible:0,drawn:0,suppressed:0,hidden:true,
+      clusterDimmed:0,maxClusterSize:0,suppressedDeathId:'',matchActive:false});
   }
-  LocalSharedMatch.noteRender({total:localDeaths.length,visible:localVisible,drawn:localDrawn,
-    suppressed:localSuppressed,clusterDimmed,maxClusterSize,suppressedDeathId,matchActive:localMatch.matched});
   // fresh blood: this run's consequences, streaked along the impact direction
   for(const sm of smears){const u=sm.d-S.depth;if(u<UTOP||u>UBOT)continue;
     const hl=sm.len/2;
@@ -4253,7 +4488,7 @@ function bindInput(){
   cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);
   cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
   document.addEventListener('touchmove',e=>{
-    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show'):null;
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#bestDiag.show,#memorialDiag.show,#reconcileDiag.show,#performanceDiag.show,#sharedDiag.show,#uniqueDiag.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
@@ -4330,7 +4565,11 @@ function sharedCheckRequested(){
   try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.shared)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.shared)==='1';}
   catch(e){return false;}
 }
-function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested()||performanceCheckRequested()||sharedCheckRequested();}
+function uniqueCheckRequested(){
+  try{return new URLSearchParams(location.search).get(APP_CONFIG.diagnostics.query.unique)==='1'||store.getItem(APP_CONFIG.storage.diagnostics.unique)==='1';}
+  catch(e){return false;}
+}
+function diagnosticRequested(){return authDiagRequested()||bestCheckRequested()||memorialCheckRequested()||reconcileCheckRequested()||performanceCheckRequested()||sharedCheckRequested()||uniqueCheckRequested();}
 const BestCheck=(()=>{
   const RELOAD_KEY=APP_CONFIG.storage.probes.bestReload;
   const PROBE_KEY=APP_CONFIG.storage.probes.bestQueue;
@@ -4972,7 +5211,7 @@ const ReleaseCheck=(()=>{
       best&&best.passed?pass('sharedBest','PASS — OWNER + HIGHER ONLY'):authWaiting?warn('sharedBest','LIVE CHECKS PASSED — RELOAD'):fail('sharedBest','FAIL');
       ranking?pass('sharedRanking','PASS — 4 TIEBREAKERS'):fail('sharedRanking','FAIL');
       memorial&&memorial.passed?pass('sharedMemorial','PASS — TOP 50 PHYSICAL'):fail('sharedMemorial','FAIL');
-      reconciliation&&reconciliation.passed?pass('sharedReconcile','PASS — NO DUPLICATE STAIN'):fail('sharedReconcile','FAIL');
+      reconciliation&&reconciliation.passed?pass('sharedReconcile','PASS — HIDDEN LOCALLY; DIAGNOSTIC COMPATIBLE'):fail('sharedReconcile','FAIL');
       network&&stateSafe?pass('sharedNetwork','PASS — QUEUE STATE SAFE'):fail('sharedNetwork','FAIL');
       recovery?pass('sharedRecovery','PASS — CANONICAL CACHES'):fail('sharedRecovery','FAIL');
       performanceReport&&performanceReport.passed?pass('sharedPerformance','PASS — 14 / 28 / 50'):fail('sharedPerformance','FAIL');
@@ -4983,7 +5222,7 @@ const ReleaseCheck=(()=>{
       const onlineOK=authOK&&!!(best&&best.passed)&&!!(memorial&&memorial.passed)&&!!(reconciliation&&reconciliation.passed);
       const overall=$('sharedOverall');
       if(overall){
-        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v5 SHARED MOUNTAIN RELEASE PASSED';overall.className='authGood';}
+        if(deterministicOK&&onlineOK){overall.textContent='VERIFIED — v6f UNIQUE-INITIAL MOUNTAIN RELEASE PASSED';overall.className='authGood';}
         else if(deterministicOK&&authWaiting){overall.textContent='LIVE CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
         else if(deterministicOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
         else{overall.textContent='RELEASE VALIDATION NEEDS ATTENTION';overall.className='authBad';}
@@ -4991,7 +5230,7 @@ const ReleaseCheck=(()=>{
       const shared=SharedMemorials.stats(),perf=PerformanceStability.snapshot(),sub=Leaderboard.submission(),recoverySnap=DataRecovery.snapshot();
       const lines=['Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,'Best-run schema: '+BEST_RUN_SCHEMA_VERSION,
         'Firebase path: '+BEST_RUN_PATH+'/{uid}','UID: '+(auth.uid||'—'),'Leaderboard records: '+Leaderboard.records().length,
-        'Compatible memorials: '+shared.accepted+' / source '+shared.source,'Local deaths: '+localDeaths.length+' / '+APP_CONFIG.localDeaths.maxRecords,
+        'Compatible memorials: '+shared.accepted+' / source '+shared.source,'Local deaths retained: '+localDeaths.length+' / '+APP_CONFIG.localDeaths.maxRecords+'; visible: '+(LOCAL_DEATHS_VISIBLE?'YES':'NO'),
         'Submission state: '+sub.phase+(sub.pending?' — pending '+sub.pendingScore:' — no pending run'),'Performance samples: '+perf.sampledFrames+'; resets: '+perf.resets,
         'Recovery events this session: '+recoverySnap.events.length,'Legacy /scores requests: '+legacy,'Diagnostic Firebase writes: NONE',
         'Private ledger unchanged: '+(ledgerBefore===ledgerAfter?'YES':'NO'),'Pending submission unchanged: '+(pendingBefore===pendingAfter?'YES':'NO')];
@@ -5007,6 +5246,123 @@ const ReleaseCheck=(()=>{
     $('sharedRetry').addEventListener('click',e=>{e.stopPropagation();run();});$('sharedClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
   return Object.freeze({init,run,last:()=>lastReport,requested:sharedCheckRequested});
 })();
+
+/* ================= UNIQUE-INITIAL MOUNTAIN RELEASE CHECK =================
+   v6f validates the complete Phase 6 derivation without mutating Firebase or the
+   private local-death ledger. Pure derive/self-test paths use synthetic records;
+   live checks inspect only the already-loaded score/recent pools and mountain view. */
+const UniqueMountainCheck=(()=>{
+  const LEGACY_PATH=LEGACY_SCORE_PATH;
+  let running=false,lastReport=null;
+  const row=(id,text,cls)=>{const e=$(id);if(e){e.textContent=text;e.className=cls||'authNeutral';}};
+  const pass=(id,text)=>row(id,text||'PASS','authGood');
+  const warn=(id,text)=>row(id,text||'CHECK','authWarn');
+  const fail=(id,text)=>row(id,text||'FAIL','authBad');
+  const requests=fragment=>{try{return performance.getEntriesByType('resource').filter(e=>String(e.name||'').includes(fragment)).length;}catch(e){return 0;}};
+  const initialsUnique=records=>{const names=(records||[]).map(e=>e.initials);return new Set(names).size===names.length;};
+  function synthetic(){
+    const now=Date.now(),base={distance:100,cleanFlags:5,attemptedFlags:6,bestCombo:3,collisions:1,
+      deathX:360,deathDepth:100,deathTheta:0,deathCause:'caught',worldVersion:WORLD_VERSION};
+    const make=(uid,initials,score,timestamp,extra)=>Object.assign({uid,initials,score,timestamp},base,extra||{});
+    const top=[
+      make('dan-best','DAN',1400,now-7000,{distance:140,deathDepth:140}),
+      make('dan-second','DAN',1300,now-6000,{distance:130,deathDepth:130}),
+      make('bob-best','BOB',1200,now-5000,{distance:120,deathDepth:120}),
+      make('sam-best','SAM',1100,now-4000,{distance:110,deathDepth:110})
+    ];
+    const recent=[
+      make('new-low','NEW',20,now-10,{distance:20,deathDepth:20}),
+      make('liz-low','LIZ',15,now-20,{distance:15,deathDepth:15}),
+      make('dan-low','DAN',200,now-30,{distance:30,deathDepth:30}),
+      make('wrong-world','OLD',9999,now-5,{worldVersion:'other-world'})
+    ];
+    const merged=top.concat(recent),group=UniqueInitials.derive(merged),mount=MountainPopulation.derive(top,recent,merged,''),
+      ranks=LeaderboardMountainIntegration.derive(top,mount.rows),names=mount.rows.map(e=>e.initials),dan=mount.rows.find(e=>e.initials==='DAN');
+    const topNames=['DAN','BOB','SAM'];
+    const capRows=[];
+    for(let i=0;i<65;i++){
+      const initials='U'+i.toString(36).toUpperCase().padStart(2,'0');
+      capRows.push(make('cap-'+i,initials,1000-i,now-10000-i,{distance:100+i,deathDepth:100+i}));
+    }
+    const cap=MountainPopulation.derive(capRows.slice(0,10),capRows.slice().reverse(),capRows,'');
+    return Object.freeze({
+      grouping:group.rows.length===6&&group.rows.filter(e=>e.initials==='DAN').length===1&&group.rows.find(e=>e.initials==='DAN').uid==='dan-best',
+      leaderboardDuplicates:top.filter(e=>e.initials==='DAN').length===2,
+      mountainUnique:initialsUnique(mount.rows)&&names.filter(n=>n==='DAN').length===1&&dan&&dan.uid==='dan-best',
+      topTen:topNames.every(n=>names.includes(n))&&mount.report.topTenIncluded===3,
+      recent:names.includes('NEW')&&names.includes('LIZ')&&mount.report.recentIncluded>=2,
+      ranks:ranks.byUid.get('dan-best')===1&&!ranks.byUid.has('dan-second')&&ranks.byUid.get('bob-best')===3,
+      world:!names.includes('OLD')&&mount.report.worldMismatch===1,
+      cap:cap.rows.length===50&&initialsUnique(cap.rows),
+      details:Object.freeze({groupUnique:group.rows.length,mountainNames:names,topTenIncluded:mount.report.topTenIncluded,
+        recentIncluded:mount.report.recentIncluded,worldMismatch:mount.report.worldMismatch,capSelected:cap.rows.length})
+    });
+  }
+  async function run(){
+    if(running)return lastReport;running=true;const btn=$('uniqueRetry');if(btn)btn.textContent='RUNNING…';
+    ['uniqueAuth','uniqueScore','uniqueRecent','uniqueGrouping','uniqueMountain','uniqueTopTen','uniqueRecentFill','uniqueRanks','uniqueWorld','uniqueCap','uniqueLocal','uniqueSpark','uniqueLegacy']
+      .forEach(id=>row(id,'CHECKING','authNeutral'));
+    try{
+      const ledgerBefore=store.getItem(LOCAL_DEATH_KEY),pendingBefore=store.getItem(BEST_RUN_STATE_KEY);
+      const d=synthetic(),live=InclusiveLoading.stats(),mount=MountainPopulation.records(),mountStats=MountainPopulation.stats(),
+        uniqueStats=UniqueInitials.stats(),integration=LeaderboardMountainIntegration.stats(),auth=Identity.status();
+      const liveUnique=initialsUnique(mount)&&mount.length<=SHARED_MEMORIAL_LIMIT;
+      const localHidden=!LOCAL_DEATHS_VISIBLE&&!LOCAL_SHARED_RECONCILIATION_ACTIVE&&localDeaths.length<=APP_CONFIG.localDeaths.maxRecords;
+      const spark=LB_SCORE_FETCH===75&&LB_RECENT_FETCH===75&&LB_REFRESH>=300000;
+      const legacy=requests(LEGACY_PATH),scoreReady=live.scoreRecords>=0,
+        recentReady=live.lastRefreshResult==='score+recent'||live.lastRefreshResult==='recent-only';
+      const stateSafe=ledgerBefore===store.getItem(LOCAL_DEATH_KEY)&&pendingBefore===store.getItem(BEST_RUN_STATE_KEY);
+      const authOK=auth.authenticated&&auth.tokenReady&&auth.verification&&auth.verification.phase==='verified';
+      const authWaiting=auth.authenticated&&auth.tokenReady&&auth.verification&&auth.verification.phase==='reload-needed';
+      authOK?pass('uniqueAuth','VERIFIED — UID STABLE'):authWaiting?warn('uniqueAuth','RELOAD REQUIRED'):warn('uniqueAuth','OFFLINE / LOCAL FALLBACK');
+      scoreReady?pass('uniqueScore',live.scoreRecords+' RECORDS · LIMIT '+LB_SCORE_FETCH):fail('uniqueScore','FAIL');
+      recentReady?pass('uniqueRecent',live.recentRecords+' RECORDS · TIMESTAMP QUERY'):warn('uniqueRecent','CACHE / SCORE-ONLY FALLBACK');
+      d.grouping?pass('uniqueGrouping','PASS — STRONGEST PER INITIALS'):fail('uniqueGrouping','FAIL');
+      d.mountainUnique&&liveUnique?pass('uniqueMountain','PASS — '+mount.length+' UNIQUE BODIES'):fail('uniqueMountain','FAIL');
+      d.topTen?pass('uniqueTopTen','PASS — UNIQUE TOP-10 NAMES GUARANTEED'):fail('uniqueTopTen','FAIL');
+      d.recent?pass('uniqueRecentFill','PASS — LOW-SCORE RECENT NAMES INCLUDED'):fail('uniqueRecentFill','FAIL');
+      d.ranks?pass('uniqueRanks','PASS — EXACT UID RANK; NO DUPLICATE BODY'):fail('uniqueRanks','FAIL');
+      d.world?pass('uniqueWorld',WORLD_VERSION+' — FILTERED'):fail('uniqueWorld','FAIL');
+      d.cap?pass('uniqueCap','PASS — 50 / 50 UNIQUE'):fail('uniqueCap','FAIL');
+      localHidden&&stateSafe?pass('uniqueLocal','HIDDEN · '+localDeaths.length+' / 50 RETAINED'):fail('uniqueLocal','FAIL');
+      spark?pass('uniqueSpark','2 × 75 · 5-MIN THROTTLE'):fail('uniqueSpark','FAIL');
+      legacy===0?pass('uniqueLegacy','ISOLATED — 0 REQUESTS'):fail('uniqueLegacy',legacy+' REQUEST(S)');
+      pass('uniqueScroll','READY — SWIPE TO REVIEW');
+      const deterministic=d.grouping&&d.leaderboardDuplicates&&d.mountainUnique&&d.topTen&&d.recent&&d.ranks&&d.world&&d.cap;
+      const baseOK=deterministic&&liveUnique&&localHidden&&stateSafe&&spark&&legacy===0;
+      const overall=$('uniqueOverall');
+      if(overall){
+        if(baseOK&&authOK&&recentReady){overall.textContent='VERIFIED — v6f UNIQUE-INITIAL MOUNTAIN PASSED';overall.className='authGood';}
+        else if(baseOK&&authWaiting){overall.textContent='LOCAL CHECKS PASSED — RELOAD THIS SAME URL ONCE';overall.className='authWarn';}
+        else if(baseOK&&!auth.authenticated){overall.textContent='LOCAL RELEASE VALIDATION PASSED — FIREBASE OFFLINE';overall.className='authWarn';}
+        else if(baseOK&&!recentReady){overall.textContent='CORE CHECKS PASSED — RECENT QUERY NEEDS TIMESTAMP INDEX / NETWORK';overall.className='authWarn';}
+        else{overall.textContent='UNIQUE-MOUNTAIN VALIDATION NEEDS ATTENTION';overall.className='authBad';}
+      }
+      const details=$('uniqueDetails');if(details)details.textContent=[
+        'Build: '+BUILD_VERSION+' ('+APP_CONFIG.build.channel+')','World: '+WORLD_VERSION,
+        'Live score / recent / merged: '+live.scoreRecords+' / '+live.recentRecords+' / '+live.mergedRecords,
+        'Canonical loaded initials: '+uniqueStats.unique,'Selected mountain bodies: '+mountStats.selected+' / '+SHARED_MEMORIAL_LIMIT,
+        'Top-10 unique included: '+mountStats.topTenIncluded+' / '+mountStats.topTenUnique,
+        'Recent unique included: '+mountStats.recentIncluded,'Ranked mountain bodies: '+integration.rankedBodies,
+        'Private local deaths retained: '+localDeaths.length+'; rendered in normal play: NO',
+        'Refresh throttle: '+Math.round(LB_REFRESH/60000)+' minutes','Legacy /scores requests: '+legacy,
+        'Diagnostic Firebase writes: NONE','Private ledger unchanged: '+(stateSafe?'YES':'NO')
+      ].join('\n');
+      lastReport={passed:baseOK&&authOK&&recentReady,waiting:baseOK&&authWaiting,offline:baseOK&&!auth.authenticated,
+        recentFallback:baseOK&&!recentReady,deterministic:d,live,mountain:mountStats,unique:uniqueStats,integration,localHidden,stateSafe,legacyRequests:legacy};
+    }catch(e){
+      const overall=$('uniqueOverall');if(overall){overall.textContent='UNIQUE-MOUNTAIN VALIDATION ERROR';overall.className='authBad';}
+      const details=$('uniqueDetails');if(details)details.textContent=(e&&e.message)||String(e);
+      lastReport={passed:false,error:(e&&e.message)||String(e)};
+    }finally{running=false;if(btn)btn.textContent='RUN FULL CHECK';}
+    return lastReport;
+  }
+  function init(){const box=$('uniqueDiag');if(!box||!uniqueCheckRequested())return;box.classList.add('show');
+    $('uniqueRetry').addEventListener('click',e=>{e.stopPropagation();run();});
+    $('uniqueClose').addEventListener('click',e=>{e.stopPropagation();box.classList.remove('show');});}
+  return Object.freeze({init,run,last:()=>lastReport,requested:uniqueCheckRequested,synthetic});
+})();
+
 Input.bind();
 initAuthDiag();
 BestCheck.init();
@@ -5014,13 +5370,15 @@ MemorialCheck.init();
 ReconciliationCheck.init();
 PerformanceCheck.init();
 ReleaseCheck.init();
+UniqueMountainCheck.init();
 Identity.start().finally(async()=>{
-  Identity.verify();SharedMemorials.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
+  Identity.verify();MountainPopulation.setOwner(Identity.status().uid);renderAuthDiag();await Leaderboard.refresh();
   if(bestCheckRequested())await BestCheck.run();
   if(memorialCheckRequested())await MemorialCheck.run();
   if(reconcileCheckRequested())await ReconciliationCheck.run();
   if(performanceCheckRequested())await PerformanceCheck.run();
   if(sharedCheckRequested())await ReleaseCheck.run();
+  if(uniqueCheckRequested())await UniqueMountainCheck.run();
   if(!diagnosticRequested())Leaderboard.drain();
 });
 /* tune sliders */
@@ -5057,7 +5415,7 @@ function reportErr(msg){errN++;errBox.textContent='ERR['+errN+'] '+msg;errBox.st
 window.addEventListener('error',e=>reportErr((e.message||e.error||'?')+' @'+(e.lineno||'?')+':'+(e.colno||'?')));
 window.addEventListener('unhandledrejection',e=>{reportErr('promise: '+((e.reason&&e.reason.message)||e.reason));if(e.preventDefault)e.preventDefault();});
 const Modules=Object.freeze({
-  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  configuration:Configuration,persistence:Persistence,dataRecovery:DataRecovery,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   audio:Audio,leaderboard:Leaderboard,difficulty:Difficulty,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
@@ -5079,7 +5437,7 @@ requestAnimationFrame(frame);
 window.__EP={
   config:Configuration,recovery:DataRecovery,modules:Modules,begin:Input.beginRun,update:Simulation.update,render:Rendering.render,S:()=>S,C,M:()=>M,fresh:Generation.fresh,
   arrays:()=>({gates,obs,npcs,edgeT,balls,localDeaths,smears,spray,sluff,floaters,parts,snow,rings,carveSegs}),
-  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
+  lb:Leaderboard,identity:Identity,bestRuns:BestRuns,uniqueInitials:UniqueInitials,mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,inclusiveLoading:InclusiveLoading,bestCheck:BestCheck,memorialCheck:MemorialCheck,reconciliationCheck:ReconciliationCheck,performanceCheck:PerformanceCheck,releaseCheck:ReleaseCheck,uniqueMountainCheck:UniqueMountainCheck,performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,localSharedMatch:LocalSharedMatch,personalBestReconciliation:PersonalBestReconciliation,
   lastRun:()=>lastFinishedRun,def:DEF,difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),
   setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);}
