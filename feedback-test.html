@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v9b.0c.4b — Public Feedback</title>
+<title>ENDLESS POWDER v9b.0c.4c — Public Feedback</title>
 <style>
   html{height:100%;height:-webkit-fill-available;background:#05070c}
   body{margin:0;padding:0;height:100%;min-height:100%;min-height:-webkit-fill-available;background:#05070c;overflow:hidden;
@@ -45,7 +45,7 @@
   .ib:active{background:rgba(90,140,200,.4)}
   #stage.intro-active .btnrow{top:calc(var(--safe-top) + 12px);right:calc(var(--safe-right) + 12px);bottom:auto}
   #stage.intro-loading .btnrow{visibility:hidden}
-  /* v9b.0c.4b run-context branch: tester identity and adaptive survey are exposed in this test build. */
+  /* v9b.0c.4c run-context branch: tester identity and adaptive survey are exposed in this test build. */
   #bTune{width:max(56px,calc(76*var(--u)));font-size:max(12px,calc(15*var(--u)));font-weight:900;letter-spacing:.06em}
   #bTune.active,#bDebug.active{background:rgba(70,145,205,.62);border-color:rgba(160,225,255,.72);color:#fff}
   #tunePanel{position:absolute;z-index:18;left:calc(var(--safe-left) + 10px);right:calc(var(--safe-right) + 10px);
@@ -285,11 +285,12 @@
   .resultRow{display:flex;justify-content:space-between;align-items:baseline;padding:calc(10*var(--u)) calc(4*var(--u));border-bottom:1px solid rgba(255,255,255,.11);font-size:calc(24*var(--u))}
   .resultRow span{font-size:calc(17*var(--u));font-weight:750;letter-spacing:.13em;text-transform:uppercase;opacity:.58}
   .resultRow b{font-size:calc(30*var(--u));font-weight:900}
-  #resultActions{width:min(78%,calc(500*var(--u)));display:grid;gap:max(10px,calc(12*var(--u)));margin-top:calc(30*var(--u));pointer-events:auto}
-  .resultAction{width:100%;min-height:max(50px,calc(60*var(--u)));box-sizing:border-box;padding:0 calc(18*var(--u));
+  #resultActions{position:relative;z-index:12;isolation:isolate;width:min(78%,calc(500*var(--u)));display:grid;gap:max(10px,calc(12*var(--u)));margin-top:calc(30*var(--u));pointer-events:auto}
+  .resultAction{position:relative;z-index:13;display:flex;align-items:center;justify-content:center;width:100%;min-height:max(50px,calc(60*var(--u)));box-sizing:border-box;padding:0 calc(18*var(--u));
     border-radius:calc(10*var(--u));border:1px solid rgba(143,216,255,.52);background:rgba(7,18,29,.82);color:#dff3ff;
-    font-size:max(14px,calc(18*var(--u)));font-weight:900;letter-spacing:.10em;touch-action:manipulation;cursor:pointer}
-  .resultAction:active{transform:scale(.985);filter:brightness(.92)}
+    font-size:max(14px,calc(18*var(--u)));font-weight:900;letter-spacing:.10em;touch-action:none;cursor:pointer;pointer-events:auto;
+    -webkit-appearance:none;appearance:none;-webkit-user-select:none;user-select:none}
+  .resultAction:active,.resultAction.is-pressed{transform:scale(.985);filter:brightness(.92)}
   .resultAction:focus-visible{outline:3px solid #8fd8ff;outline-offset:3px}
   .ov .go{margin-top:calc(40*var(--u));font-size:calc(26*var(--u));font-weight:800;letter-spacing:.18em;
     color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
@@ -380,7 +381,7 @@
       -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;
     }
   }
-  /* v9b.0c.4b: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
+  /* v9b.0c.4c: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
   #playtestBadge{display:none;position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 16px);left:50%;transform:translateX(-50%);
     padding:7px 11px;border-radius:999px;border:1px solid rgba(143,216,255,.45);background:rgba(5,12,20,.76);color:#dff3ff;
     font-size:max(10px,calc(13*var(--u)));font-weight:900;letter-spacing:.14em;pointer-events:none;backdrop-filter:blur(7px)}
@@ -592,7 +593,7 @@
       <div class="introView" id="introMenu">
         <button class="introBtn primary" id="introStart" type="button">START RUN</button>
         <button class="introBtn secondary" id="introHow" type="button" aria-controls="introHowPreview" aria-expanded="false">HOW TO PLAY</button>
-        <div class="version">v9b.0c.4b</div>
+        <div class="version">v9b.0c.4c</div>
       </div>
     </div>
     <section id="introHowPreview" aria-hidden="true" aria-labelledby="introHowTitle">
@@ -616,7 +617,7 @@
         <div class="introView">
           <button class="introBtn primary" id="introHowStart" type="button">START RUN</button>
           <button class="introBtn secondary" id="introBack" type="button">BACK</button>
-          <div class="version howVersionSpacer" aria-hidden="true">v9b.0c.4b</div>
+          <div class="version howVersionSpacer" aria-hidden="true">v9b.0c.4c</div>
         </div>
       </div>
     </section>
@@ -703,11 +704,11 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v9b.0c.4b is a run-context derivative of the active v8e arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
+   v9b.0c.4c is a run-context derivative of the active v8e arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
    Retired personal-best paths, schemas, caches, queues, and compatibility diagnostics are removed from the runtime.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v9b.0c.4b',channel:'public-feedback-and-bug-reporting'}),
+  build:Object.freeze({version:'v9b.0c.4c',channel:'public-feedback-and-bug-reporting'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -896,8 +897,8 @@ const RunContext=(()=>{
     const tune=document.getElementById('bTune'),debug=document.getElementById('bDebug');
     if(tune){tune.textContent=launchDevtools?'DEV':'TEST';tune.setAttribute('aria-label',launchDevtools?'Open developer controls':'Open playtest controls');}
     if(debug)debug.setAttribute('aria-hidden',launchDevtools?'false':'true');
-    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?'v9b.0c.4b · PLAYTEST':'v9b.0c.4b';});
-    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER v9b.0c.4b — Playtest':'ENDLESS POWDER v9b.0c.4b';
+    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?'v9b.0c.4c · PLAYTEST':'v9b.0c.4c';});
+    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER v9b.0c.4c — Playtest':'ENDLESS POWDER v9b.0c.4c';
     return current();
   }
   function selfTest(){
@@ -2755,7 +2756,7 @@ const PublicFeedback=(()=>{
   function open(nextSource){if(!RunContext.permits('allowPublicFeedback'))return false;source=nextSource==='death'?'death':'menu';const modal=$('publicFeedbackModal'),text=$('publicFeedbackText'),cat=$('publicFeedbackCategory'),box=$('publicFeedbackAttach'),send=$('publicFeedbackSend');if(!modal)return false;if(cat)cat.value=source==='menu'?'bug':'general';if(text){text.value='';$('publicFeedbackCount').textContent='0 / '+CFG.maxComment;}if(box)box.checked=source==='death'&&!!(lastDiagnostics&&lastDiagnostics.summary);if(send){send.disabled=false;send.textContent='SEND FEEDBACK';}setStatus('');updateDisclosure();modal.classList.add('show');modal.setAttribute('aria-hidden','false');setTimeout(()=>{try{text&&text.focus();}catch(e){}},0);return true;}
   function close(){const modal=$('publicFeedbackModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}submitting=false;return true;}
   async function submit(){if(submitting)return false;const cat=String(($('publicFeedbackCategory')||{}).value||'general'),comment=String(($('publicFeedbackText')||{}).value||'').trim().slice(0,CFG.maxComment),attach=!!(($('publicFeedbackAttach')||{}).checked);if(!CFG.categories.includes(cat)){setStatus('Choose a valid category.');return false;}if(!comment){setStatus('Enter a short message before sending.');return false;}const payload=buildPayload(cat,comment,attach),bytes=CompactTelemetry.byteSize(payload);if(bytes>CFG.maxBytes){setStatus('This report is too large. Turn off diagnostic attachment and try again.');return false;}enqueue(payload);submitting=true;const send=$('publicFeedbackSend');if(send){send.disabled=true;send.textContent='SENDING…';}setStatus('Sending…');let result;try{result=await FeedbackTransport.drain('user-submit');}catch(e){result={status:'transport-error'};}const stillPending=pending().some(x=>x.feedbackId===payload.feedbackId);if(!stillPending){setStatus('Feedback sent. Thank you.');if(send)send.textContent='SENT';last={status:'sent',feedbackId:payload.feedbackId,bytes,pending:pending().length};}else{setStatus('Feedback saved locally and will retry when a connection is available.');if(send){send.disabled=false;send.textContent='RETRY SEND';}}submitting=false;return !stillPending;}
-  function initUI(){const menu=$('menuFeedback'),death=$('rPublicFeedback'),modal=$('publicFeedbackModal'),cancel=$('publicFeedbackCancel'),send=$('publicFeedbackSend'),text=$('publicFeedbackText'),attach=$('publicFeedbackAttach');if(menu)menu.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('menu');});if(death)death.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('death');});if(modal)modal.addEventListener('pointerdown',e=>e.stopPropagation());if(cancel)cancel.addEventListener('click',e=>{e.preventDefault();close();});if(send)send.addEventListener('click',e=>{e.preventDefault();submit();});if(text)text.addEventListener('input',()=>{$('publicFeedbackCount').textContent=String(text.value.length)+' / '+CFG.maxComment;});if(attach)attach.addEventListener('change',updateDisclosure);}
+  function initUI(){const menu=$('menuFeedback'),death=$('rPublicFeedback'),modal=$('publicFeedbackModal'),cancel=$('publicFeedbackCancel'),send=$('publicFeedbackSend'),text=$('publicFeedbackText'),attach=$('publicFeedbackAttach');if(menu)menu.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('menu');});if(modal)modal.addEventListener('pointerdown',e=>e.stopPropagation());if(cancel)cancel.addEventListener('click',e=>{e.preventDefault();close();});if(send)send.addEventListener('click',e=>{e.preventDefault();submit();});if(text)text.addEventListener('input',()=>{$('publicFeedbackCount').textContent=String(text.value.length)+' / '+CFG.maxComment;});if(attach)attach.addEventListener('change',updateDisclosure);}
   function status(){return Object.freeze({enabled:APP_CONFIG.feedback.enabled,source,active:!!active,lastDiagnostics:!!lastDiagnostics,pending:pending().length,last:Object.assign({},last),maxBytes:CFG.maxBytes,maxComment:CFG.maxComment,maxTraceSamples:MAX_SAMPLES});}
   function selfTest(){const sampleSummary={reportId:'tr_000000000000000000000000',run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0},steering:{hardCarveSec:2,directionReversals:3},pursuit:{peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},attacks:{telegraphs:1,lunges:1,dodges:1},performance:{averageFps:60,minimumFps:55}};const p={schema:PUBLIC_FEEDBACK_SCHEMA_VERSION,feedbackId:'pf_000000000000000000000000',timestamp:Date.now(),category:'bug',comment:'test',source:'menu',attachDiagnostics:true,build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION},client:{clientId:'tc_00000000000000000000',sessionId:'ts_00000000000000000000',inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},runData:runBlock(sampleSummary),trace:Array.from({length:MAX_SAMPLES},(_,i)=>({t:i*.2,d:i,x:360,v:20,s:0,c:0,y:'CHASE',g:25,p:.2,h:0}))};const q=normalizeQueue({version:PUBLIC_FEEDBACK_QUEUE_SCHEMA_VERSION,items:Array.from({length:6},(_,i)=>({feedbackId:'pf_'+String(i).padStart(24,'0'),payload:{i}}))});return Object.freeze({passed:CompactTelemetry.byteSize(p)<CFG.maxBytes&&p.comment.length<=CFG.maxComment&&p.trace.length===MAX_SAMPLES&&q.items.length===QUEUE_CFG.maxPending&&PUBLIC_FEEDBACK_ID_RE.test(p.feedbackId),sampleBytes:CompactTelemetry.byteSize(p),traceSamples:p.trace.length,queueCap:q.items.length});}
   return Object.freeze({beginRun,tick,finish,noteError,open,close,submit,pending,nextPending,removePending,markAttempt,status,selfTest,initUI,lastDiagnostics:()=>clone(lastDiagnostics),buildPayload:(c,m,a)=>clone(buildPayload(c,m,a))});
@@ -2787,7 +2788,7 @@ const FeedbackTransport=(()=>{
 const FeedbackBaseline=(()=>{
   const SAMPLE_STEP=0.20,MAX_SAMPLES=3000,MAX_EVENTS=900,MAX_REPORTS=8;
   const REPORT_KEY=APP_CONFIG.storage.diagnostics.feedbackReports,TESTER_KEY='ep_feedback_tester_v2',LEGACY_TESTER_KEY='ep_feedback_tester_v1';
-  const REPORT_VERSION='feedback-v9b.0c.4b',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
+  const REPORT_VERSION='feedback-v9b.0c.4c',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
   const SCALE=Object.freeze({minimum:1,maximum:5,notApplicable:'NA',automaticNotApplicable:AUTO_NA,labels:Object.freeze({
     1:'Very low / not at all',2:'Low',3:'Moderate',4:'High',5:'Very high',NA:'Not applicable / not judged',NA_AUTO:'Automatic N/A'
   })});
@@ -5379,6 +5380,53 @@ function showLeaderboard(){
   renderBoard();ArcadeLeaderboard.refresh();InitialsMountain.refresh();if(RunContext.permits('allowLeaderboard')&&RunContext.permits('allowMountainWrites'))ArcadeSubmission.drain();
 }
 function showResults(){el.leaderboard.classList.add('hide');el.results.classList.remove('hide');}
+/* v9b.0c.4c: iOS-safe result actions. The visual rectangle is the hit rectangle.
+   Route pointerdown geometrically at the results-overlay capture phase so no child,
+   text node, legacy overlay, or delayed synthesized click can create partial dead zones. */
+const ResultActionRouter=(()=>{
+  const ACTION_IDS=Object.freeze(['rContinue','rPublicFeedback']);
+  let bound=false,lastActivationAt=-Infinity,lastAction='';
+  function visible(){return el.results&&!el.results.classList.contains('hide');}
+  function hitAt(x,y){
+    if(!visible())return null;
+    for(const id of ACTION_IDS){
+      const node=$(id);if(!node||node.disabled)continue;
+      const r=node.getBoundingClientRect();
+      if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return node;
+    }
+    return null;
+  }
+  function activate(id){
+    lastActivationAt=performance.now();lastAction=id;
+    const node=$(id);if(node){node.classList.add('is-pressed');setTimeout(()=>node.classList.remove('is-pressed'),120);}
+    if(id==='rContinue')showLeaderboard();
+    else if(id==='rPublicFeedback')PublicFeedback.open('death');
+    return true;
+  }
+  function pointerDown(e){
+    if(e.isPrimary===false||(e.pointerType==='mouse'&&e.button!==0))return;
+    const node=hitAt(e.clientX,e.clientY);if(!node)return;
+    e.preventDefault();e.stopPropagation();
+    activate(node.id);
+  }
+  function click(e){
+    const node=e.target&&e.target.closest?e.target.closest('#rContinue,#rPublicFeedback'):null;
+    if(!node||!visible())return;
+    e.preventDefault();e.stopPropagation();
+    if(performance.now()-lastActivationAt<650&&lastAction===node.id)return;
+    activate(node.id);
+  }
+  function bind(){
+    if(bound||!el.results)return false;bound=true;
+    el.results.addEventListener('pointerdown',pointerDown,true);
+    ACTION_IDS.forEach(id=>{const node=$(id);if(node)node.addEventListener('click',click);});
+    return true;
+  }
+  function selfTest(){
+    return Object.freeze({bound,actions:ACTION_IDS.slice(),geometricHitRouting:true,activationEvent:'pointerdown',fullRectangle:true});
+  }
+  return Object.freeze({bind,selfTest,hitAt});
+})();
 let inputBound=false;
 function bindInput(){
   if(inputBound){PerformanceStability.noteInputBind(true);return false;}
@@ -5399,7 +5447,7 @@ function bindInput(){
   $('introHowStart').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Input.beginRun();});
   $('introBack').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showIntroMenu();focusIntroControl('introHow');});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.mode==='intro'&&introView==='instructions'){e.preventDefault();showIntroMenu();focusIntroControl('introHow');}});
-  $('rContinue').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showLeaderboard();});
+  ResultActionRouter.bind();
   $('lbBack').addEventListener('click',e=>{e.stopPropagation();showResults();});
   $('lbRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
