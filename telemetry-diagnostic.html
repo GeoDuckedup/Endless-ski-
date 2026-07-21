@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05070c">
+<title>Endless Powder Telemetry Diagnostic v9b.0c.3b</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#05070c;color:#eaf4fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+main{width:min(720px,100%);margin:0 auto}h1{font-size:24px;letter-spacing:.05em;margin:0 0 8px}p{color:#b9c9d5;line-height:1.45}.card{border:1px solid #294052;background:#08121d;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:minmax(120px,.7fr) minmax(0,1.3fr);gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.09)}.row:last-child{border:0}.row span{color:#91a8b8}.row b{word-break:break-word}.good{color:#8ee6b0}.bad{color:#ff9e94}.neutral{color:#ffd18b}button{width:100%;min-height:50px;margin-top:10px;border-radius:10px;border:1px solid #8fd8ff;background:#8fd8ff;color:#07111a;font-weight:850;font-size:15px;letter-spacing:.07em}button.secondary{background:#132332;color:#eaf4fb;border-color:#38576e}button:disabled{opacity:.45}pre{white-space:pre-wrap;word-break:break-word;background:#03080d;border:1px solid #1d3040;border-radius:10px;padding:12px;min-height:120px;color:#cfe2ef;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}.note{font-size:13px;color:#9fb1bd}.warn{color:#ffd18b}
+</style>
+</head>
+<body>
+<main>
+<h1>ENDLESS POWDER TELEMETRY CHECK</h1>
+<p>This page performs one anonymous Firebase sign-in and one schema-valid, create-only telemetry write. It does not read private telemetry.</p>
+<div class="card">
+  <div class="row"><span>Build</span><b>v9b.0c.3b diagnostic</b></div>
+  <div class="row"><span>Authentication</span><b id="auth" class="neutral">NOT STARTED</b></div>
+  <div class="row"><span>UID</span><b id="uid">—</b></div>
+  <div class="row"><span>Report path</span><b id="path">—</b></div>
+  <div class="row"><span>HTTP result</span><b id="http" class="neutral">—</b></div>
+  <button id="run" type="button">RUN TELEMETRY TEST</button>
+  <button id="clear" class="secondary" type="button">CLEAR SAVED TEST LOGIN</button>
+</div>
+<div class="card">
+  <b>Diagnostic log</b>
+  <pre id="log" aria-live="polite">Ready.</pre>
+  <p class="note">A successful write returns HTTP 200 or 204. HTTP 401 normally indicates authentication or Security Rules rejection. HTTP 400 indicates a malformed request or payload.</p>
+</div>
+</main>
+<script>
+'use strict';
+const API_KEY='AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI';
+const DB='https://endless-powder-default-rtdb.firebaseio.com';
+const SESSION_KEY='ep_telemetry_diag_auth_v1';
+const $=id=>document.getElementById(id);
+const logLines=[];
+function log(message,data){const line=new Date().toISOString()+'  '+message+(data===undefined?'':'\n'+(typeof data==='string'?data:JSON.stringify(data,null,2)));logLines.push(line);$('log').textContent=logLines.join('\n\n');}
+function set(id,text,kind){const n=$(id);n.textContent=text;n.className=kind||'';}
+function hex(bytes){const a=new Uint8Array(bytes);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
+function loadSession(){try{const v=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');return v&&v.idToken&&v.uid&&v.expiresAt>Date.now()+60000?v:null;}catch(e){return null;}}
+function saveSession(v){try{localStorage.setItem(SESSION_KEY,JSON.stringify(v));}catch(e){}}
+async function responseDetail(r){let text='';try{text=await r.text();}catch(e){}return {status:r.status,statusText:r.statusText,body:text||'(empty response)',headers:{contentType:r.headers.get('content-type'),firebaseDebug:r.headers.get('x-firebase-auth-debug')}};}
+async function authenticate(){
+  const cached=loadSession();
+  if(cached){set('auth','AUTHENTICATED (CACHED)','good');set('uid',cached.uid);log('Using cached anonymous session.',{uid:cached.uid});return cached;}
+  set('auth','AUTHENTICATING','neutral');
+  log('Requesting anonymous Firebase account.');
+  let r;
+  try{r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(API_KEY),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});}
+  catch(e){set('auth','NETWORK FAILURE','bad');throw new Error('Authentication network failure: '+e.message);}
+  if(!r.ok){const d=await responseDetail(r);set('auth','AUTH FAILED '+r.status,'bad');throw new Error('Authentication failed: '+JSON.stringify(d));}
+  const j=await r.json();
+  const session={uid:j.localId,idToken:j.idToken,expiresAt:Date.now()+Math.max(60,Number(j.expiresIn)||3600)*1000};
+  saveSession(session);set('auth','AUTHENTICATED','good');set('uid',session.uid);log('Anonymous authentication succeeded.',{uid:session.uid,expiresAt:new Date(session.expiresAt).toISOString()});return session;
+}
+function payload(reportId){
+  const now=Date.now();
+  return {
+    schema:'public-run-v1',reportId,timestamp:now,
+    build:{version:'v9b.0c.3b',worldVersion:'mountain-v4-course-1',telemetryVersion:'telemetry-engine-v1'},
+    session:{sessionId:'ts_'+hex(10),runOrdinal:1},
+    client:{clientId:'tc_'+hex(10),inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},
+    run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0},
+    steering:{averageAbsoluteSteer:.4,hardCarveSec:2,directionReversals:3},
+    pursuit:{averageWorldGap:25,minimumWorldGap:8,averageTargetGap:20,averagePressure:.2,peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},
+    flags:{cleanEvents:4,missEvents:1,queuedCleanGap:2,queuedMissNudge:4,retainedCleanGapAfter1s:1,retainedCleanGapAfter2s:.5,retainedMissGapAfter1s:-2,retainedMissGapAfter2s:-3},
+    attacks:{huntCloses:1,telegraphs:1,lunges:1,dodges:0,recoveries:1,lulls:0,feedings:0,averageSpeedAtTelegraph:20,averageSpeedAtLunge:22},
+    performance:{averageFps:60,minimumFps:54,lowFpsFrames:0}
+  };
+}
+async function run(){
+  $('run').disabled=true;set('http','RUNNING','neutral');
+  try{
+    const session=await authenticate();
+    const reportId='tr_'+hex(12),month=new Date().toISOString().slice(0,7);
+    const path='/endless_powder/telemetry/runs/'+month+'/'+session.uid+'/'+reportId;
+    set('path',path);const body=JSON.stringify(payload(reportId));
+    log('Sending conditional PUT.',{path,bytes:new TextEncoder().encode(body).length,ifMatch:'null_etag',printSilent:false});
+    let r;
+    try{r=await fetch(DB+path+'.json?auth='+encodeURIComponent(session.idToken),{method:'PUT',headers:{'Content-Type':'application/json','if-match':'null_etag'},body});}
+    catch(e){set('http','NETWORK/CORS FAILURE','bad');throw new Error('Database request failed before an HTTP response: '+e.message);}
+    const detail=await responseDetail(r);log('Firebase response.',detail);
+    if(r.ok){set('http',r.status+' SUCCESS','good');log('SUCCESS: look for the exact report path shown above in Realtime Database.');}
+    else if(r.status===412){set('http','412 ALREADY EXISTS','neutral');}
+    else{set('http',r.status+' REJECTED','bad');}
+  }catch(e){log('TEST FAILED',e&&e.stack||String(e));if($('http').textContent==='RUNNING')set('http','FAILED','bad');}
+  finally{$('run').disabled=false;}
+}
+$('run').addEventListener('click',run);
+$('clear').addEventListener('click',()=>{localStorage.removeItem(SESSION_KEY);set('auth','NOT STARTED','neutral');set('uid','—');set('path','—');set('http','—','neutral');logLines.length=0;log('Saved diagnostic login cleared.');});
+</script>
+</body>
+</html>
