@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v9b.0c.4 — Public Feedback</title>
+<title>ENDLESS POWDER v9b.0c.4b — Public Feedback</title>
 <style>
   html{height:100%;height:-webkit-fill-available;background:#05070c}
   body{margin:0;padding:0;height:100%;min-height:100%;min-height:-webkit-fill-available;background:#05070c;overflow:hidden;
@@ -45,7 +45,7 @@
   .ib:active{background:rgba(90,140,200,.4)}
   #stage.intro-active .btnrow{top:calc(var(--safe-top) + 12px);right:calc(var(--safe-right) + 12px);bottom:auto}
   #stage.intro-loading .btnrow{visibility:hidden}
-  /* v9b.0c.4 run-context branch: tester identity and adaptive survey are exposed in this test build. */
+  /* v9b.0c.4b run-context branch: tester identity and adaptive survey are exposed in this test build. */
   #bTune{width:max(56px,calc(76*var(--u)));font-size:max(12px,calc(15*var(--u)));font-weight:900;letter-spacing:.06em}
   #bTune.active,#bDebug.active{background:rgba(70,145,205,.62);border-color:rgba(160,225,255,.72);color:#fff}
   #tunePanel{position:absolute;z-index:18;left:calc(var(--safe-left) + 10px);right:calc(var(--safe-right) + 10px);
@@ -210,11 +210,11 @@
   }
   .howContent{
     flex:1 1 auto;min-height:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
-    -webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;align-items:center;justify-content:center;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;align-items:flex-start;justify-content:flex-start;
     padding:calc(var(--safe-top) + 52px) calc(var(--safe-right) + 22px)
-      max(18px,calc(24*var(--u))) calc(var(--safe-left) + 22px)
+      max(28px,calc(36*var(--u))) calc(var(--safe-left) + 22px)
   }
-  .howCard{width:min(88%,calc(520*var(--u)));margin:auto;display:flex;flex-direction:column;align-items:stretch}
+  .howCard{width:min(88%,calc(520*var(--u)));margin:0 auto;display:flex;flex-direction:column;align-items:stretch}
   .howActions{
     position:relative;flex:0 0 auto;min-height:max(178px,calc(285*var(--u)));width:100%;box-sizing:border-box;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -280,12 +280,17 @@
   .ov .big{font-size:calc(88*var(--u));font-weight:900;margin:calc(14*var(--u)) 0 0}
   .ov .best{font-size:calc(24*var(--u));opacity:.75;margin-top:calc(4*var(--u))}
   .scoreUnit{font-size:calc(18*var(--u));font-weight:800;letter-spacing:.22em;opacity:.62;margin-top:calc(-5*var(--u))}
-  #ovResults{cursor:pointer;touch-action:manipulation}
+  #ovResults{cursor:default;touch-action:manipulation}
   #resultSummary{width:min(78%,calc(500*var(--u)));margin-top:calc(24*var(--u));font-variant-numeric:tabular-nums}
   .resultRow{display:flex;justify-content:space-between;align-items:baseline;padding:calc(10*var(--u)) calc(4*var(--u));border-bottom:1px solid rgba(255,255,255,.11);font-size:calc(24*var(--u))}
   .resultRow span{font-size:calc(17*var(--u));font-weight:750;letter-spacing:.13em;text-transform:uppercase;opacity:.58}
   .resultRow b{font-size:calc(30*var(--u));font-weight:900}
-  #rContinue{margin-top:calc(38*var(--u));font-size:calc(19*var(--u));font-weight:850;letter-spacing:.18em;color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
+  #resultActions{width:min(78%,calc(500*var(--u)));display:grid;gap:max(10px,calc(12*var(--u)));margin-top:calc(30*var(--u));pointer-events:auto}
+  .resultAction{width:100%;min-height:max(50px,calc(60*var(--u)));box-sizing:border-box;padding:0 calc(18*var(--u));
+    border-radius:calc(10*var(--u));border:1px solid rgba(143,216,255,.52);background:rgba(7,18,29,.82);color:#dff3ff;
+    font-size:max(14px,calc(18*var(--u)));font-weight:900;letter-spacing:.10em;touch-action:manipulation;cursor:pointer}
+  .resultAction:active{transform:scale(.985);filter:brightness(.92)}
+  .resultAction:focus-visible{outline:3px solid #8fd8ff;outline-offset:3px}
   .ov .go{margin-top:calc(40*var(--u));font-size:calc(26*var(--u));font-weight:800;letter-spacing:.18em;
     color:#8fd8ff;animation:pulse 1.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
@@ -375,7 +380,7 @@
       -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;
     }
   }
-  /* v9b.0c.4: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
+  /* v9b.0c.4b: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
   #playtestBadge{display:none;position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 16px);left:50%;transform:translateX(-50%);
     padding:7px 11px;border-radius:999px;border:1px solid rgba(143,216,255,.45);background:rgba(5,12,20,.76);color:#dff3ff;
     font-size:max(10px,calc(13*var(--u)));font-weight:900;letter-spacing:.14em;pointer-events:none;backdrop-filter:blur(7px)}
@@ -384,10 +389,9 @@
   #stage.playtest-mode:not(.devtools-mode) .devOnly{display:none!important}
   #stage:not(.playtest-mode) #rFeedbackReport{display:none!important}
 
-  /* Phase 9B.0c.4: voluntary public feedback. */
-  #rPublicFeedback{margin-top:14px;min-height:46px;padding:0 18px;border-radius:9px;border:1px solid rgba(143,216,255,.52);
-    background:rgba(7,18,29,.78);color:#dff3ff;font-weight:900;letter-spacing:.08em;pointer-events:auto}
-  #rPublicFeedback:active,.publicFeedbackEntry:active{transform:scale(.985);filter:brightness(.92)}
+  /* Phase 9B.0c.4b: voluntary public feedback. */
+  #rPublicFeedback{pointer-events:auto}
+  .publicFeedbackEntry:active{transform:scale(.985);filter:brightness(.92)}
   .publicFeedbackEntry{width:100%;min-height:46px;margin-top:16px;border-radius:9px;border:1px solid rgba(255,255,255,.22);
     background:rgba(18,31,46,.82);color:#e9f5fc;font-weight:850;letter-spacing:.08em}
   #publicFeedbackModal{position:absolute;inset:0;z-index:42;display:none;box-sizing:border-box;
@@ -588,7 +592,7 @@
       <div class="introView" id="introMenu">
         <button class="introBtn primary" id="introStart" type="button">START RUN</button>
         <button class="introBtn secondary" id="introHow" type="button" aria-controls="introHowPreview" aria-expanded="false">HOW TO PLAY</button>
-        <div class="version">v9b.0c.4</div>
+        <div class="version">v9b.0c.4b</div>
       </div>
     </div>
     <section id="introHowPreview" aria-hidden="true" aria-labelledby="introHowTitle">
@@ -612,14 +616,14 @@
         <div class="introView">
           <button class="introBtn primary" id="introHowStart" type="button">START RUN</button>
           <button class="introBtn secondary" id="introBack" type="button">BACK</button>
-          <div class="version howVersionSpacer" aria-hidden="true">v9b.0c.4</div>
+          <div class="version howVersionSpacer" aria-hidden="true">v9b.0c.4b</div>
         </div>
       </div>
     </section>
   </div>
   <div id="introBoot" aria-hidden="true"></div>
   
-  <div class="ov hide" id="ovResults" role="button" aria-label="Continue to leaderboard">
+  <div class="ov hide" id="ovResults" aria-label="Run results">
     <h1 id="rTitle">Caught</h1>
     <div class="tag" id="rTag"></div>
     <div id="resultSummary">
@@ -628,9 +632,11 @@
       <div class="resultRow"><span>Flags</span><b id="rAccuracy">0 / 0</b></div>
       <div class="resultRow"><span>Accuracy</span><b id="rAccuracyPct">0%</b></div>
     </div>
-    <button id="rPublicFeedback" type="button">PROVIDE FEEDBACK</button>
+    <div id="resultActions">
+      <button class="resultAction" id="rContinue" type="button">VIEW LEADERBOARD</button>
+      <button class="resultAction" id="rPublicFeedback" type="button">PROVIDE FEEDBACK</button>
+    </div>
     <button id="rFeedbackReport" type="button">VIEW FEEDBACK REPORT</button>
-    <div id="rContinue">TAP FOR LEADERBOARD</div>
   </div>
   <div class="ov hide" id="ovLeaderboard">
     <h1>LEADERBOARD</h1>
@@ -697,11 +703,11 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v9b.0c.4 is a run-context derivative of the active v8e arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
+   v9b.0c.4b is a run-context derivative of the active v8e arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
    Retired personal-best paths, schemas, caches, queues, and compatibility diagnostics are removed from the runtime.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v9b.0c.4',channel:'public-feedback-and-bug-reporting'}),
+  build:Object.freeze({version:'v9b.0c.4b',channel:'public-feedback-and-bug-reporting'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -890,8 +896,8 @@ const RunContext=(()=>{
     const tune=document.getElementById('bTune'),debug=document.getElementById('bDebug');
     if(tune){tune.textContent=launchDevtools?'DEV':'TEST';tune.setAttribute('aria-label',launchDevtools?'Open developer controls':'Open playtest controls');}
     if(debug)debug.setAttribute('aria-hidden',launchDevtools?'false':'true');
-    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?'v9b.0c.4 · PLAYTEST':'v9b.0c.4';});
-    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER v9b.0c.4 — Playtest':'ENDLESS POWDER v9b.0c.4';
+    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?'v9b.0c.4b · PLAYTEST':'v9b.0c.4b';});
+    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER v9b.0c.4b — Playtest':'ENDLESS POWDER v9b.0c.4b';
     return current();
   }
   function selfTest(){
@@ -2749,7 +2755,7 @@ const PublicFeedback=(()=>{
   function open(nextSource){if(!RunContext.permits('allowPublicFeedback'))return false;source=nextSource==='death'?'death':'menu';const modal=$('publicFeedbackModal'),text=$('publicFeedbackText'),cat=$('publicFeedbackCategory'),box=$('publicFeedbackAttach'),send=$('publicFeedbackSend');if(!modal)return false;if(cat)cat.value=source==='menu'?'bug':'general';if(text){text.value='';$('publicFeedbackCount').textContent='0 / '+CFG.maxComment;}if(box)box.checked=source==='death'&&!!(lastDiagnostics&&lastDiagnostics.summary);if(send){send.disabled=false;send.textContent='SEND FEEDBACK';}setStatus('');updateDisclosure();modal.classList.add('show');modal.setAttribute('aria-hidden','false');setTimeout(()=>{try{text&&text.focus();}catch(e){}},0);return true;}
   function close(){const modal=$('publicFeedbackModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}submitting=false;return true;}
   async function submit(){if(submitting)return false;const cat=String(($('publicFeedbackCategory')||{}).value||'general'),comment=String(($('publicFeedbackText')||{}).value||'').trim().slice(0,CFG.maxComment),attach=!!(($('publicFeedbackAttach')||{}).checked);if(!CFG.categories.includes(cat)){setStatus('Choose a valid category.');return false;}if(!comment){setStatus('Enter a short message before sending.');return false;}const payload=buildPayload(cat,comment,attach),bytes=CompactTelemetry.byteSize(payload);if(bytes>CFG.maxBytes){setStatus('This report is too large. Turn off diagnostic attachment and try again.');return false;}enqueue(payload);submitting=true;const send=$('publicFeedbackSend');if(send){send.disabled=true;send.textContent='SENDING…';}setStatus('Sending…');let result;try{result=await FeedbackTransport.drain('user-submit');}catch(e){result={status:'transport-error'};}const stillPending=pending().some(x=>x.feedbackId===payload.feedbackId);if(!stillPending){setStatus('Feedback sent. Thank you.');if(send)send.textContent='SENT';last={status:'sent',feedbackId:payload.feedbackId,bytes,pending:pending().length};}else{setStatus('Feedback saved locally and will retry when a connection is available.');if(send){send.disabled=false;send.textContent='RETRY SEND';}}submitting=false;return !stillPending;}
-  function initUI(){const menu=$('menuFeedback'),death=$('rPublicFeedback'),modal=$('publicFeedbackModal'),cancel=$('publicFeedbackCancel'),send=$('publicFeedbackSend'),text=$('publicFeedbackText'),attach=$('publicFeedbackAttach');if(menu)menu.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('menu');});if(death)death.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();open('death');});if(modal)modal.addEventListener('pointerdown',e=>e.stopPropagation());if(cancel)cancel.addEventListener('click',e=>{e.preventDefault();close();});if(send)send.addEventListener('click',e=>{e.preventDefault();submit();});if(text)text.addEventListener('input',()=>{$('publicFeedbackCount').textContent=String(text.value.length)+' / '+CFG.maxComment;});if(attach)attach.addEventListener('change',updateDisclosure);}
+  function initUI(){const menu=$('menuFeedback'),death=$('rPublicFeedback'),modal=$('publicFeedbackModal'),cancel=$('publicFeedbackCancel'),send=$('publicFeedbackSend'),text=$('publicFeedbackText'),attach=$('publicFeedbackAttach');if(menu)menu.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('menu');});if(death)death.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open('death');});if(modal)modal.addEventListener('pointerdown',e=>e.stopPropagation());if(cancel)cancel.addEventListener('click',e=>{e.preventDefault();close();});if(send)send.addEventListener('click',e=>{e.preventDefault();submit();});if(text)text.addEventListener('input',()=>{$('publicFeedbackCount').textContent=String(text.value.length)+' / '+CFG.maxComment;});if(attach)attach.addEventListener('change',updateDisclosure);}
   function status(){return Object.freeze({enabled:APP_CONFIG.feedback.enabled,source,active:!!active,lastDiagnostics:!!lastDiagnostics,pending:pending().length,last:Object.assign({},last),maxBytes:CFG.maxBytes,maxComment:CFG.maxComment,maxTraceSamples:MAX_SAMPLES});}
   function selfTest(){const sampleSummary={reportId:'tr_000000000000000000000000',run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0},steering:{hardCarveSec:2,directionReversals:3},pursuit:{peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},attacks:{telegraphs:1,lunges:1,dodges:1},performance:{averageFps:60,minimumFps:55}};const p={schema:PUBLIC_FEEDBACK_SCHEMA_VERSION,feedbackId:'pf_000000000000000000000000',timestamp:Date.now(),category:'bug',comment:'test',source:'menu',attachDiagnostics:true,build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION},client:{clientId:'tc_00000000000000000000',sessionId:'ts_00000000000000000000',inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},runData:runBlock(sampleSummary),trace:Array.from({length:MAX_SAMPLES},(_,i)=>({t:i*.2,d:i,x:360,v:20,s:0,c:0,y:'CHASE',g:25,p:.2,h:0}))};const q=normalizeQueue({version:PUBLIC_FEEDBACK_QUEUE_SCHEMA_VERSION,items:Array.from({length:6},(_,i)=>({feedbackId:'pf_'+String(i).padStart(24,'0'),payload:{i}}))});return Object.freeze({passed:CompactTelemetry.byteSize(p)<CFG.maxBytes&&p.comment.length<=CFG.maxComment&&p.trace.length===MAX_SAMPLES&&q.items.length===QUEUE_CFG.maxPending&&PUBLIC_FEEDBACK_ID_RE.test(p.feedbackId),sampleBytes:CompactTelemetry.byteSize(p),traceSamples:p.trace.length,queueCap:q.items.length});}
   return Object.freeze({beginRun,tick,finish,noteError,open,close,submit,pending,nextPending,removePending,markAttempt,status,selfTest,initUI,lastDiagnostics:()=>clone(lastDiagnostics),buildPayload:(c,m,a)=>clone(buildPayload(c,m,a))});
@@ -2781,7 +2787,7 @@ const FeedbackTransport=(()=>{
 const FeedbackBaseline=(()=>{
   const SAMPLE_STEP=0.20,MAX_SAMPLES=3000,MAX_EVENTS=900,MAX_REPORTS=8;
   const REPORT_KEY=APP_CONFIG.storage.diagnostics.feedbackReports,TESTER_KEY='ep_feedback_tester_v2',LEGACY_TESTER_KEY='ep_feedback_tester_v1';
-  const REPORT_VERSION='feedback-v9b.0c.4',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
+  const REPORT_VERSION='feedback-v9b.0c.4b',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
   const SCALE=Object.freeze({minimum:1,maximum:5,notApplicable:'NA',automaticNotApplicable:AUTO_NA,labels:Object.freeze({
     1:'Very low / not at all',2:'Low',3:'Moderate',4:'High',5:'Very high',NA:'Not applicable / not judged',NA_AUTO:'Automatic N/A'
   })});
@@ -5384,7 +5390,7 @@ function bindInput(){
   window.addEventListener('pointerup',pup,{passive:true});
   window.addEventListener('pointercancel',pup,{passive:true});
   document.addEventListener('touchmove',e=>{
-    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#arcadeDiag.show,#feedbackReport.show,#tunePanel.show'):null;
+    const target=e.target&&e.target.closest?e.target.closest('#authDiag.show,#arcadeDiag.show,#feedbackReport.show,#tunePanel.show,#introHowPreview,#publicFeedbackModal.show'):null;
     if(!el.tune.classList.contains('show')&&!target)e.preventDefault();
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
@@ -5393,7 +5399,7 @@ function bindInput(){
   $('introHowStart').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Input.beginRun();});
   $('introBack').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showIntroMenu();focusIntroControl('introHow');});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.mode==='intro'&&introView==='instructions'){e.preventDefault();showIntroMenu();focusIntroControl('introHow');}});
-  el.results.addEventListener('pointerdown',e=>{e.preventDefault();showLeaderboard();});
+  $('rContinue').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showLeaderboard();});
   $('lbBack').addEventListener('click',e=>{e.stopPropagation();showResults();});
   $('lbRetry').addEventListener('click',e=>{e.stopPropagation();Input.beginRun();});
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
