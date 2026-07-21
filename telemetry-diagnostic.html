@@ -13,9 +13,9 @@ main{width:min(720px,100%);margin:0 auto}h1{font-size:24px;letter-spacing:.05em;
 <body>
 <main>
 <h1>ENDLESS POWDER TELEMETRY CHECK</h1>
-<p>This page performs one anonymous Firebase sign-in and one schema-valid, create-only telemetry write. It does not read private telemetry.</p>
+<p>This page performs one anonymous Firebase sign-in and one schema-valid telemetry write protected by the server-side create-only rule. It does not read private telemetry.</p>
 <div class="card">
-  <div class="row"><span>Build</span><b>v9b.0c.3b diagnostic</b></div>
+  <div class="row"><span>Build</span><b>v9b.0c.3c diagnostic</b></div>
   <div class="row"><span>Authentication</span><b id="auth" class="neutral">NOT STARTED</b></div>
   <div class="row"><span>UID</span><b id="uid">—</b></div>
   <div class="row"><span>Report path</span><b id="path">—</b></div>
@@ -77,9 +77,9 @@ async function run(){
     const reportId='tr_'+hex(12),month=new Date().toISOString().slice(0,7);
     const path='/endless_powder/telemetry/runs/'+month+'/'+session.uid+'/'+reportId;
     set('path',path);const body=JSON.stringify(payload(reportId));
-    log('Sending conditional PUT.',{path,bytes:new TextEncoder().encode(body).length,ifMatch:'null_etag',printSilent:false});
+    log('Sending standard create-only PUT.',{path,bytes:new TextEncoder().encode(body).length,conditionalHeader:false,createOnlyRule:true});
     let r;
-    try{r=await fetch(DB+path+'.json?auth='+encodeURIComponent(session.idToken),{method:'PUT',headers:{'Content-Type':'application/json','if-match':'null_etag'},body});}
+    try{r=await fetch(DB+path+'.json?auth='+encodeURIComponent(session.idToken),{method:'PUT',headers:{'Content-Type':'application/json'},body});}
     catch(e){set('http','NETWORK/CORS FAILURE','bad');throw new Error('Database request failed before an HTTP response: '+e.message);}
     const detail=await responseDetail(r);log('Firebase response.',detail);
     if(r.ok){set('http',r.status+' SUCCESS','good');log('SUCCESS: look for the exact report path shown above in Realtime Database.');}
