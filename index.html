@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>ENDLESS POWDER v9b.0c.6</title>
+<title>ENDLESS POWDER v11.0</title>
 <style>
   html{height:100%;height:-webkit-fill-available;background:#05070c}
   body{margin:0;padding:0;height:100%;min-height:100%;min-height:-webkit-fill-available;background:#05070c;overflow:hidden;
@@ -45,7 +45,7 @@
   .ib:active{background:rgba(90,140,200,.4)}
   #stage.intro-active .btnrow{top:calc(var(--safe-top) + 12px);right:calc(var(--safe-right) + 12px);bottom:auto}
   #stage.intro-loading .btnrow{visibility:hidden}
-  /* v9b.0c.6 run-context branch: tester identity and adaptive survey are exposed in this test build. */
+  /* Hidden playtest branch: tester identity and adaptive survey are available only in playtest mode. */
   #bTune{width:max(56px,calc(76*var(--u)));font-size:max(12px,calc(15*var(--u)));font-weight:900;letter-spacing:.06em}
   #bTune.active,#bDebug.active{background:rgba(70,145,205,.62);border-color:rgba(160,225,255,.72);color:#fff}
   #tunePanel{position:absolute;z-index:18;left:calc(var(--safe-left) + 10px);right:calc(var(--safe-right) + 10px);
@@ -387,7 +387,7 @@
       -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;
     }
   }
-  /* v9b.0c.6: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
+  /* v10a: public mode hides diagnostic tooling; URL-selected playtest mode exposes only its required controls. */
   #playtestBadge{display:none;position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 16px);left:50%;transform:translateX(-50%);
     padding:7px 11px;border-radius:999px;border:1px solid rgba(143,216,255,.45);background:rgba(5,12,20,.76);color:#dff3ff;
     font-size:max(10px,calc(13*var(--u)));font-weight:900;letter-spacing:.14em;pointer-events:none;backdrop-filter:blur(7px)}
@@ -426,6 +426,7 @@
   #publicFeedbackActions button.primary{background:#dbeef8;color:#07101a;border-color:#dbeef8}
   #publicFeedbackActions button:disabled{opacity:.46}
   #stage.playtest-mode #rPublicFeedback,#stage.playtest-mode .publicFeedbackEntry{display:none!important}
+  #stage.experiment-local #rPublicFeedback,#stage.experiment-local .publicFeedbackEntry{display:none!important}
 
 </style>
 </head>
@@ -443,7 +444,7 @@
   </div>
   <div id="tunePanel" aria-label="Playtest controls">
     <div class="tuneHead">
-      <div><div class="tuneTitle">PLAYTEST MODE</div><div class="tuneSub">Diagnostic runs do not update records, leaderboard submissions, death history, or the shared mountain.</div></div>
+      <div><div class="tuneTitle">PRIVATE PLAYTEST</div><div class="tuneSub">Playtest runs do not update records, leaderboard submissions, death history, public telemetry, public feedback, or the shared mountain. Completed playtest reports may be sent privately.</div></div>
     </div>
     <div class="tuneSection">
       <h3>TESTER</h3>
@@ -478,9 +479,9 @@
     </div>
     <div class="tuneSection devOnly">
       <h3>START &amp; SPEED ECONOMY</h3>
-      <label><span class="nm">First-run speed</span><input type="range" id="sStart" min="10" max="22" step="0.5" value="14"><span class="vl" id="vStart">14.0</span></label>
-      <label><span class="nm">Retry speed</span><input type="range" id="sRetry" min="10" max="22" step="0.5" value="17"><span class="vl" id="vRetry">17.0</span></label>
-      <label><span class="nm">Flag fuel</span><input type="range" id="sFuel" min="3" max="14" step="0.5" value="7"><span class="vl" id="vFuel">7.0</span></label>
+      <label><span class="nm">First-run speed</span><input type="range" id="sStart" min="10" max="22" step="0.05" value="16.1"><span class="vl" id="vStart">16.1</span></label>
+      <label><span class="nm">Retry speed</span><input type="range" id="sRetry" min="10" max="22" step="0.05" value="19.55"><span class="vl" id="vRetry">19.6</span></label>
+      <label><span class="nm">Flag fuel</span><input type="range" id="sFuel" min="3" max="14" step="0.5" value="8"><span class="vl" id="vFuel">8.0</span></label>
       <label><span class="nm">Speed bleed</span><input type="range" id="sBleed" min="0.1" max="0.9" step="0.05" value="0.4"><span class="vl" id="vBleed">0.40</span></label>
     </div>
     <div class="tuneSection devOnly">
@@ -549,7 +550,7 @@
     <div id="feedbackReportCard">
       <div id="feedbackReportView">
         <div id="feedbackReportHead">
-          <h2>PHASE 9B.0c.5 PLAYTEST RUN REPORT</h2>
+          <h2>PHASE 10B.1B SKIER IMPACT SMOOTHING REPORT</h2>
           <select id="feedbackReportSelect" aria-label="Choose a recent diagnostic report"></select>
           <div id="feedbackReportStatus" aria-live="polite"></div>
         </div>
@@ -601,7 +602,7 @@
       <div class="introView" id="introMenu">
         <button class="introBtn primary" id="introStart" type="button">START RUN</button>
         <button class="introBtn secondary" id="introHow" type="button" aria-controls="introHowPreview" aria-expanded="false">HOW TO PLAY</button>
-        <div class="version">v9b.0c.6</div>
+        <div class="version">v11.0</div>
       </div>
     </div>
     <section id="introHowPreview" aria-hidden="true" aria-labelledby="introHowTitle">
@@ -625,7 +626,7 @@
         <div class="introView">
           <button class="introBtn primary" id="introHowStart" type="button">START RUN</button>
           <button class="introBtn secondary" id="introBack" type="button">BACK</button>
-          <div class="version howVersionSpacer" aria-hidden="true">v9b.0c.6</div>
+          <div class="version howVersionSpacer" aria-hidden="true">v10a</div>
         </div>
       </div>
     </section>
@@ -712,11 +713,12 @@ const LW=720, BASE_LH=1280, PXM=16, EDGE=40, PR=12, MAX_DT=0.05;
 let LH=BASE_LH, PIN_Y=0.36*LH;
 const D2R=Math.PI/180;
 /* ==================== SHARED-MOUNTAIN CONFIGURATION ====================
-   v9b.0c.6 is a run-context derivative of the active v8e arcade-only release: immutable leaderboard runs plus one strongest run per initials for the mountain.
+   v11.0 is the production Phase 11 derivative of the validated v9b.0c.6 release: immutable leaderboard runs plus one strongest run per initials for the mountain.
    Retired personal-best paths, schemas, caches, queues, and compatibility diagnostics are removed from the runtime.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({version:'v9b.0c.6',channel:'production-telemetry-feedback-playtest'}),
+  build:Object.freeze({version:'v11.0',channel:'production-telemetry-feedback-playtest'}),
+  experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 11'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   firebase:Object.freeze({
     projectId:'endless-powder',
@@ -753,8 +755,8 @@ const APP_CONFIG=Object.freeze({
       causes:Object.freeze(['caught','edge','tree','boulder']),
       limits:Object.freeze({depthMax:999999,xMin:EDGE,xMax:LW-EDGE,thetaMin:-1.2,thetaMax:1.2,timestampFutureMs:300000})
     }),
-    telemetrySummary:Object.freeze({version:'public-run-v1',reportIdPattern:'^tr_[a-f0-9]{24}$',sessionIdPattern:'^ts_[a-f0-9]{20}$',clientIdPattern:'^tc_[a-f0-9]{20}$'}),
-    telemetryQueue:Object.freeze({version:'telemetry-pending-v1',maxPending:5}),
+    telemetrySummary:Object.freeze({version:'public-run-v2',reportIdPattern:'^tr_[a-f0-9]{24}$',sessionIdPattern:'^ts_[a-f0-9]{20}$',clientIdPattern:'^tc_[a-f0-9]{20}$'}),
+    telemetryQueue:Object.freeze({version:'phase11-validation-pending-v1',maxPending:5}),
     publicFeedback:Object.freeze({version:'public-feedback-v1',feedbackIdPattern:'^pf_[a-f0-9]{24}$',maxComment:500,maxBytes:40960,maxTraceSamples:75,maxErrors:5,
       categories:Object.freeze(['general','bug','controls','yeti','difficulty','visuals','performance','leaderboard','other'])}),
     feedbackQueue:Object.freeze({version:'public-feedback-pending-v1',maxPending:3}),
@@ -765,7 +767,7 @@ const APP_CONFIG=Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',
     arcadeQueue:'ep_arcade_submit_queue_v7a',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_v7c',initialsMountain:'ep_initials_mountain_v7e',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
-    telemetryConsent:'ep_telemetry_consent_v1',telemetryClient:'ep_telemetry_client_v1',telemetryQueue:'ep_telemetry_queue_v1',publicFeedbackQueue:'ep_public_feedback_queue_v1',playtestQueue:'ep_playtest_upload_queue_v1',
+    telemetryConsent:'ep_telemetry_consent_v1',telemetryClient:'ep_telemetry_client_v1',telemetryQueue:'ep_phase11_validation_queue_v1',publicFeedbackQueue:'ep_public_feedback_queue_v1',playtestQueue:'ep_playtest_upload_queue_v1',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a','ep_best_run_submit_v5c2','ep_best_run_board_v5c3','ep_best_diag','ep_memorial_diag','ep_reconcile_diag','ep_performance_diag','ep_shared_diag','ep_unique_diag_v6f','ep_bestcheck_reload_v5c4','ep_bestcheck_queue_probe_v5c4','ep_memorialcheck_cache_probe_v5d4','ep_reconcilecheck_probe_v5e4','ep_arcade_diag_v7e']),
     diagnostics:Object.freeze({auth:'ep_auth_diag',arcade:'ep_arcade_diag_v8e',feedbackReports:'ep_feedback_reports_v9a'})
   }),
@@ -776,6 +778,8 @@ const APP_CONFIG=Object.freeze({
   telemetry:Object.freeze({enabled:true,uploadEnabled:true,summaryMaxBytes:8192,hardCarveThreshold:0.78,lowFpsThreshold:50,retentionSeconds:Object.freeze([1,2])}),
   feedback:Object.freeze({enabled:true,uploadEnabled:true,sampleStep:0.20}),
   playtest:Object.freeze({uploadEnabled:true}),
+  fullMomentum:Object.freeze({enabled:true,thresholdRatio:0.99,holdSec:0.20,graceSec:0.28,holdDecayPerSec:6,visualRise:12,visualFall:5,armPulseSec:0.55,npcImpactTargetRatio:0.90,npcImpactEaseSec:0.22,npcBloodCarryDistance:8.0}),
+  avalancheBoulder:Object.freeze({npcBloodCarryDistance:14.0,npcKillViewportGate:true}),
   performance:Object.freeze({
     sampleEveryFrames:30,historySamples:120,memorialCacheEntries:64,
     transientCaps:Object.freeze({floaters:24,sluff:32,smears:70}),
@@ -786,7 +790,7 @@ const APP_CONFIG=Object.freeze({
   leaderboard:Object.freeze({visibleRows:10,scoreFetchRecords:75,recentFetchRecords:75,refreshMs:300000}),
   localDeaths:Object.freeze({maxRecords:50,renderVisible:false}),
   memorials:Object.freeze({
-    loadedRecords:50,labelRange:12.5,labelFullRange:6.5,groupX:24,groupDepth:3,
+    loadedRecords:50,labelRange:28.125,labelFullRange:14.625,groupX:24,groupDepth:3,
     quality:Object.freeze({
       low:Object.freeze({bodies:14,groupBodies:2,detailScale:0.90}),
       medium:Object.freeze({bodies:28,groupBodies:3,detailScale:0.85}),
@@ -890,15 +894,17 @@ const RunContext=(()=>{
   }
   const launchMode=queryFlag(query.playtest)?RUN_MODE.PLAYTEST:RUN_MODE.NORMAL;
   const launchDevtools=launchMode===RUN_MODE.PLAYTEST&&queryFlag(query.devtools);
+  const localOnly=!!(APP_CONFIG.experiment&&APP_CONFIG.experiment.localOnly);
+  const telemetryOnlyValidation=!!(APP_CONFIG.experiment&&APP_CONFIG.experiment.telemetryOnlyValidation);
   let serial=0,active=null;
   function policy(mode,devtools,runSerial){
     const playtest=mode===RUN_MODE.PLAYTEST;
     return Object.freeze({
       id:'ctx_'+mode+'_'+String(runSerial||0),mode,runSerial:runSerial||0,startedAt:Date.now(),
       telemetryLevel:playtest?'detailed':'summary',developerTools:!!devtools,
-      allowLeaderboard:!playtest,allowPersonalRecords:!playtest,allowDeathMarkers:!playtest,
-      allowMountainWrites:!playtest,allowLocalRunHistory:!playtest,allowProgression:!playtest,allowTelemetryUploads:!playtest,
-      allowPublicFeedback:!playtest,allowPublicFeedbackUploads:!playtest,allowDiagnosticReports:playtest,allowPlaytestUploads:playtest
+      allowLeaderboard:!playtest&&!localOnly,allowPersonalRecords:!playtest&&!localOnly,allowDeathMarkers:!playtest&&!localOnly,
+      allowMountainWrites:!playtest&&!localOnly,allowLocalRunHistory:!playtest&&!localOnly,allowProgression:!playtest&&!localOnly,allowTelemetryUploads:!playtest&&(!localOnly||telemetryOnlyValidation),
+      allowPublicFeedback:!playtest&&!localOnly,allowPublicFeedbackUploads:!playtest&&!localOnly,allowDiagnosticReports:playtest,allowPlaytestUploads:playtest&&!localOnly
     });
   }
   const launch=policy(launchMode,launchDevtools,0);
@@ -910,26 +916,27 @@ const RunContext=(()=>{
     if(typeof stage==='undefined'||!stage)return current();
     stage.classList.toggle('playtest-mode',launchMode===RUN_MODE.PLAYTEST);
     stage.classList.toggle('devtools-mode',launchDevtools);
+    stage.classList.toggle('experiment-local',localOnly);
     const tune=document.getElementById('bTune'),debug=document.getElementById('bDebug');
     if(tune){tune.textContent=launchDevtools?'DEV':'TEST';tune.setAttribute('aria-label',launchDevtools?'Open developer controls':'Open playtest controls');}
     if(debug)debug.setAttribute('aria-hidden',launchDevtools?'false':'true');
-    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?'v9b.0c.6 · PLAYTEST':'v9b.0c.6';});
-    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER v9b.0c.6 — Playtest':'ENDLESS POWDER v9b.0c.6';
+    document.querySelectorAll('#ovIntro .version').forEach(node=>{node.textContent=launchMode===RUN_MODE.PLAYTEST?BUILD_VERSION+' · PLAYTEST':BUILD_VERSION;});
+    document.title=launchMode===RUN_MODE.PLAYTEST?'ENDLESS POWDER '+BUILD_VERSION+' — Playtest':'ENDLESS POWDER '+BUILD_VERSION;
     return current();
   }
   function selfTest(){
     const normal=policy(RUN_MODE.NORMAL,false,1),playtest=policy(RUN_MODE.PLAYTEST,false,2),dev=policy(RUN_MODE.PLAYTEST,true,3);
-    const normalAll=normal.allowLeaderboard&&normal.allowPersonalRecords&&normal.allowDeathMarkers&&normal.allowMountainWrites&&normal.allowLocalRunHistory&&normal.allowProgression&&normal.allowTelemetryUploads&&normal.allowPublicFeedback&&normal.allowPublicFeedbackUploads&&!normal.allowDiagnosticReports&&!normal.allowPlaytestUploads;
+    const normalExpected=localOnly?(!normal.allowLeaderboard&&!normal.allowPersonalRecords&&!normal.allowDeathMarkers&&!normal.allowMountainWrites&&!normal.allowLocalRunHistory&&!normal.allowProgression&&normal.allowTelemetryUploads===telemetryOnlyValidation&&!normal.allowPublicFeedback&&!normal.allowPublicFeedbackUploads&&!normal.allowDiagnosticReports&&!normal.allowPlaytestUploads):(normal.allowLeaderboard&&normal.allowPersonalRecords&&normal.allowDeathMarkers&&normal.allowMountainWrites&&normal.allowLocalRunHistory&&normal.allowProgression&&normal.allowTelemetryUploads&&normal.allowPublicFeedback&&normal.allowPublicFeedbackUploads&&!normal.allowDiagnosticReports&&!normal.allowPlaytestUploads);
     const isolated=!playtest.allowLeaderboard&&!playtest.allowPersonalRecords&&!playtest.allowDeathMarkers&&!playtest.allowMountainWrites&&!playtest.allowLocalRunHistory&&!playtest.allowProgression&&!playtest.allowTelemetryUploads&&!playtest.allowPublicFeedback&&!playtest.allowPublicFeedbackUploads&&playtest.allowDiagnosticReports&&playtest.allowPlaytestUploads;
-    return Object.freeze({passed:normalAll&&isolated&&dev.developerTools&&!playtest.developerTools,normal,playtest,devtools:dev});
+    return Object.freeze({passed:normalExpected&&isolated&&dev.developerTools&&!playtest.developerTools,normal,playtest,devtools:dev,localOnly,telemetryOnlyValidation});
   }
-  function status(){return Object.freeze({launchMode,launchDevtools,active:current(),serial});}
+  function status(){return Object.freeze({launchMode,launchDevtools,localOnly,telemetryOnlyValidation,active:current(),serial});}
   return Object.freeze({modes:RUN_MODE,begin,current,permits,isPlaytest,applyPresentation,selfTest,status});
 })();
 const C={
   thetaMax:62*D2R, turnRate:240*D2R, returnRate:170*D2R,
   touchDZ:12, touchFull:155, steerLerp:28,
-  glide:10.8, speedMax:40, bleed:0.40, flagFuel:7, fuelPerCombo:0.10, comboFuelCap:10, poolCap:26, fuelRate:15,
+  glide:12.42, speedMax:40, bleed:0.40, flagFuel:8, fuelPerCombo:0.10, comboFuelCap:10, poolCap:26, fuelRate:15,
   crashCut:0.45, faultCut:0.82,
   stun:0.45, iframe:0.55, forgive:0.62, hitstop:0.12,
   chunk:22, ahead:108,
@@ -946,20 +953,123 @@ const C={
   lungeMissBack:3, lungeMissFury:0.1, lungeMissStag:0.5,
   npcChance:0.22, boulderAfter:240, boulderRate:0.045,
   chaseAfter:500, chaseCleanGap:25, chaseDangerGap:9,
+  cleanProtectMin:1.25, cleanProtectMax:1.75, cleanProtectReclaim:0.45, cleanProtectFloorMax:32,
+  threatCooldownControlled:1.22, threatCooldownHunting:1.00, threatCooldownPredatory:0.78, threatCooldownCritical:0.60,
+  predatoryFollowChance:0.72, criticalSecondFollowChance:0.32,
+  predictiveLeadControlled:36, predictiveLeadHunting:76, predictiveLeadPredatory:124, predictiveLeadCritical:154,
+  predictiveRhythmMinConsistency:0.55, predictiveReversalMinInterval:0.24, predictiveReversalMaxInterval:2.20,
+  counterplayBreakMargin:18, counterplayPulseSec:0.72, counterplayMarkerHoldSec:0.58,
+  deepEscalationStart:1800, deepEscalationFull:6200, deepThreatBiasMax:0.10, deepCooldownCutMax:0.16,
+  deepRestCutMax:0.28, deepWhiffStagCutMax:0.18, deepLullCutMax:0.30, deepMistakeAmplifyMax:0.22,
+  lowSpeedDebtThreshold:23, lowSpeedDebtGrace:1.25,
   lullMin:1.0, lullMax:3.0, npcHuntCooldown:10,
   phaseMin:230, phaseMax:320,
   localDeathCap:APP_CONFIG.localDeaths.maxRecords, SEED:1337
 };
+/* ==================== PHASE 11A.2: THREAT-STATE ATTACK INTENSITY ====================
+   Builds on accepted v11a.1 performance-responsive pursuit. The existing Controlled, Hunting, Predatory,
+   and Critical threat states now govern attack cooldowns and conditional follow-up lunges. Follow-ups are
+   decided only after a committed lunge misses and only while poor-skiing threat remains elevated. Telegraph
+   timing, lunge timing, committed aim, grab radius, and attack vocabulary remain unchanged. */
+/* ==================== PHASE 11B.0: PREDICTIVE BUT COMMITTED TARGETING ====================
+   Player-directed telegraphs now choose one fixed aim point from recent carve motion. Prediction strength
+   scales with the existing threat state and is disabled before 500 m. Repeated, consistent reversal cadence
+   can influence Predatory and Critical aim, but the selected point is visibly telegraphed and never changes
+   after the attack begins. Telegraph duration, lunge duration, boost, grab radius, and hitboxes are unchanged. */
+/* ==================== PHASE 11B.1: ATTACK READABILITY + COUNTERPLAY ====================
+   The committed target remains visibly marked through both telegraph and lunge. A restrained snow guide
+   shows the locked prediction direction, follow-up attacks use a double-notch marker, and confirmed dodges
+   fracture the old target while highlighting the skier's escape point. These additions are presentation and
+   telemetry only: prediction, timing, movement, hitboxes, recovery distances, and follow-up rules are unchanged. */
+
+/* ==================== PHASE 11D.0: FULL PHASE 11 VALIDATION SYSTEMS ====================
+   Consolidates the approved Phase 11 pursuit, attack, counterplay, and deep-mountain systems
+   for production. Normal runs use production records and services; hidden playtest runs remain
+   isolated. Compact public-run-v2 telemetry uses a version-isolated queue to avoid mixing with
+   incompatible public-run-v1 pending reports. */
+
+/* ==================== PHASE 11C.0: DEEP-MOUNTAIN YETI ESCALATION ====================
+   After 1800 m, depth can intensify only unresolved poor-skiing pressure. Clean, controlled skiing adds no
+   depth penalty. Under sustained debt, misses, neglect, or low speed, deep runs retain threat longer, shorten
+   Predatory/Critical cooldowns, reduce passive rest/lull time, and resume pursuit sooner after a whiff. Earned
+   clean-flag separation, telegraph duration, lunge duration, aim commitment, hitboxes, and the two-lunge cap
+   remain unchanged. */
+const FullMomentum=(()=>{
+  const CFG=APP_CONFIG.fullMomentum;
+  const threshold=()=>C.speedMax*CFG.thresholdRatio;
+  function reset(state=S){
+    if(!state)return false;
+    state.fullMomentumArmed=false;state.fullMomentumHold=0;state.fullMomentumGrace=0;
+    state.fullMomentumVisual=0;state.fullMomentumPulse=0;state.fullMomentumArmCount=0;
+    state.fullMomentumArmedAt=-1;state.fullMomentumLostAt=-1;
+    state.npcBloodCarryRemaining=0;state.npcBloodCarryTotal=Math.max(0.1,CFG.npcBloodCarryDistance||8.0);
+    return true;
+  }
+  function note(type,extra){
+    try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent(type,extra||{},null);}catch(e){}
+  }
+  function arm(){
+    if(S.fullMomentumArmed)return false;
+    S.fullMomentumArmed=true;S.fullMomentumArmedAt=S.time;S.fullMomentumArmCount=(S.fullMomentumArmCount||0)+1;
+    S.fullMomentumPulse=1;S.fullMomentumGrace=CFG.graceSec;
+    ringAt(S.x,S.depth,'rgba(250,253,255,0.90)',12);
+    // Compact, skier-centered snow shock. Deterministic visual variation avoids
+    // consuming gameplay randomness.
+    for(let i=0;i<16;i++){
+      const sk=i%2?-1:1,r0=hshG((S.fullMomentumArmCount||1)*91+i*7.13),r1=hshG((S.fullMomentumArmCount||1)*137+i*11.7);
+      pushSpray({type:i%2===0?'fm':'mist',front:i%4===0,fmUphill:true,
+        x:S.x+sk*(4+r0*8),y:PIN_Y+(S.bodyY||0)+10+r1*5,
+        vx:sk*(28+r0*70)-Math.sin(S.theta)*(14+r1*20),vy:-(78+r1*112),
+        gravity:i%2===0?52:28,t:0.22+r0*0.24,r:1.5+r1*3.6,
+        rot:r0*6.283,vr:(r1-0.5)*13,seed:r0*1000+r1*17});
+    }
+    tone(185,82,0.22,'sawtooth',0.15);tone(460,720,0.10,'triangle',0.055);vib(18);
+    note('FULL_MOMENTUM_ARM',{speed:+S.speed.toFixed(2),threshold:+threshold().toFixed(2),armCount:S.fullMomentumArmCount});
+    return true;
+  }
+  function disarm(reason){
+    if(!S.fullMomentumArmed)return false;
+    S.fullMomentumArmed=false;S.fullMomentumLostAt=S.time;
+    note('FULL_MOMENTUM_LOST',{speed:+S.speed.toFixed(2),reason:String(reason||'below-threshold')});
+    return true;
+  }
+  function tick(dt){
+    if(!CFG.enabled||!S||S.mode!=='play')return status();
+    const need=threshold(),qualifies=S.speed>=need;
+    if(qualifies){
+      S.fullMomentumHold=Math.min(CFG.holdSec,S.fullMomentumHold+dt);
+      S.fullMomentumGrace=CFG.graceSec;
+    }else{
+      S.fullMomentumHold=Math.max(0,S.fullMomentumHold-dt*CFG.holdDecayPerSec);
+      S.fullMomentumGrace=Math.max(0,S.fullMomentumGrace-dt);
+    }
+    if(!S.fullMomentumArmed&&S.fullMomentumHold+1e-6>=CFG.holdSec)arm();
+    else if(S.fullMomentumArmed&&!qualifies&&S.fullMomentumGrace<=0)disarm('grace-expired');
+    const preview=clamp(S.fullMomentumHold/Math.max(0.001,CFG.holdSec),0,1);
+    const target=S.fullMomentumArmed?1:preview*0.46;
+    const response=target>S.fullMomentumVisual?CFG.visualRise:CFG.visualFall;
+    S.fullMomentumVisual+=(target-S.fullMomentumVisual)*Math.min(1,response*dt);
+    S.fullMomentumPulse=Math.max(0,S.fullMomentumPulse-dt/CFG.armPulseSec);
+    return status();
+  }
+  function forceOff(reason){if(!S)return false;S.fullMomentumHold=0;S.fullMomentumGrace=0;return disarm(reason||'forced');}
+  function status(){
+    if(!S)return Object.freeze({armed:false,eligible:false,visual:0,hold:0,grace:0,threshold:threshold(),armCount:0});
+    return Object.freeze({armed:!!S.fullMomentumArmed,eligible:S.speed>=threshold(),visual:+(S.fullMomentumVisual||0).toFixed(3),hold:+(S.fullMomentumHold||0).toFixed(3),grace:+(S.fullMomentumGrace||0).toFixed(3),threshold:+threshold().toFixed(2),armCount:S.fullMomentumArmCount||0});
+  }
+  function selfTest(){const t=threshold();return Object.freeze({passed:CFG.enabled&&t>39&&t<40&&CFG.holdSec===0.20&&CFG.graceSec===0.28,threshold:t,config:CFG});}
+  return Object.freeze({reset,tick,forceOff,status,selfTest,threshold});
+})();
 /* ==================== PHASE 9B.0: DEVELOPER TUNING ====================
    Defaults reproduce the v8e baseline. Values are session-local and are recorded
    in diagnostic reports whenever a run begins or a slider changes. */
 const DEV_TUNING_SCHEMA_VERSION='dev-tuning-v9a1';
 const DEV_DEFAULTS=Object.freeze({
-  startSpeed:14,retrySpeed:17,paceMatch:1,chaseCorrection:1,cleanPush:1,cleanRelief:1,missPressure:1,visualFollow:1
+  startSpeed:16.1,retrySpeed:19.55,paceMatch:1,chaseCorrection:1,cleanPush:1,cleanRelief:1,missPressure:1,visualFollow:1
 });
 const DEV_TUNING_BASELINE=Object.freeze({
-  startSpeed:14,retrySpeed:17,paceMatch:1,chaseCorrection:1,cleanPush:1,cleanRelief:1,missPressure:1,visualFollow:1,
-  returnRateDeg:170,turnRateDeg:240,flagFuel:7,bleed:0.40,pre500YetiPressure:1,obstacles:7,cleanTargetGap:25,dangerTargetGap:9
+  startSpeed:16.1,retrySpeed:19.55,paceMatch:1,chaseCorrection:1,cleanPush:1,cleanRelief:1,missPressure:1,visualFollow:1,
+  returnRateDeg:170,turnRateDeg:240,flagFuel:8,bleed:0.40,pre500YetiPressure:1,obstacles:7,cleanTargetGap:25,dangerTargetGap:9
 });
 const DevTuning={
   startSpeed:DEV_DEFAULTS.startSpeed,retrySpeed:DEV_DEFAULTS.retrySpeed,
@@ -1095,7 +1205,7 @@ const ctx=cv.getContext('2d');
 const el={depth:$('hDepth'),score:$('hScore'),combo:$('hCombo'),
   intro:$('ovIntro'),results:$('ovResults'),leaderboard:$('ovLeaderboard'),rTitle:$('rTitle'),rTag:$('rTag'),rScore:$('rScore'),
   tune:$('tunePanel')};
-/* v9b.0c.6: a hidden overlay is non-interactive as a complete subtree. CSS is the
+/* v10a: a hidden overlay is non-interactive as a complete subtree. CSS is the
    fallback; inert + aria-hidden are the authoritative runtime state. */
 function setOverlayVisible(node,visible){
   if(!node)return false;
@@ -1133,7 +1243,7 @@ function ensureHiss(){const a=AC;if(!a||hiss)return;
   const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=220;
   const g2=a.createGain();g2.gain.value=0;
   src2.connect(lp);lp.connect(g2);g2.connect(a.destination);src2.start();
-  hiss={g,bp,g2,buf};}catch(e){hiss=null;}}
+  hiss={g,bp,g2,lp,buf};}catch(e){hiss=null;}}
 function crunch(vol){ // one grain of snow crust giving way
   const a=AC;if(!a||!sndOn||!hiss||!hiss.buf)return;
   try{const src=a.createBufferSource();src.buffer=hiss.buf;
@@ -2267,14 +2377,19 @@ function fresh(){
     deathRecorded:false,deathX:null,deathDepth:null,deathTheta:0,
     camZ:220,camLead:0,bank:0,bankV:0,lastDir:0,lastSide:1,powK:0,sink:0,
     prevTheta:0,turnVel:0,turnPressure:0,edgeSnap:0,bodyY:0,lastFlagD:-99,lastFlagX:null,sluffCD:0,tightBoost:0,
+    lastReversalAt:-99,reversalInterval:0,reversalConsistency:0,reversalDir:0,reversalCount:0,
+    fullMomentumArmed:false,fullMomentumHold:0,fullMomentumGrace:0,fullMomentumVisual:0,fullMomentumPulse:0,fullMomentumArmCount:0,fullMomentumArmedAt:-1,fullMomentumLostAt:-1,
     scoreFlag:0,scoreCombo:0,scorePenalty:0,cleanFlags:0,flagsAttempted:0,bestCombo:0,collisions:0,
+    fullMomentumNpcKills:0,fullMomentumNpcImpactEaseActive:false,fullMomentumNpcImpactEaseT:0,fullMomentumNpcImpactEaseStart:0,fullMomentumNpcImpactEaseTarget:0,
+    npcBloodCarryRemaining:0,npcBloodCarryTotal:Math.max(0.1,APP_CONFIG.fullMomentum.npcBloodCarryDistance||8.0),
     steer:0,steerSm:0,active:false,gen:0,corC:LW/2,routeNextD:7,routePhrase:0,
     phase:PHASES[0],phaseAt:C.phaseMin+Math.random()*(C.phaseMax-C.phaseMin),
     ball2:0,trail:[],
-    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,passNext:0,cleanWindow:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0,
+    yeti:{on:false,step:0,pside:1,d:-C.yetiStart,x:LW/2,st:0,tele:0,teleMax:C.teleT,burst:0,eat:0,next:0,foot:0,breath:0,fury:0,snarl:0,aimX:LW/2,aimStartX:LW/2,aimLeadPx:0,aimMode:'DIRECT',aimThreat:'CONTROLLED',aimHorizonSec:0,aimLockedAt:-1,aimSource:'',aimFollowUp:false,aimPeakEscapePx:0,aimLineBroken:false,counterplayPulse:0,counterplayAimX:LW/2,counterplayPlayerX:LW/2,counterplayD:0,counterplayEscapePx:0,counterplayLineBroken:false,counterplayFollowUp:false,counterplayThreat:'CONTROLLED',counterplayKind:'',stag:0,press:0,tired:0,pant:0,pass:0,passT:0,passLunges:0,passTotal:0,attackSeqStarted:0,followUpsGranted:0,followUpBias:0,sequenceThreat:'CONTROLLED',lastCooldownThreat:'CONTROLLED',passNext:0,cleanWindow:0,cleanProtectT:0,cleanProtectFloor:0,cleanProtectStrength:0,cleanProtectEvents:0,surge:0,surgePower:0,lull:0,lullNext:0,lullBack:0,npcTarget:null,npcTele:0,npcBurst:0,npcNext:0,gapImpulse:0,renderGap:C.yetiStart,renderX:LW/2,renderScale:0.98,renderPosture:1,renderYOffset:0,
       walkPhase:0,moveSpeed:0,lateralSpeed:0,bodyPhase:0,visualBreathPhase:0},
-    buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
+    buffer:999,streak:0,mistakeChain:0,lastMistake:-99,missStreak:0,cleanDebt:0,unresolvedMistakes:0,cleanRecoveryStreak:0,lowSpeedExposure:0,lastCleanFlagD:500,neglectK:0,neglectWarn:0};
   genTo();
+  FullMomentum.reset(S);
   DEF.reset();
   PerformanceStability.noteReset(before);
 }
@@ -2556,7 +2671,7 @@ const Effects=Object.freeze({floater,burstAt,bloodSmear,ringAt});
    Passive bounded aggregation for normal runs. Collection never calls Math.random() and
    never reads telemetry from Firebase. Uploads are delegated to TelemetryTransport. */
 const CompactTelemetry=(()=>{
-  const ENGINE_VERSION='telemetry-engine-v1',MAX_BYTES=APP_CONFIG.telemetry.summaryMaxBytes,
+  const ENGINE_VERSION='telemetry-engine-v2.6',MAX_BYTES=APP_CONFIG.telemetry.summaryMaxBytes,
     MAX_PENDING=APP_CONFIG.schemas.telemetryQueue.maxPending,HARD_CARVE=APP_CONFIG.telemetry.hardCarveThreshold,
     LOW_FPS=APP_CONFIG.telemetry.lowFpsThreshold;
   let active=null,lastSummary=null,lastResult=null,runOrdinal=0,previousReportId='',lastDeathAt=null,inputType=defaultInput();
@@ -2605,9 +2720,15 @@ const CompactTelemetry=(()=>{
     active={reportId:makeId('tr',12),context,startedAt:now,restartDelaySec:lastDeathAt===null?null:round(Math.max(0,now-lastDeathAt)/1000,2),
       elapsed:0,speedArea:0,maxSpeed:0,steerArea:0,hardCarveSec:0,directionReversals:0,lastSteerSign:0,
       gapArea:0,gapTime:0,minGap:null,targetArea:0,pressureArea:0,peakPressure:0,lastGap:null,secondsYetiGaining:0,secondsPlayerSeparating:0,
-      fpsArea:0,minFps:null,lowFpsFrames:0,frameSamples:0,state:'OFF',states:blankCounters(),telegraphSpeedSum:0,telegraphSpeedCount:0,lungeSpeedSum:0,lungeSpeedCount:0,dodges:0,
+      fpsArea:0,minFps:null,lowFpsFrames:0,frameSamples:0,state:'OFF',states:blankCounters(),telegraphSpeedSum:0,telegraphSpeedCount:0,lungeSpeedSum:0,lungeSpeedCount:0,
+      telegraphStarts:0,committedLunges:0,lungeDodges:0,lungeHits:0,passiveCatches:0,passiveWhiffs:0,followUpLunges:0,predictiveTelegraphs:0,rhythmPredictions:0,aimLeadAbsSum:0,aimLeadSignedSum:0,aimLeadCount:0,lineBreakDodges:0,followUpLineBreakDodges:0,targetEscapeSum:0,targetEscapeCount:0,conditionalFollowUpsQueued:0,followUpsCancelledByClean:0,followUpsSuppressed:0,thirdLungeBlocks:0,followUpSuppressReasons:{threat:0,cleanProtection:0,chance:0,twoLungeCap:0},telegraphInterruptions:0,lungeInterruptions:0,catchType:null,
+      threatExposureSec:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},followUpsQueuedByThreat:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},
+      attackTelegraphGapSum:0,attackTelegraphPressureSum:0,attackTelegraphDebtSum:0,attackTelegraphComboSum:0,attackLungeGapSum:0,attackLungePressureSum:0,attackLungeDebtSum:0,attackLungeComboSum:0,
+      threatAtTelegraph:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},threatAtLunge:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},
+      recoveryEffects:[],recoveryImmediateSum:0,recoveryImmediateCount:0,recoveryRetained1Sum:0,recoveryRetained1Count:0,recoveryRetained2Sum:0,recoveryRetained2Count:0,
       cleanEvents:0,missEvents:0,queuedCleanGap:0,queuedMissNudge:0,effects:[],cleanRetained1Sum:0,cleanRetained1Count:0,cleanRetained2Sum:0,cleanRetained2Count:0,
-      missRetained1Sum:0,missRetained1Count:0,missRetained2Sum:0,missRetained2Count:0,inputType};
+      missRetained1Sum:0,missRetained1Count:0,missRetained2Sum:0,missRetained2Count:0,
+      debtArea:0,debtTime:0,peakDebt:0,unresolvedArea:0,peakUnresolved:0,protectedPlaySec:0,cleanProtectionEvents:0,protectedSecondsGranted:0,deepEscalationArea:0,deepEscalationTime:0,peakDeepEscalation:0,deepPredatorySec:0,deepCriticalSec:0,inputType};
     return active.reportId;
   }
   function processEffects(){
@@ -2619,6 +2740,13 @@ const CompactTelemetry=(()=>{
       if(!e.done2)keep.push(e);
     }
     active.effects=keep.slice(-12);
+    const recoveryKeep=[];
+    for(const e of active.recoveryEffects){
+      if(!e.done1&&now>=e.t+1){active.recoveryRetained1Sum+=gap-e.beforeGap;active.recoveryRetained1Count++;e.done1=true;}
+      if(!e.done2&&now>=e.t+2){active.recoveryRetained2Sum+=gap-e.beforeGap;active.recoveryRetained2Count++;e.done2=true;}
+      if(!e.done2)recoveryKeep.push(e);
+    }
+    active.recoveryEffects=recoveryKeep.slice(-8);
   }
   function tick(dt){
     if(!active||!S||S.mode!=='play')return false;dt=Math.max(0,Math.min(MAX_DT,+dt||0));if(!dt)return false;
@@ -2628,21 +2756,63 @@ const CompactTelemetry=(()=>{
     if(sign&&active.lastSteerSign&&sign!==active.lastSteerSign)active.directionReversals++;if(sign)active.lastSteerSign=sign;
     const f=Number.isFinite(fps)?fps:0;active.fpsArea+=f*dt;active.frameSamples++;if(active.minFps===null||f<active.minFps)active.minFps=f;if(f<LOW_FPS)active.lowFpsFrames++;
     const Y=S.yeti||{},nextState=stateName(Y);
-    if(nextState!==active.state){active.state=nextState;if(Object.prototype.hasOwnProperty.call(active.states,nextState)){active.states[nextState]++;if(nextState==='TELEGRAPH'){active.telegraphSpeedSum+=S.speed;active.telegraphSpeedCount++;}if(nextState==='LUNGE'){active.lungeSpeedSum+=S.speed;active.lungeSpeedCount++;}}}
+    if(nextState!==active.state){active.state=nextState;if(Object.prototype.hasOwnProperty.call(active.states,nextState))active.states[nextState]++;}
     if(Y.on){
       const gap=S.depth-Y.d,D=Difficulty.profile(S.depth),pressure=effectiveYetiPressure(D),target=S.depth>=C.chaseAfter?chaseTargetGap(D,pressure):C.SAFE;
       active.gapArea+=gap*dt;active.gapTime+=dt;active.minGap=active.minGap===null?gap:Math.min(active.minGap,gap);active.targetArea+=target*dt;active.pressureArea+=pressure*dt;active.peakPressure=Math.max(active.peakPressure,pressure);
+      const debt=debtLevel(),unresolved=Math.max(0,+S.unresolvedMistakes||0);active.debtArea+=debt*dt;active.debtTime+=dt;active.peakDebt=Math.max(active.peakDebt,debt);active.unresolvedArea+=unresolved*dt;active.peakUnresolved=Math.max(active.peakUnresolved,unresolved);if((Y.cleanProtectT||0)>0)active.protectedPlaySec+=dt;
+      const snap=YetiAttackTelemetry.threatSnapshot(),threat=snap.threatState;if(Object.prototype.hasOwnProperty.call(active.threatExposureSec,threat))active.threatExposureSec[threat]+=dt;
+      const deep=Math.max(0,+snap.deepEscalation||0);active.deepEscalationArea+=deep*dt;active.deepEscalationTime+=dt;active.peakDeepEscalation=Math.max(active.peakDeepEscalation,deep);if((snap.depth||0)>=C.deepEscalationStart&&threat==='PREDATORY')active.deepPredatorySec+=dt;if((snap.depth||0)>=C.deepEscalationStart&&threat==='CRITICAL')active.deepCriticalSec+=dt;
       if(active.lastGap!==null){const delta=gap-active.lastGap;if(delta<-0.005)active.secondsYetiGaining+=dt;else if(delta>0.005)active.secondsPlayerSeparating+=dt;}active.lastGap=gap;
     }
     processEffects();return true;
   }
   function noteFlag(kind,before,effect){
-    if(!active)return false;const clean=kind==='clean';if(clean){active.cleanEvents++;active.queuedCleanGap+=Math.max(0,+((effect&&effect.push)||0));}else{active.missEvents++;active.queuedMissNudge+=Math.max(0,+((effect&&effect.nudge)||0));}
+    if(!active)return false;const clean=kind==='clean';if(clean){active.cleanEvents++;active.queuedCleanGap+=Math.max(0,+((effect&&effect.push)||0));const protectedSec=Math.max(0,+((effect&&effect.protectedDuration)||0));if(protectedSec>0){active.cleanProtectionEvents++;active.protectedSecondsGranted+=protectedSec;}}else{active.missEvents++;active.queuedMissNudge+=Math.max(0,+((effect&&effect.nudge)||0));}
     const beforeOn=!!(before&&before.yeti&&before.yeti.on),beforeGap=beforeOn&&Number.isFinite(+before.yeti.gap)?+before.yeti.gap:(S.yeti&&S.yeti.on?S.depth-S.yeti.d:null);
     if(Number.isFinite(beforeGap))active.effects.push({kind:clean?'clean':'miss',t:S.time,gap:beforeGap,done1:false,done2:false});
     if(active.effects.length>12)active.effects.splice(0,active.effects.length-12);return true;
   }
-  function noteAttackOutcome(kind){if(active&&kind==='dodge'){active.dodges++;return true;}return false;}
+  function noteAttackEvent(type,snapshot,extra){
+    if(!active)return false;
+    const snap=snapshot||{},kind=String(type||''),threat=/^(CONTROLLED|HUNTING|PREDATORY|CRITICAL)$/.test(String(snap.threatState||''))?String(snap.threatState):'CONTROLLED';
+    if(kind==='TELEGRAPH_START'){
+      active.telegraphStarts++;active.telegraphSpeedSum+=Math.max(0,+snap.speed||0);active.telegraphSpeedCount++;
+      active.attackTelegraphGapSum+=+snap.gap||0;active.attackTelegraphPressureSum+=+snap.pressure||0;active.attackTelegraphDebtSum+=+snap.debt||0;active.attackTelegraphComboSum+=Math.max(0,+snap.cleanCombo||0);
+      active.threatAtTelegraph[threat]++;
+      const aimLead=Number.isFinite(+snap.aimLeadPx)?+snap.aimLeadPx:0;if(Math.abs(aimLead)>=1)active.predictiveTelegraphs++;if(String(snap.aimMode||'')==='RHYTHM')active.rhythmPredictions++;active.aimLeadAbsSum+=Math.abs(aimLead);active.aimLeadSignedSum+=aimLead;active.aimLeadCount++;return true;
+    }
+    if(kind==='LUNGE_START'){
+      active.committedLunges++;active.lungeSpeedSum+=Math.max(0,+snap.speed||0);active.lungeSpeedCount++;
+      active.attackLungeGapSum+=+snap.gap||0;active.attackLungePressureSum+=+snap.pressure||0;active.attackLungeDebtSum+=+snap.debt||0;active.attackLungeComboSum+=Math.max(0,+snap.cleanCombo||0);
+      active.threatAtLunge[threat]++;if(extra&&extra.followUp)active.followUpLunges++;return true;
+    }
+    if(kind==='LUNGE_DODGE'){
+      active.lungeDodges++;
+      const before=Number.isFinite(+(extra&&extra.beforeGap))?+(extra.beforeGap):null,after=Number.isFinite(+(extra&&extra.afterGap))?+(extra.afterGap):null;
+      const escape=Number.isFinite(+(extra&&extra.targetEscapePx))?Math.max(0,+(extra.targetEscapePx)):null;
+      if(escape!==null){active.targetEscapeSum+=escape;active.targetEscapeCount++;}
+      if(extra&&extra.lineBroken){active.lineBreakDodges++;if(extra.followUp)active.followUpLineBreakDodges++;}
+      if(before!==null&&after!==null){active.recoveryImmediateSum+=after-before;active.recoveryImmediateCount++;active.recoveryEffects.push({t:S.time,beforeGap:before,done1:false,done2:false});if(active.recoveryEffects.length>8)active.recoveryEffects.shift();}
+      return true;
+    }
+    if(kind==='LUNGE_HIT'){active.lungeHits++;active.catchType='lungeHit';return true;}
+    if(kind==='PASSIVE_CATCH'){active.passiveCatches++;active.catchType='passiveCatch';return true;}
+    if(kind==='PASSIVE_WHIFF'){active.passiveWhiffs++;return true;}
+    if(kind==='TELEGRAPH_INTERRUPTED'){active.telegraphInterruptions++;return true;}
+    if(kind==='LUNGE_INTERRUPTED'){active.lungeInterruptions++;return true;}
+    return false;
+  }
+  function noteAttackDecision(type,snapshot){
+    if(!active)return false;const kind=String(type||''),snap=snapshot||{},threat=/^(CONTROLLED|HUNTING|PREDATORY|CRITICAL)$/.test(String(snap.threatState||''))?String(snap.threatState):'CONTROLLED';
+    if(kind==='FOLLOWUP_QUEUED'){active.conditionalFollowUpsQueued++;active.followUpsQueuedByThreat[threat]++;return true;}
+    if(kind==='FOLLOWUP_CANCELLED_BY_CLEAN'){active.followUpsCancelledByClean++;return true;}
+    if(kind==='FOLLOWUP_SUPPRESSED'){
+      const reason=/^(threat|cleanProtection|chance|twoLungeCap)$/.test(String(snap.reason||''))?String(snap.reason):'threat';
+      active.followUpsSuppressed++;active.followUpSuppressReasons[reason]++;if(reason==='twoLungeCap')active.thirdLungeBlocks++;return true;
+    }
+    return false;
+  }
   function noteInput(kind){const v=String(kind||'').toLowerCase();inputType=v==='touch'||v==='pen'?'touch':v==='mouse'?'mouse':v==='keyboard'?'keyboard':inputType;if(active)active.inputType=inputType;return inputType;}
   function build(run){
     const a=active,duration=Math.max(0,a.elapsed),gapTime=a.gapTime;
@@ -2652,14 +2822,21 @@ const CompactTelemetry=(()=>{
       client:{clientId,inputType:a.inputType,deviceClass:broadDevice(),browserFamily:broadBrowser(),qualitySetting:PerfBudget.profile().name},
       run:{distance:Math.max(0,Math.floor(+run.distance||0)),score:Math.max(0,Math.floor(+run.score||0)),durationSec:round(duration,2),averageSpeed:mean(a.speedArea,duration,2),maximumSpeed:round(a.maxSpeed,2),
         cleanFlags:Math.max(0,Math.floor(+run.cleanFlags||0)),attemptedFlags:Math.max(0,Math.floor(+run.attemptedFlags||0)),bestCombo:Math.max(0,Math.floor(+run.bestCombo||0)),collisions:Math.max(0,Math.floor(+run.collisions||0)),
-        deathCause:String(run.deathCause||'caught'),deathSpeed:round(S.speed,2),deathCombo:Math.max(0,S.combo|0)},
+        deathCause:String(run.deathCause||'caught'),deathSpeed:round(S.speed,2),deathCombo:Math.max(0,S.combo|0),catchType:String(run.deathCause||'caught')==='caught'?(a.catchType||'unclassifiedCatch'):null},
       steering:{averageAbsoluteSteer:mean(a.steerArea,duration,3),hardCarveSec:round(a.hardCarveSec,2),directionReversals:a.directionReversals},
-      pursuit:{averageWorldGap:mean(a.gapArea,gapTime,2),minimumWorldGap:a.minGap===null?null:round(a.minGap,2),averageTargetGap:mean(a.targetArea,gapTime,2),averagePressure:mean(a.pressureArea,gapTime,3),peakPressure:round(a.peakPressure,3),secondsYetiGaining:round(a.secondsYetiGaining,2),secondsPlayerSeparating:round(a.secondsPlayerSeparating,2)},
+      pursuit:{averageWorldGap:mean(a.gapArea,gapTime,2),minimumWorldGap:a.minGap===null?null:round(a.minGap,2),minimumResolvedWorldGap:a.minGap===null?null:round(Math.max(0,a.minGap),2),averageTargetGap:mean(a.targetArea,gapTime,2),averagePressure:mean(a.pressureArea,gapTime,3),peakPressure:round(a.peakPressure,3),secondsYetiGaining:round(a.secondsYetiGaining,2),secondsPlayerSeparating:round(a.secondsPlayerSeparating,2)},
+      performanceResponse:{averageMistakeDebt:mean(a.debtArea,a.debtTime,3),peakMistakeDebt:round(a.peakDebt,3),averageUnresolvedMistakes:mean(a.unresolvedArea,a.debtTime,2),peakUnresolvedMistakes:round(a.peakUnresolved,2),cleanProtectionEvents:a.cleanProtectionEvents,protectedSecondsGranted:round(a.protectedSecondsGranted,2),protectedPlaySec:round(a.protectedPlaySec,2)},
+      deepMountain:{averageEscalation:mean(a.deepEscalationArea,a.deepEscalationTime,3),peakEscalation:round(a.peakDeepEscalation,3),predatoryExposureSec:round(a.deepPredatorySec,2),criticalExposureSec:round(a.deepCriticalSec,2)},
       flags:{cleanEvents:a.cleanEvents,missEvents:a.missEvents,queuedCleanGap:round(a.queuedCleanGap,2),queuedMissNudge:round(a.queuedMissNudge,2),
         retainedCleanGapAfter1s:mean(a.cleanRetained1Sum,a.cleanRetained1Count,2),retainedCleanGapAfter2s:mean(a.cleanRetained2Sum,a.cleanRetained2Count,2),
         retainedMissGapAfter1s:mean(a.missRetained1Sum,a.missRetained1Count,2),retainedMissGapAfter2s:mean(a.missRetained2Sum,a.missRetained2Count,2)},
-      attacks:{huntCloses:a.states.HUNT_CLOSE,telegraphs:a.states.TELEGRAPH,lunges:a.states.LUNGE,dodges:a.dodges,recoveries:a.states.RECOVERY,lulls:a.states.LULL,feedings:a.states.FEEDING,
-        averageSpeedAtTelegraph:mean(a.telegraphSpeedSum,a.telegraphSpeedCount,2),averageSpeedAtLunge:mean(a.lungeSpeedSum,a.lungeSpeedCount,2)},
+      attacks:{huntCloses:a.states.HUNT_CLOSE,telegraphs:a.telegraphStarts,lunges:a.committedLunges,dodges:a.lungeDodges,recoveries:a.states.RECOVERY,lulls:a.states.LULL,feedings:a.states.FEEDING,
+        telegraphStarts:a.telegraphStarts,committedLunges:a.committedLunges,lungeDodges:a.lungeDodges,lungeHits:a.lungeHits,passiveCatches:a.passiveCatches,passiveWhiffs:a.passiveWhiffs,
+        followUpLunges:a.followUpLunges,predictiveTelegraphs:a.predictiveTelegraphs,rhythmPredictions:a.rhythmPredictions,averageAbsoluteAimLeadPx:mean(a.aimLeadAbsSum,a.aimLeadCount,2),averageSignedAimLeadPx:mean(a.aimLeadSignedSum,a.aimLeadCount,2),lineBreakDodges:a.lineBreakDodges,followUpLineBreakDodges:a.followUpLineBreakDodges,averageTargetEscapePx:mean(a.targetEscapeSum,a.targetEscapeCount,2),conditionalFollowUpsQueued:a.conditionalFollowUpsQueued,followUpsCancelledByClean:a.followUpsCancelledByClean,followUpsSuppressed:a.followUpsSuppressed,thirdLungeBlocks:a.thirdLungeBlocks,followUpSuppressReasons:Object.assign({},a.followUpSuppressReasons),followUpsQueuedByThreat:Object.assign({},a.followUpsQueuedByThreat),threatExposureSec:{CONTROLLED:round(a.threatExposureSec.CONTROLLED,2),HUNTING:round(a.threatExposureSec.HUNTING,2),PREDATORY:round(a.threatExposureSec.PREDATORY,2),CRITICAL:round(a.threatExposureSec.CRITICAL,2)},telegraphInterruptions:a.telegraphInterruptions,lungeInterruptions:a.lungeInterruptions,stateObservedTelegraphs:a.states.TELEGRAPH,stateObservedLunges:a.states.LUNGE,
+        averageSpeedAtTelegraph:mean(a.telegraphSpeedSum,a.telegraphSpeedCount,2),averageSpeedAtLunge:mean(a.lungeSpeedSum,a.lungeSpeedCount,2),
+        averageGapAtTelegraph:mean(a.attackTelegraphGapSum,a.telegraphStarts,2),averagePressureAtTelegraph:mean(a.attackTelegraphPressureSum,a.telegraphStarts,3),averageMistakeDebtAtTelegraph:mean(a.attackTelegraphDebtSum,a.telegraphStarts,3),averageCleanComboAtTelegraph:mean(a.attackTelegraphComboSum,a.telegraphStarts,2),
+        averageGapAtLunge:mean(a.attackLungeGapSum,a.committedLunges,2),averagePressureAtLunge:mean(a.attackLungePressureSum,a.committedLunges,3),averageMistakeDebtAtLunge:mean(a.attackLungeDebtSum,a.committedLunges,3),averageCleanComboAtLunge:mean(a.attackLungeComboSum,a.committedLunges,2),
+        threatAtTelegraph:Object.assign({},a.threatAtTelegraph),threatAtLunge:Object.assign({},a.threatAtLunge),averageImmediateDodgeRecovery:mean(a.recoveryImmediateSum,a.recoveryImmediateCount,2),retainedDodgeRecoveryAfter1s:mean(a.recoveryRetained1Sum,a.recoveryRetained1Count,2),retainedDodgeRecoveryAfter2s:mean(a.recoveryRetained2Sum,a.recoveryRetained2Count,2)},
       performance:{averageFps:mean(a.fpsArea,duration,1),minimumFps:a.minFps===null?null:round(a.minFps,1),lowFpsFrames:a.lowFpsFrames}};
   }
   function enqueue(payload){
@@ -2680,11 +2857,11 @@ const CompactTelemetry=(()=>{
   function initUI(){const b=$('telemetryToggle');if(b&&!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setConsent(!consent());});}syncUI();}
   function status(){return Object.freeze({enabled:APP_CONFIG.telemetry.enabled,consent:consent(),active:!!active,activeReportId:active&&active.reportId||'',sessionId,clientId,runOrdinal,previousReportId,pending:readQueue().items.length,lastResult:lastResult&&Object.assign({},lastResult),maxBytes:MAX_BYTES,maxPending:MAX_PENDING});}
   function selfTest(){
-    const sample={schema:TELEMETRY_SUMMARY_SCHEMA_VERSION,reportId:'tr_000000000000000000000000',timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,telemetryVersion:ENGINE_VERSION},session:{sessionId:'ts_test',runOrdinal:1,previousReportId:null,restartDelaySec:null},client:{clientId:'tc_00000000000000000000',inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0},steering:{averageAbsoluteSteer:.4,hardCarveSec:2,directionReversals:3},pursuit:{averageWorldGap:25,minimumWorldGap:8,averageTargetGap:20,averagePressure:.2,peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},flags:{cleanEvents:4,missEvents:1,queuedCleanGap:2,queuedMissNudge:4,retainedCleanGapAfter1s:1,retainedCleanGapAfter2s:.5,retainedMissGapAfter1s:-2,retainedMissGapAfter2s:-3},attacks:{huntCloses:1,telegraphs:1,lunges:1,dodges:0,recoveries:1,lulls:0,feedings:0,averageSpeedAtTelegraph:20,averageSpeedAtLunge:22},performance:{averageFps:60,minimumFps:54,lowFpsFrames:0}};
+    const sample={schema:TELEMETRY_SUMMARY_SCHEMA_VERSION,reportId:'tr_000000000000000000000000',timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,telemetryVersion:ENGINE_VERSION},session:{sessionId:'ts_test',runOrdinal:1,previousReportId:null,restartDelaySec:null},client:{clientId:'tc_00000000000000000000',inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0,catchType:'lungeHit'},steering:{averageAbsoluteSteer:.4,hardCarveSec:2,directionReversals:3},pursuit:{averageWorldGap:25,minimumWorldGap:-1,minimumResolvedWorldGap:0,averageTargetGap:20,averagePressure:.2,peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},performanceResponse:{averageMistakeDebt:.2,peakMistakeDebt:.8,averageUnresolvedMistakes:.4,peakUnresolvedMistakes:2,cleanProtectionEvents:2,protectedSecondsGranted:3,protectedPlaySec:2.5},flags:{cleanEvents:4,missEvents:1,queuedCleanGap:2,queuedMissNudge:4,retainedCleanGapAfter1s:1,retainedCleanGapAfter2s:.5,retainedMissGapAfter1s:-2,retainedMissGapAfter2s:-3},attacks:{huntCloses:1,telegraphs:1,lunges:1,dodges:1,recoveries:1,lulls:0,feedings:0,telegraphStarts:1,committedLunges:1,lungeDodges:1,lungeHits:0,passiveCatches:0,passiveWhiffs:0,followUpLunges:0,telegraphInterruptions:0,lungeInterruptions:0,stateObservedTelegraphs:1,stateObservedLunges:1,averageSpeedAtTelegraph:20,averageSpeedAtLunge:22,averageGapAtTelegraph:8,averagePressureAtTelegraph:.7,averageMistakeDebtAtTelegraph:.5,averageCleanComboAtTelegraph:4,averageGapAtLunge:6,averagePressureAtLunge:.7,averageMistakeDebtAtLunge:.5,averageCleanComboAtLunge:4,threatAtTelegraph:{CONTROLLED:0,HUNTING:0,PREDATORY:1,CRITICAL:0},threatAtLunge:{CONTROLLED:0,HUNTING:0,PREDATORY:1,CRITICAL:0},averageImmediateDodgeRecovery:7,retainedDodgeRecoveryAfter1s:5,retainedDodgeRecoveryAfter2s:3},performance:{averageFps:60,minimumFps:54,lowFpsFrames:0}};
     const q=normalizeQueue({version:TELEMETRY_QUEUE_SCHEMA_VERSION,items:Array.from({length:8},(_,i)=>({reportId:'x'+i,payload:{i}}))});
     return Object.freeze({passed:byteSize(sample)<MAX_BYTES&&q.items.length===MAX_PENDING&&TELEMETRY_CLIENT_ID_RE.test(clientId)&&TELEMETRY_SESSION_ID_RE.test(sessionId),sampleBytes:byteSize(sample),queueCap:q.items.length,clientIdShape:TELEMETRY_CLIENT_ID_RE.test(clientId),sessionIdShape:TELEMETRY_SESSION_ID_RE.test(sessionId)});
   }
-  return Object.freeze({begin,tick,noteFlag,noteAttackOutcome,noteInput,finish,consent,setConsent,pending,nextPending,removePending,markAttempt,clearQueue,initUI,status,selfTest,lastSummary:()=>clone(lastSummary),byteSize});
+  return Object.freeze({begin,tick,noteFlag,noteAttackEvent,noteAttackDecision,noteInput,finish,consent,setConsent,pending,nextPending,removePending,markAttempt,clearQueue,initUI,status,selfTest,lastSummary:()=>clone(lastSummary),byteSize});
 })();
 
 /* ==================== PHASE 9B.0c.3: PRIVATE FIREBASE TELEMETRY TRANSPORT ====================
@@ -2779,7 +2956,7 @@ const PublicFeedback=(()=>{
   function tick(){if(!active||!S||S.mode!=='play')return false;if(!CompactTelemetry.consent()){active=null;return false;}if(S.time-active.lastSampleAt+0.0001<SAMPLE_STEP)return false;sample();return true;}
   function finish(run,compactOutcome){if(!active){lastDiagnostics=null;return null;}sample();const summary=compactOutcome&&compactOutcome.payload?compactOutcome.payload:CompactTelemetry.lastSummary();lastDiagnostics={finishedAt:Date.now(),summary:summary?clone(summary):null,trace:clone(active.samples)||[],errors:clone(runtimeErrors.slice(active.errorStart))||[],runId:run&&run.runId||''};active=null;return clone(lastDiagnostics);}
   function clientBlock(){const st=CompactTelemetry.status();return{clientId:st.clientId,sessionId:st.sessionId,inputType:inputType(),deviceClass:broadDevice(),browserFamily:broadBrowser(),qualitySetting:PerfBudget.profile().name};}
-  function runBlock(summary){if(!summary||!summary.run)return null;const r=summary.run,s=summary.steering||{},p=summary.pursuit||{},a=summary.attacks||{},f=summary.performance||{};const out={reportId:summary.reportId,distance:r.distance,score:r.score,durationSec:r.durationSec,averageSpeed:r.averageSpeed,maximumSpeed:r.maximumSpeed,cleanFlags:r.cleanFlags,attemptedFlags:r.attemptedFlags,bestCombo:r.bestCombo,collisions:r.collisions,deathCause:r.deathCause,deathSpeed:r.deathSpeed,deathCombo:r.deathCombo,hardCarveSec:s.hardCarveSec,directionReversals:s.directionReversals,peakPressure:p.peakPressure,secondsYetiGaining:p.secondsYetiGaining,secondsPlayerSeparating:p.secondsPlayerSeparating,telegraphs:a.telegraphs,lunges:a.lunges,dodges:a.dodges,averageFps:f.averageFps,minimumFps:f.minimumFps};for(const k of Object.keys(out))if(out[k]===null||out[k]===undefined||!Number.isFinite(out[k])&&typeof out[k]==='number')delete out[k];return out;}
+  function runBlock(summary){if(!summary||!summary.run)return null;const r=summary.run,s=summary.steering||{},p=summary.pursuit||{},a=summary.attacks||{},f=summary.performance||{};const out={reportId:summary.reportId,distance:r.distance,score:r.score,durationSec:r.durationSec,averageSpeed:r.averageSpeed,maximumSpeed:r.maximumSpeed,cleanFlags:r.cleanFlags,attemptedFlags:r.attemptedFlags,bestCombo:r.bestCombo,collisions:r.collisions,deathCause:r.deathCause,deathSpeed:r.deathSpeed,deathCombo:r.deathCombo,hardCarveSec:s.hardCarveSec,directionReversals:s.directionReversals,peakPressure:p.peakPressure,secondsYetiGaining:p.secondsYetiGaining,secondsPlayerSeparating:p.secondsPlayerSeparating,telegraphs:a.telegraphs,lunges:a.lunges,dodges:a.dodges,lungeHits:a.lungeHits,passiveCatches:a.passiveCatches,followUpLunges:a.followUpLunges,averageFps:f.averageFps,minimumFps:f.minimumFps};for(const k of Object.keys(out))if(out[k]===null||out[k]===undefined||!Number.isFinite(out[k])&&typeof out[k]==='number')delete out[k];return out;}
   function buildPayload(category,comment,attach){const payload={schema:PUBLIC_FEEDBACK_SCHEMA_VERSION,feedbackId:makeId(),timestamp:Date.now(),category,comment,source,attachDiagnostics:!!attach,build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION}};if(attach){payload.client=clientBlock();const diag=lastDiagnostics;if(diag&&diag.summary){payload.runData=runBlock(diag.summary);if(diag.trace&&diag.trace.length)payload.trace=clone(diag.trace.slice(-MAX_SAMPLES));}const errors=diag&&diag.errors&&diag.errors.length?diag.errors:runtimeErrors.slice(-MAX_ERRORS);if(errors.length)payload.errors=clone(errors.slice(-MAX_ERRORS));}return payload;}
   function updateDisclosure(){const box=$('publicFeedbackAttach'),note=$('publicFeedbackDisclosure');if(!box||!note)return;const hasRun=!!(lastDiagnostics&&lastDiagnostics.summary);note.textContent=hasRun?'Includes compact run statistics, broad device/browser category, recent errors, and the final '+Math.min(MAX_SAMPLES,lastDiagnostics.trace.length)+' trace samples. No name, email, or leaderboard initials.':'Includes build, broad device/browser category, and recent runtime errors. No completed-run trace is available. No name, email, or leaderboard initials.';}
   function setStatus(message){const n=$('publicFeedbackStatus');if(n)n.textContent=String(message||'');}
@@ -2819,7 +2996,7 @@ const FeedbackTransport=(()=>{
 const PlaytestReport=(()=>{
   const CFG=APP_CONFIG.schemas.playtestReport;
   const TUNING_KEYS=Object.freeze(['startSpeed','retrySpeed','paceMatch','chaseCorrection','cleanPush','cleanRelief','missPressure','visualFollow','returnRateDeg','turnRateDeg','flagFuel','bleed','pre500YetiPressure','obstacles','cleanTargetGap','dangerTargetGap']);
-  const EVENT_TYPES=new Set(['RUN_START','YETI_STATE','FLAG_CLEAN','FLAG_MISS','DEV_TUNING','DEV_TUNING_RESET']);
+  const EVENT_TYPES=new Set(['RUN_START','YETI_STATE','FLAG_CLEAN','FLAG_MISS','DEV_TUNING','DEV_TUNING_RESET','FULL_MOMENTUM_ARM','FULL_MOMENTUM_LOST']);
   const round=(v,n=2)=>{const p=Math.pow(10,n);return Number.isFinite(+v)?Math.round(+v*p)/p:0;};
   const int=(v,max=999999)=>Math.max(0,Math.min(max,Math.floor(+v||0)));
   const clone=v=>{try{return JSON.parse(JSON.stringify(v));}catch(e){return null;}};
@@ -2831,7 +3008,7 @@ const PlaytestReport=(()=>{
   function inputType(){const st=CompactTelemetry.status(),v=st&&st.lastResult&&st.lastResult.inputType;try{if(v&&/^(touch|mouse|keyboard|unknown)$/.test(v))return v;return matchMedia('(pointer:coarse)').matches?'touch':'mouse';}catch(e){return'unknown';}}
   function compactSample(row){row=row||{};const y=row.yeti||{};return{t:round(row.t),d:int(row.depth),x:round(Math.max(EDGE,Math.min(LW-EDGE,+row.x||LW/2)),1),v:round(Math.max(0,+row.speed||0)),s:round(Math.max(-1,Math.min(1,Number.isFinite(+row.steerSm)?+row.steerSm:+row.steer||0)),3),c:int(row.combo,9999),f:round(Math.max(0,+row.fps||0),1),q:/^(LOW|MED|HIGH)$/.test(String(row.quality||''))?String(row.quality):PerfBudget.profile().name,y:/^(OFF|CHASE|HUNT_CLOSE|TELEGRAPH|LUNGE|PRESS|RECOVERY|LULL|FEEDING|NPC_HUNT|STAGGERED|TIRED)$/.test(String(y.state||''))?String(y.state):'OFF',g:round(Number.isFinite(+y.gap)?+y.gap:999),p:round(Math.max(0,+y.pressure||0),3)};}
   function miniState(row){row=row||{};const y=row.yeti||{};return{v:round(Math.max(0,+row.speed||0)),s:round(Math.max(-1,Math.min(1,Number.isFinite(+row.steerSm)?+row.steerSm:+row.steer||0)),3),c:int(row.combo,9999),y:/^(OFF|CHASE|HUNT_CLOSE|TELEGRAPH|LUNGE|PRESS|RECOVERY|LULL|FEEDING|NPC_HUNT|STAGGERED|TIRED)$/.test(String(y.state||''))?String(y.state):'OFF',g:round(Number.isFinite(+y.gap)?+y.gap:999),p:round(Math.max(0,+y.pressure||0),3)};}
-  function eventDetail(ev){const x=ev&&ev.extra||{};let detail={};if(ev&&ev.type==='YETI_STATE')detail={from:String(x.from||''),to:String(x.to||'')};else if(ev&&ev.type==='DEV_TUNING')detail={key:String(x.key||''),from:x.from,to:x.to};else if(ev&&ev.type==='DEV_TUNING_RESET')detail={key:'ALL'};else if(ev&&ev.type==='RUN_START')detail={scenario:String(x.scenario||'')};else detail={kind:String(x.kind||''),push:round(x.push),nudge:round(x.nudge)};let text='';try{text=JSON.stringify(detail);}catch(e){}return text.slice(0,240);}
+  function eventDetail(ev){const x=ev&&ev.extra||{};let detail={};if(ev&&ev.type==='YETI_STATE')detail={from:String(x.from||''),to:String(x.to||'')};else if(ev&&ev.type==='DEV_TUNING')detail={key:String(x.key||''),from:x.from,to:x.to};else if(ev&&ev.type==='DEV_TUNING_RESET')detail={key:'ALL'};else if(ev&&ev.type==='RUN_START')detail={scenario:String(x.scenario||'')};else if(ev&&ev.type==='FULL_MOMENTUM_ARM')detail={speed:round(x.speed),threshold:round(x.threshold),armCount:int(x.armCount,9999)};else if(ev&&ev.type==='FULL_MOMENTUM_LOST')detail={speed:round(x.speed),reason:String(x.reason||'')};else detail={kind:String(x.kind||''),push:round(x.push),nudge:round(x.nudge)};let text='';try{text=JSON.stringify(detail);}catch(e){}return text.slice(0,240);}
   function compactEvent(ev,index){const type=EVENT_TYPES.has(String(ev&&ev.type||''))?String(ev.type):'YETI_STATE';return{seq:int(ev&&ev.id||index+1,999999),type,t:round(ev&&ev.t),d:round(ev&&ev.depth),before:miniState(ev&&ev.before),after:miniState(ev&&ev.after),detail:eventDetail(ev)};}
   function uniform(rows,max){if(rows.length<=max)return rows.slice();if(max<=1)return rows.length?[rows[rows.length-1]]:[];const out=[];let prior=-1;for(let i=0;i<max;i++){const idx=Math.round(i*(rows.length-1)/(max-1));if(idx!==prior){out.push(rows[idx]);prior=idx;}}return out;}
   function oneHzFrom(rows){const out=[];let sec=-1;for(const row of rows){const next=Math.max(0,Math.floor(+row.t||0));if(next===sec)continue;sec=next;out.push(compactSample(row));}return uniform(out,CFG.maxSamples1Hz);}
@@ -2840,11 +3017,11 @@ const PlaytestReport=(()=>{
   function tuningChanges(report){const rows=Array.isArray(report&&report.tuningChanges)?report.tuningChanges:[];return rows.slice(-CFG.maxTuningChanges).map((x,i)=>({seq:i,type:String(x.event||'DEV_TUNING').slice(0,24),t:round(x.t),key:String(x.key||'').slice(0,32),from:round(x.from),to:round(x.to)}));}
   function validResponse(v){return Number.isInteger(v)&&v>=1&&v<=5||v==='NA'||v==='NA_AUTO';}
   function responseBlock(report){const f=report&&report.subjectiveFeedback||{},src=f.responses||{},out={};const ids=['runFun','immediateReplayDesire','overallFairness','deathClarity','steeringSatisfaction','terrainReadability','flagSurvivalValue','performanceResponse','comboRiskReward','attackDirectionReaction','attackCommittedTooEarly','sameDodgeWorkedRepeatedly','attackWindupPhysical','flagsBeatSlowPlay','leaderboardMotivation'];for(const id of ids){const v=src[id];out[id]=validResponse(v)?v:(ids.indexOf(id)<8?0:'NA_AUTO');}return out;}
-  function basePayload(report){const d=details(report),sf=report&&report.subjectiveFeedback||{},summary=report&&report.summary||{},p=report&&report.pursuit||{},fl=report&&report.flagEffect||{},a=report&&report.attacks||{},t=report&&report.tuning||{},client=CompactTelemetry.status();return{schema:PLAYTEST_REPORT_SCHEMA_VERSION,reportId:reportId(report),sourceReportId:String(report&&report.id||'').slice(0,64),timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,reportVersion:String(report&&report.version||'feedback-v9b.0c.6').slice(0,32),questionnaireVersion:String(sf.questionnaireVersion||'feedback-questionnaire-v4').slice(0,48)},tester:{code:String(report&&report.tester&&report.tester.id||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,12),gameExperienceRating:int(report&&report.tester&&report.tester.gameExperienceRating,5)},scenario:{id:String(report&&report.scenario||'NORMAL'),adherence:/^(YES|PARTLY|NO)$/.test(String(sf.scenarioAdherence||''))?String(sf.scenarioAdherence):'YES'},client:{clientId:String(client.clientId||''),sessionId:String(client.sessionId||''),inputType:inputType(),deviceClass:broadDevice(),browserFamily:broadBrowser(),qualitySetting:d.performance.qualitySetting},run:{durationSec:round(summary.duration),distance:int(summary.distance),score:int(summary.score,9999999),averageSpeed:round(summary.averageSpeed),cleanFlags:int(summary.cleanFlags,99999),attemptedFlags:int(summary.attemptedFlags,99999),bestCombo:int(summary.bestCombo,9999),collisions:int(summary.collisions,9999),deathCause:/^(caught|edge|tree|boulder)$/.test(String(summary.cause||''))?String(summary.cause):'caught'},pursuit:{averageWorldGap:round(p.averageWorldGap),minimumWorldGap:round(p.minimumWorldGap),maximumWorldGap:round(p.maximumWorldGap),averageRenderedGap:round(p.averageRenderedGap),averageRenderError:round(p.averageRenderError),averageTargetGap:round(p.averageTargetGap),averageClosingRate:round(p.averageClosingRate),secondsYetiGaining:round(p.secondsYetiGaining),secondsPlayerSeparating:round(p.secondsPlayerSeparating),averagePressure:round(p.averagePressure,3),peakPressure:round(p.peakPressure,3),averageRequestedAdvance:round(p.averageRequestedAdvance),averageYetiMoveSpeed:round(p.averageYetiMoveSpeed)},flags:{cleanEvents:int(fl.cleanEvents,99999),missEvents:int(fl.missEvents,99999),queuedCleanGap:round(fl.queuedCleanGap),queuedMissNudge:round(fl.queuedMissNudge),retainedGapAfter1s:round(fl.retainedGapAfter1s),retainedGapAfter2s:round(fl.retainedGapAfter2s)},attacks:{huntCloses:int(a.huntCloses,99999),telegraphs:int(a.telegraphs,99999),lunges:int(a.lunges,99999),recoveries:int(a.recoveries,99999),lulls:int(a.lulls,99999),feedings:int(a.feedings,99999)},performance:d.performance,tuning:{schemaVersion:String(t.schemaVersion||DEV_TUNING_SCHEMA_VERSION).slice(0,32),classification:/^(BASELINE|TUNED|LIVE-TUNED)$/.test(String(t.classification||''))?String(t.classification):'BASELINE',modifiedCountAtStart:int(t.modifiedCountAtStart,16),modifiedCountAtFinish:int(t.modifiedCountAtFinish,16),valuesAtStart:tuningValues(t.valuesAtStart||report&&report.tuningAtStart),valuesAtFinish:tuningValues(t.valuesAtFinish||report&&report.tuningAtFinish),changes:tuningChanges(report)},survey:{completed:sf.completed===true,completedAt:int(sf.completedAt||sf.updatedAt,9999999999999),responses:responseBlock(report),responseCounts:{coreRated:int(sf.responseCounts&&sf.responseCounts.coreRated,8),optionalRated:int(sf.responseCounts&&sf.responseCounts.optionalRated,7),manualNotApplicable:int(sf.responseCounts&&sf.responseCounts.manualNotApplicable,7),automaticNotApplicable:int(sf.responseCounts&&sf.responseCounts.automaticNotApplicable,7)},comments:String(sf.comments||'').slice(0,2000)},samples1Hz:d.samples1Hz,deathTrace:d.deathTrace,events:d.events,truncation:{sourceSamples:int(d.sourceCounts.samples,999999),storedSamples:d.samples1Hz.length,sourceEvents:int(d.sourceCounts.events,999999),storedEvents:d.events.length,sourceTrace:int(d.sourceCounts.trace,999999),storedTrace:d.deathTrace.length,targetBytes:CFG.targetBytes,hardMaxBytes:CFG.maxBytes}};}
+  function basePayload(report){const d=details(report),sf=report&&report.subjectiveFeedback||{},summary=report&&report.summary||{},p=report&&report.pursuit||{},fl=report&&report.flagEffect||{},a=report&&report.attacks||{},t=report&&report.tuning||{},client=CompactTelemetry.status();return{schema:PLAYTEST_REPORT_SCHEMA_VERSION,reportId:reportId(report),sourceReportId:String(report&&report.id||'').slice(0,64),timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,reportVersion:String(report&&report.version||'feedback-v10a').slice(0,32),questionnaireVersion:String(sf.questionnaireVersion||'feedback-questionnaire-v4').slice(0,48)},tester:{code:String(report&&report.tester&&report.tester.id||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,12),gameExperienceRating:int(report&&report.tester&&report.tester.gameExperienceRating,5)},scenario:{id:String(report&&report.scenario||'NORMAL'),adherence:/^(YES|PARTLY|NO)$/.test(String(sf.scenarioAdherence||''))?String(sf.scenarioAdherence):'YES'},client:{clientId:String(client.clientId||''),sessionId:String(client.sessionId||''),inputType:inputType(),deviceClass:broadDevice(),browserFamily:broadBrowser(),qualitySetting:d.performance.qualitySetting},run:{durationSec:round(summary.duration),distance:int(summary.distance),score:int(summary.score,9999999),averageSpeed:round(summary.averageSpeed),cleanFlags:int(summary.cleanFlags,99999),attemptedFlags:int(summary.attemptedFlags,99999),bestCombo:int(summary.bestCombo,9999),collisions:int(summary.collisions,9999),deathCause:/^(caught|edge|tree|boulder)$/.test(String(summary.cause||''))?String(summary.cause):'caught'},pursuit:{averageWorldGap:round(p.averageWorldGap),minimumWorldGap:round(p.minimumWorldGap),maximumWorldGap:round(p.maximumWorldGap),averageRenderedGap:round(p.averageRenderedGap),averageRenderError:round(p.averageRenderError),averageTargetGap:round(p.averageTargetGap),averageClosingRate:round(p.averageClosingRate),secondsYetiGaining:round(p.secondsYetiGaining),secondsPlayerSeparating:round(p.secondsPlayerSeparating),averagePressure:round(p.averagePressure,3),peakPressure:round(p.peakPressure,3),averageRequestedAdvance:round(p.averageRequestedAdvance),averageYetiMoveSpeed:round(p.averageYetiMoveSpeed)},flags:{cleanEvents:int(fl.cleanEvents,99999),missEvents:int(fl.missEvents,99999),queuedCleanGap:round(fl.queuedCleanGap),queuedMissNudge:round(fl.queuedMissNudge),retainedGapAfter1s:round(fl.retainedGapAfter1s),retainedGapAfter2s:round(fl.retainedGapAfter2s)},attacks:{huntCloses:int(a.huntCloses,99999),telegraphs:int(a.telegraphs,99999),lunges:int(a.lunges,99999),dodges:int(a.dodges,99999),lungeHits:int(a.lungeHits,99999),passiveCatches:int(a.passiveCatches,99999),passiveWhiffs:int(a.passiveWhiffs,99999),followUpLunges:int(a.followUpLunges,99999),telegraphInterruptions:int(a.telegraphInterruptions,99999),lungeInterruptions:int(a.lungeInterruptions,99999),recoveries:int(a.recoveries,99999),lulls:int(a.lulls,99999),feedings:int(a.feedings,99999)},performance:d.performance,tuning:{schemaVersion:String(t.schemaVersion||DEV_TUNING_SCHEMA_VERSION).slice(0,32),classification:/^(BASELINE|TUNED|LIVE-TUNED)$/.test(String(t.classification||''))?String(t.classification):'BASELINE',modifiedCountAtStart:int(t.modifiedCountAtStart,16),modifiedCountAtFinish:int(t.modifiedCountAtFinish,16),valuesAtStart:tuningValues(t.valuesAtStart||report&&report.tuningAtStart),valuesAtFinish:tuningValues(t.valuesAtFinish||report&&report.tuningAtFinish),changes:tuningChanges(report)},survey:{completed:sf.completed===true,completedAt:int(sf.completedAt||sf.updatedAt,9999999999999),responses:responseBlock(report),responseCounts:{coreRated:int(sf.responseCounts&&sf.responseCounts.coreRated,8),optionalRated:int(sf.responseCounts&&sf.responseCounts.optionalRated,7),manualNotApplicable:int(sf.responseCounts&&sf.responseCounts.manualNotApplicable,7),automaticNotApplicable:int(sf.responseCounts&&sf.responseCounts.automaticNotApplicable,7)},comments:String(sf.comments||'').slice(0,2000)},samples1Hz:d.samples1Hz,deathTrace:d.deathTrace,events:d.events,truncation:{sourceSamples:int(d.sourceCounts.samples,999999),storedSamples:d.samples1Hz.length,sourceEvents:int(d.sourceCounts.events,999999),storedEvents:d.events.length,sourceTrace:int(d.sourceCounts.trace,999999),storedTrace:d.deathTrace.length,targetBytes:CFG.targetBytes,hardMaxBytes:CFG.maxBytes}};}
   function trim(payload){let bytes=byteSize(payload);while(bytes>CFG.targetBytes&&payload.samples1Hz.length>60){payload.samples1Hz=uniform(payload.samples1Hz,Math.max(60,Math.floor(payload.samples1Hz.length*.75)));payload.truncation.storedSamples=payload.samples1Hz.length;bytes=byteSize(payload);}while(bytes>CFG.targetBytes&&payload.events.length>60){payload.events=payload.events.slice(-Math.max(60,Math.floor(payload.events.length*.80)));payload.truncation.storedEvents=payload.events.length;bytes=byteSize(payload);}while(bytes>CFG.targetBytes&&payload.deathTrace.length>40){payload.deathTrace=payload.deathTrace.slice(-Math.max(40,Math.floor(payload.deathTrace.length*.85)));payload.truncation.storedTrace=payload.deathTrace.length;bytes=byteSize(payload);}if(bytes>CFG.targetBytes&&payload.survey.comments.length>500){payload.survey.comments=payload.survey.comments.slice(0,500);bytes=byteSize(payload);}return bytes;}
   function build(report){const sf=report&&report.subjectiveFeedback||{},core=['runFun','immediateReplayDesire','overallFairness','deathClarity','steeringSatisfaction','terrainReadability','flagSurvivalValue','performanceResponse'];if(!report||sf.completed!==true||!core.every(id=>Number.isInteger(sf.responses&&sf.responses[id])&&sf.responses[id]>=1&&sf.responses[id]<=5))return{ok:false,error:'complete-feedback-required',payload:null,bytes:0};const payload=basePayload(report);const bytes=trim(payload);return{ok:bytes<=CFG.maxBytes,error:bytes<=CFG.maxBytes?'':'report-over-100kb',payload,bytes,targetMet:bytes<=CFG.targetBytes};}
   function download(report){const built=build(report);if(!built.ok)return false;const tester=String(built.payload.tester.code||'UNKNOWN'),scenario=String(built.payload.scenario.id||'RUN').replace(/[^A-Z0-9]+/gi,'-').replace(/^-|-$/g,'');const blob=new Blob([JSON.stringify(built.payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='endless_powder_playtest_'+tester+'_'+scenario+'_'+built.payload.reportId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);return true;}
-  function selfTest(){const fake={id:'fb_test_1',version:'feedback-v9b.0c.6',scenario:'NORMAL',tester:{id:'T01',gameExperienceRating:4},startedAt:Date.now()-10000,finishedAt:Date.now(),summary:{duration:10,distance:100,score:200,averageSpeed:20,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,cause:'caught'},pursuit:{},flagEffect:{},attacks:{},tuning:{schemaVersion:DEV_TUNING_SCHEMA_VERSION,classification:'BASELINE',valuesAtStart:DEV_TUNING_BASELINE,valuesAtFinish:DEV_TUNING_BASELINE},subjectiveFeedback:{questionnaireVersion:'feedback-questionnaire-v4',completed:true,completedAt:Date.now(),scenarioAdherence:'YES',responses:{runFun:4,immediateReplayDesire:4,overallFairness:4,deathClarity:4,steeringSatisfaction:4,terrainReadability:4,flagSurvivalValue:4,performanceResponse:4},responseCounts:{coreRated:8,optionalRated:0,manualNotApplicable:0,automaticNotApplicable:7},comments:''},samples:[{t:0,depth:0,x:360,speed:14,steer:0,steerSm:0,combo:0,fps:60,quality:'HIGH',yeti:{state:'OFF',gap:999,pressure:0}}],events:[{id:1,type:'RUN_START',t:0,depth:0,before:null,after:{speed:14,steer:0,combo:0,yeti:{state:'OFF',gap:999,pressure:0}},extra:{scenario:'NORMAL'}}]};const built=build(fake);return Object.freeze({passed:built.ok&&PLAYTEST_REPORT_ID_RE.test(built.payload.reportId)&&built.bytes<CFG.targetBytes&&built.payload.samples1Hz.length===1&&built.payload.events.length===1,bytes:built.bytes,reportId:built.payload.reportId,targetMet:built.targetMet});}
+  function selfTest(){const fake={id:'fb_test_1',version:'feedback-v10a',scenario:'NORMAL',tester:{id:'T01',gameExperienceRating:4},startedAt:Date.now()-10000,finishedAt:Date.now(),summary:{duration:10,distance:100,score:200,averageSpeed:20,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,cause:'caught'},pursuit:{},flagEffect:{},attacks:{},tuning:{schemaVersion:DEV_TUNING_SCHEMA_VERSION,classification:'BASELINE',valuesAtStart:DEV_TUNING_BASELINE,valuesAtFinish:DEV_TUNING_BASELINE},subjectiveFeedback:{questionnaireVersion:'feedback-questionnaire-v4',completed:true,completedAt:Date.now(),scenarioAdherence:'YES',responses:{runFun:4,immediateReplayDesire:4,overallFairness:4,deathClarity:4,steeringSatisfaction:4,terrainReadability:4,flagSurvivalValue:4,performanceResponse:4},responseCounts:{coreRated:8,optionalRated:0,manualNotApplicable:0,automaticNotApplicable:7},comments:''},samples:[{t:0,depth:0,x:360,speed:14,steer:0,steerSm:0,combo:0,fps:60,quality:'HIGH',yeti:{state:'OFF',gap:999,pressure:0}}],events:[{id:1,type:'RUN_START',t:0,depth:0,before:null,after:{speed:14,steer:0,combo:0,yeti:{state:'OFF',gap:999,pressure:0}},extra:{scenario:'NORMAL'}}]};const built=build(fake);return Object.freeze({passed:built.ok&&PLAYTEST_REPORT_ID_RE.test(built.payload.reportId)&&built.bytes<CFG.targetBytes&&built.payload.samples1Hz.length===1&&built.payload.events.length===1,bytes:built.bytes,reportId:built.payload.reportId,targetMet:built.targetMet});}
   return Object.freeze({version:PLAYTEST_REPORT_SCHEMA_VERSION,details,build,download,reportId,byteSize,selfTest});
 })();
 
@@ -2889,7 +3066,7 @@ const PlaytestUpload=(()=>{
 const FeedbackBaseline=(()=>{
   const SAMPLE_STEP=0.20,MAX_SAMPLES=3000,MAX_EVENTS=900,MAX_REPORTS=8;
   const REPORT_KEY=APP_CONFIG.storage.diagnostics.feedbackReports,TESTER_KEY='ep_feedback_tester_v2',LEGACY_TESTER_KEY='ep_feedback_tester_v1';
-  const REPORT_VERSION='feedback-v9b.0c.6',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
+  const REPORT_VERSION='feedback-v10a',QUESTIONNAIRE_VERSION='feedback-questionnaire-v4',AUTO_NA='NA_AUTO';
   const SCALE=Object.freeze({minimum:1,maximum:5,notApplicable:'NA',automaticNotApplicable:AUTO_NA,labels:Object.freeze({
     1:'Very low / not at all',2:'Low',3:'Moderate',4:'High',5:'Very high',NA:'Not applicable / not judged',NA_AUTO:'Automatic N/A'
   })});
@@ -2955,6 +3132,7 @@ const FeedbackBaseline=(()=>{
     const target=on&&S.depth>=C.chaseAfter?chaseTargetGap(D,pressure):C.SAFE;
     return Object.freeze({
       t:round(S.time),mode:S.mode,depth:round(S.depth),speed:round(S.speed),fuel:round(S.fuel),combo:S.combo|0,bestCombo:S.bestCombo|0,
+      fullMomentum:Object.freeze({armed:!!S.fullMomentumArmed,eligible:S.speed>=FullMomentum.threshold(),visual:round(S.fullMomentumVisual,3),hold:round(S.fullMomentumHold,3),grace:round(S.fullMomentumGrace,3),threshold:round(FullMomentum.threshold(),2),armCount:S.fullMomentumArmCount|0,bloodCarry:round(clamp((S.npcBloodCarryRemaining||0)/Math.max(0.1,S.npcBloodCarryTotal||1),0,1),3)}),
       steer:round(S.steer),steerSm:round(S.steerSm),active:!!S.active,thetaDeg:round(S.theta/D2R,1),
       fps:round(typeof fps==='number'?fps:0,1),quality:PerfBudget.profile().name,camZ:round(S.camZ),pinY:round(PIN_Y),
       yeti:Object.freeze({
@@ -2963,7 +3141,7 @@ const FeedbackBaseline=(()=>{
         matchComponent:round(Y.diagMatch),correctionComponent:round(Y.diagCorrection),surgeComponent:round(Y.diagSurge),
         controller:String(Y.diagMode||'STATE'),pass:Y.pass|0,tele:round(Y.tele),burst:round(Y.burst),tired:round(Y.tired),lull:round(Y.lull),
         next:round(Y.next),passNext:round(Y.passNext),gapImpulse:round(Y.gapImpulse),fury:round(Y.fury),
-        cleanDebt:round(S.cleanDebt),debtLevel:round(debtLevel()),missStreak:S.missStreak|0,neglect:round(S.neglectK),pressure:round(pressure)
+        cleanDebt:round(S.cleanDebt),debtLevel:round(debtLevel()),unresolvedMistakes:round(S.unresolvedMistakes,2),cleanRecoveryStreak:S.cleanRecoveryStreak|0,lowSpeedExposure:round(S.lowSpeedExposure,2),missStreak:S.missStreak|0,neglect:round(S.neglectK),cleanProtectionSec:round(Y.cleanProtectT),cleanProtectionFloor:round(Y.cleanProtectFloor),pressure:round(pressure),threatState:YetiAttackTelemetry.threatSnapshot().threatState
       })
     });
   }
@@ -3061,6 +3239,7 @@ const FeedbackBaseline=(()=>{
     const s=active.samples.slice(),e=active.events.slice(),y=s.filter(x=>x.yeti&&x.yeti.on);
     const clean=e.filter(x=>x.type==='FLAG_CLEAN'),miss=e.filter(x=>x.type==='FLAG_MISS');
     const stateCounts={};for(const x of e)if(x.type==='YETI_STATE'&&x.extra)stateCounts[x.extra.to]=(stateCounts[x.extra.to]||0)+1;
+    const eventCount=type=>e.filter(x=>x.type===type).length;
     const tuningChanges=e.filter(x=>x.type==='DEV_TUNING'||x.type==='DEV_TUNING_RESET').map(x=>({
       event:x.type,t:x.t,depth:x.depth,key:x.extra&&x.extra.key,from:x.extra&&x.extra.from,to:x.extra&&x.extra.to,
       values:x.extra&&x.extra.tuning?clone(x.extra.tuning):null
@@ -3081,7 +3260,9 @@ const FeedbackBaseline=(()=>{
         averageRequestedAdvance:round(avg(y,x=>x.yeti.requestedAdvance)),averageYetiMoveSpeed:round(avg(y,x=>x.yeti.moveSpeed))},
       flagEffect:{cleanEvents:clean.length,missEvents:miss.length,queuedCleanGap:round(clean.reduce((n,x)=>n+finite(x.extra&&x.extra.push),0)),
         queuedMissNudge:round(miss.reduce((n,x)=>n+finite(x.extra&&x.extra.nudge),0)),retainedGapAfter1s:round(retained(clean,'1s')),retainedGapAfter2s:round(retained(clean,'2s'))},
-      attacks:{huntCloses:stateCounts.HUNT_CLOSE||0,telegraphs:stateCounts.TELEGRAPH||0,lunges:stateCounts.LUNGE||0,
+      attacks:{huntCloses:stateCounts.HUNT_CLOSE||0,telegraphs:eventCount('YETI_TELEGRAPH_START'),lunges:eventCount('YETI_LUNGE_START'),dodges:eventCount('YETI_LUNGE_DODGE'),
+        lungeHits:eventCount('YETI_LUNGE_HIT'),passiveCatches:eventCount('YETI_PASSIVE_CATCH'),passiveWhiffs:eventCount('YETI_PASSIVE_WHIFF'),followUpLunges:e.filter(x=>x.type==='YETI_LUNGE_START'&&x.extra&&x.extra.followUp).length,
+        telegraphInterruptions:eventCount('YETI_TELEGRAPH_INTERRUPTED'),lungeInterruptions:eventCount('YETI_LUNGE_INTERRUPTED'),stateObservedTelegraphs:stateCounts.TELEGRAPH||0,stateObservedLunges:stateCounts.LUNGE||0,
         recoveries:stateCounts.RECOVERY||0,lulls:stateCounts.LULL||0,feedings:stateCounts.FEEDING||0},
       subjectiveFeedback:null,samples:s,events:e
     };report.subjectiveFeedback=emptyFeedback(report);return report;
@@ -3110,8 +3291,9 @@ const FeedbackBaseline=(()=>{
       'FLAG EFFECT','Clean events: '+f.cleanEvents,'Miss events: '+f.missEvents,'Queued clean separation: '+f.queuedCleanGap,
       'Queued miss nudge: '+f.queuedMissNudge,'Average retained gap after 1 s: '+f.retainedGapAfter1s,
       'Average retained gap after 2 s: '+f.retainedGapAfter2s,'',
-      'ATTACK STATES','Hunt closes: '+a.huntCloses,'Telegraphs: '+a.telegraphs,'Lunges: '+a.lunges,'Recoveries: '+a.recoveries,
-      'Lulls: '+a.lulls,'Feedings: '+a.feedings,'',
+      'ATTACK EVENTS','Hunt closes: '+a.huntCloses,'Telegraph starts: '+a.telegraphs,'Committed lunges: '+a.lunges,'Lunge dodges: '+(a.dodges||0),
+      'Lunge hits: '+(a.lungeHits||0),'Passive catches: '+(a.passiveCatches||0),'Passive whiffs: '+(a.passiveWhiffs||0),'Follow-up lunges: '+(a.followUpLunges||0),
+      'Telegraph interruptions: '+(a.telegraphInterruptions||0),'Lunge interruptions: '+(a.lungeInterruptions||0),'Observed recovery states: '+a.recoveries,'Lulls: '+a.lulls,'Feedings: '+a.feedings,'',
       'TUNING','Classification: '+(t.classification||'UNKNOWN'),'Schema: '+(t.schemaVersion||'legacy'),
       'Modified at run start: '+(t.modifiedCountAtStart||t.modifiedCount||0),'Modified at run finish: '+(t.modifiedCountAtFinish||0),'Changes during run: '+((t.changesDuringRun&&t.changesDuringRun.length)||0)
     ];
@@ -3207,11 +3389,13 @@ const FeedbackBaseline=(()=>{
   function setScenario(v){scenario=Object.prototype.hasOwnProperty.call(SCENARIO_GUIDES,v)?v:'NORMAL';updateScenarioGuide();return scenario;}
   function refreshReportButton(){const b=$('rFeedbackReport');if(b)b.style.display=RunContext.isPlaytest()&&reports().length?'inline-flex':'none';}
   function hudLines(){const s=capture();if(!s)return['NO STATE'];const y=s.yeti,latest=active&&active.samples.length?active.samples[active.samples.length-1]:null,close=latest?latest.closingRate:0;return[
-    'PHASE 9B.0c.5 · '+(active?active.scenario:scenario),'SPD '+s.speed.toFixed(1)+'  YETI '+y.requestedAdvance.toFixed(1)+'  MOVE '+y.moveSpeed.toFixed(1),
-    'GAP '+(y.on?y.gap.toFixed(1):'—')+'  DISPLAY '+(y.on?y.renderGap.toFixed(1):'—')+'  TARGET '+(y.on?y.targetGap.toFixed(1):'—'),
+    'PHASE 9B.0c.5 · '+(active?active.scenario:scenario),'SPD '+s.speed.toFixed(1)+'  MOM '+(s.fullMomentum.armed?'ARMED':s.fullMomentum.eligible?'CHARGING':'OFF')+' '+Math.round(s.fullMomentum.visual*100)+'%',
+    'YETI '+y.requestedAdvance.toFixed(1)+'  MOVE '+y.moveSpeed.toFixed(1)+'  GAP '+(y.on?y.gap.toFixed(1):'—')+'  TARGET '+(y.on?y.targetGap.toFixed(1):'—'),
+    'DISPLAY '+(y.on?y.renderGap.toFixed(1):'—')+'  HOLD '+s.fullMomentum.hold.toFixed(2)+'  GRACE '+s.fullMomentum.grace.toFixed(2)+'  ARMS '+s.fullMomentum.armCount,
     'CLOSE '+close.toFixed(2)+'  PRESS '+y.pressure.toFixed(2)+'  STATE '+y.state,
     'MATCH '+y.matchComponent.toFixed(1)+'  CORR '+y.correctionComponent.toFixed(1)+'  SURGE '+y.surgeComponent.toFixed(1),
-    'FURY '+y.fury.toFixed(2)+'  DEBT '+y.cleanDebt.toFixed(2)+'  MISS '+y.missStreak+'  NEG '+y.neglect.toFixed(2),
+    'FURY '+y.fury.toFixed(2)+'  DEBT '+y.cleanDebt.toFixed(2)+'  UNRES '+y.unresolvedMistakes.toFixed(1)+'  MISS '+y.missStreak,
+    'CLEAN SHIELD '+y.cleanProtectionSec.toFixed(2)+'s  FLOOR '+y.cleanProtectionFloor.toFixed(1)+'  NEG '+y.neglect.toFixed(2),
     'COMBO '+s.combo+'  FLAGS '+S.cleanFlags+'/'+S.flagsAttempted+'  DEPTH '+s.depth.toFixed(0),'FPS '+s.fps.toFixed(0)+' '+s.quality+'  '+PerfBudget.avg.toFixed(1)+'ms'];}
   function status(){return Object.freeze({active:!!active&&!active.completed,scenario,tester:clone(tester),sampleStep:SAMPLE_STEP,samples:active?active.samples.length:0,events:active?active.events.length:0,reports:reports().length,lastReportId:lastReport&&lastReport.id,questionnaireVersion:QUESTIONNAIRE_VERSION});}
   function snapshot(){return capture();}function events(){return active?active.events.slice():[];}function report(){return lastReport||reports()[0]||null;}
@@ -3243,6 +3427,59 @@ const FeedbackBaseline=(()=>{
   return Object.freeze({beginRun,tick,capture,noteFlag,noteEvent,finish,showReport,hideReport,download,copySummary,clearReports,setScenario,markLeaderboardViewed,
     testerReady,promptTester,tester:()=>clone(tester),scenario:()=>scenario,status,snapshot,events,report,reports,selected,complete,markUpload,reset,selfTest,hudLines,initUI,reportText,questions:()=>clone(QUESTIONS),openSurvey});
 })();
+/* ==================== PHASE 11A.0: EXACT YETI ATTACK EVENT LIFECYCLE ====================
+   This module is observational only. It does not alter movement, pressure, cooldowns, hitboxes, or RNG. */
+const YetiAttackTelemetry=(()=>{
+  let telegraph=null,lunge=null,serial=0,lastOutcomeAt=-Infinity;
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v));}catch(e){return null;}};
+  function threatSnapshot(){
+    const Y=S&&S.yeti||{},D=Difficulty.profile(S&&S.depth||0),pressure=Y.on?effectiveYetiPressure(D):0,debt=debtLevel(),unresolved=clamp((S&&S.unresolvedMistakes||0)/5,0,1),miss=clamp((S&&S.missStreak||0)/3,0,1),neglect=clamp(S&&S.neglectK||0,0,1);
+    const deep=deepYetiProfile(S&&S.depth||0);
+    const threatScore=clamp(0.50*pressure+0.22*debt+0.12*unresolved+0.10*miss+0.06*neglect+deep.threatBias,0,1);
+    const threatState=threatScore>=0.72?'CRITICAL':threatScore>=0.48?'PREDATORY':threatScore>=0.22?'HUNTING':'CONTROLLED';
+    return Object.freeze({t:S&&S.time||0,depth:S&&S.depth||0,speed:S&&S.speed||0,gap:Y.on?(S.depth-Y.d):null,pressure,debt,unresolvedMistakes:S&&S.unresolvedMistakes||0,missStreak:S&&S.missStreak||0,neglect,cleanCombo:S&&S.combo||0,cleanProtectionSec:Y.cleanProtectT||0,threatScore,threatState,deepK:deep.deepK,deepPoorSkiing:deep.poorK,deepEscalation:deep.escalation,aimX:Number.isFinite(Y.aimX)?Y.aimX:null,aimLeadPx:Number.isFinite(Y.aimLeadPx)?Y.aimLeadPx:0,aimMode:String(Y.aimMode||'DIRECT'),aimHorizonSec:Number.isFinite(Y.aimHorizonSec)?Y.aimHorizonSec:0,aimLockedAt:Number.isFinite(Y.aimLockedAt)?Y.aimLockedAt:null,aimSource:String(Y.aimSource||'')});
+  }
+  function detailed(type,extra,before){try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent(type,extra||{},before||null);}catch(e){}}
+  function begin(){telegraph=null;lunge=null;lastOutcomeAt=-Infinity;return status();}
+  function telegraphStart(source,followUp){
+    if(lunge)interrupt('replaced-by-telegraph');else if(telegraph)interrupt('replaced-telegraph');
+    const snap=threatSnapshot(),id='ya_'+(++serial);telegraph={id,source:String(source||'unknown'),followUp:!!followUp,snapshot:snap};
+    CompactTelemetry.noteAttackEvent('TELEGRAPH_START',snap,{source:telegraph.source,followUp:telegraph.followUp,id});
+    detailed('YETI_TELEGRAPH_START',{id,source:telegraph.source,followUp:telegraph.followUp,snapshot:clone(snap)},null);return id;
+  }
+  function lungeStart(source){
+    if(lunge)interrupt('replaced-lunge');
+    const snap=threatSnapshot(),base=telegraph,followUp=!!(base&&base.followUp),id=base&&base.id||'ya_'+(++serial);
+    lunge={id,source:String(source||base&&base.source||'unknown'),followUp,snapshot:snap};telegraph=null;
+    CompactTelemetry.noteAttackEvent('LUNGE_START',snap,{source:lunge.source,followUp,id});
+    detailed('YETI_LUNGE_START',{id,source:lunge.source,followUp,snapshot:clone(snap)},null);return id;
+  }
+  function lungeDodge(kind,beforeGap,afterGap,counterplay){
+    if(!lunge)return false;const ev=lunge;lunge=null;telegraph=null;lastOutcomeAt=S.time;
+    const cp=counterplay||{},snap=threatSnapshot(),extra={id:ev.id,source:ev.source,followUp:ev.followUp,kind:String(kind||'miss'),beforeGap,afterGap,
+      targetEscapePx:Number.isFinite(+cp.targetEscapePx)?Math.max(0,+cp.targetEscapePx):null,lineBroken:!!cp.lineBroken};
+    CompactTelemetry.noteAttackEvent('LUNGE_DODGE',snap,extra);detailed('YETI_LUNGE_DODGE',Object.assign({snapshot:clone(snap)},extra),null);return true;
+  }
+  function passiveWhiff(beforeGap,afterGap){
+    if(Math.abs((S&&S.time||0)-lastOutcomeAt)<0.0001)return false;
+    const snap=threatSnapshot(),extra={beforeGap,afterGap};CompactTelemetry.noteAttackEvent('PASSIVE_WHIFF',snap,extra);detailed('YETI_PASSIVE_WHIFF',Object.assign({snapshot:clone(snap)},extra),null);lastOutcomeAt=S.time;return true;
+  }
+  function catchPlayer(){
+    const snap=threatSnapshot();
+    if(lunge){const ev=lunge;lunge=null;telegraph=null;CompactTelemetry.noteAttackEvent('LUNGE_HIT',snap,{id:ev.id,source:ev.source,followUp:ev.followUp});detailed('YETI_LUNGE_HIT',{id:ev.id,source:ev.source,followUp:ev.followUp,snapshot:clone(snap)},null);return'lungeHit';}
+    if(telegraph)interrupt('catch-before-commit');
+    CompactTelemetry.noteAttackEvent('PASSIVE_CATCH',snap,{});detailed('YETI_PASSIVE_CATCH',{snapshot:clone(snap)},null);return'passiveCatch';
+  }
+  function interrupt(reason){
+    const why=String(reason||'interrupted'),snap=threatSnapshot();
+    if(lunge){const ev=lunge;lunge=null;CompactTelemetry.noteAttackEvent('LUNGE_INTERRUPTED',snap,{id:ev.id,reason:why});detailed('YETI_LUNGE_INTERRUPTED',{id:ev.id,reason:why,snapshot:clone(snap)},null);return'LUNGE';}
+    if(telegraph){const ev=telegraph;telegraph=null;CompactTelemetry.noteAttackEvent('TELEGRAPH_INTERRUPTED',snap,{id:ev.id,reason:why});detailed('YETI_TELEGRAPH_INTERRUPTED',{id:ev.id,reason:why,snapshot:clone(snap)},null);return'TELEGRAPH';}
+    return'';
+  }
+  function status(){return Object.freeze({telegraph:clone(telegraph),lunge:clone(lunge),lastOutcomeAt,threat:threatSnapshot()});}
+  return Object.freeze({begin,telegraphStart,lungeStart,lungeDodge,passiveWhiff,catchPlayer,interrupt,status,threatSnapshot,hasOpenLunge:()=>!!lunge,hasOpenTelegraph:()=>!!telegraph});
+})();
+
 /* ============================ ECONOMY EVENTS ============================ */
 function heatRGB(){return S.combo>=15?'255,157,58':S.combo>=9?'255,215,106':S.combo>=4?'127,230,255':'255,255,255';}
 function fmtNum(n){return String(Math.max(0,Math.floor(+n||0))).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
@@ -3250,17 +3487,170 @@ function distancePoints(){return Math.max(0,Math.floor(S.depth))*2;}
 function totalScore(){return Math.max(0,distancePoints()+S.scoreFlag+S.scoreCombo-S.scorePenalty);}
 function recordFlagAttempt(clean){S.flagsAttempted++;if(clean)S.cleanFlags++;}
 function recordCollision(penalty){S.collisions++;S.scorePenalty+=Math.max(0,penalty||0);}
-function debtLevel(){return clamp((S.cleanDebt||0)/8,0,1);}
+function unresolvedMistakeLevel(){return clamp((S.unresolvedMistakes||0)/5,0,1);}
+function debtLevel(){
+  const stored=clamp((S.cleanDebt||0)/10,0,1),unresolved=unresolvedMistakeLevel();
+  return clamp(0.72*stored+0.28*unresolved,0,1);
+}
 function effectiveYetiPressure(D){
   const Y=S.yeti,hard=(D||Difficulty.profile(S.depth)).hard;
   const missK=clamp((S.missStreak||0)/3,0,1)*hard;
-  return clamp(Y.fury+0.52*debtLevel()*hard+0.18*missK+0.22*(S.neglectK||0)*hard,0,1);
+  return clamp(Y.fury+0.50*debtLevel()*hard+0.20*missK+0.22*(S.neglectK||0)*hard,0,1);
 }
 function chaseTargetGap(D,P){
   if(S.depth<C.chaseAfter)return C.SAFE;
-  const debt=debtLevel(),miss=clamp((S.missStreak||0)/3,0,1),neglect=S.neglectK||0;
-  const threat=clamp(0.68*P+0.18*debt+0.10*miss+0.12*neglect,0,1);
+  const debt=debtLevel(),unresolved=unresolvedMistakeLevel(),miss=clamp((S.missStreak||0)/3,0,1),neglect=S.neglectK||0;
+  const threat=clamp(0.63*P+0.19*debt+0.10*unresolved+0.06*miss+0.08*neglect,0,1);
   return lerp(C.chaseCleanGap,C.chaseDangerGap,threat);
+}
+function deepYetiProfile(depth){
+  const d=Number.isFinite(+depth)?+depth:(S&&S.depth||0);
+  const t=clamp((d-C.deepEscalationStart)/Math.max(1,C.deepEscalationFull-C.deepEscalationStart),0,1);
+  const deepK=t*t*(3-2*t);
+  const debt=debtLevel(),unresolved=unresolvedMistakeLevel(),miss=clamp((S&&S.missStreak||0)/3,0,1),neglect=clamp(S&&S.neglectK||0,0,1);
+  const poorK=clamp(0.42*debt+0.28*unresolved+0.18*miss+0.12*neglect,0,1);
+  const escalation=deepK*poorK;
+  return Object.freeze({deepK,poorK,escalation,threatBias:C.deepThreatBiasMax*escalation,
+    cooldownMul:1-C.deepCooldownCutMax*escalation,restMul:1-C.deepRestCutMax*escalation,
+    stagMul:1-C.deepWhiffStagCutMax*escalation,lullMul:1-C.deepLullCutMax*escalation,
+    mistakeMul:1+C.deepMistakeAmplifyMax*escalation,furyDecayMul:1-0.38*escalation});
+}
+const THREAT_ATTACK_RANK=Object.freeze({CONTROLLED:0,HUNTING:1,PREDATORY:2,CRITICAL:3});
+function threatAttackProfile(state){
+  const key=Object.prototype.hasOwnProperty.call(THREAT_ATTACK_RANK,state)?state:'CONTROLLED';
+  if(key==='CRITICAL')return Object.freeze({state:key,rank:3,cooldownMul:C.threatCooldownCritical,maxFollowUps:1,firstFollowChance:1,lullMul:0});
+  if(key==='PREDATORY')return Object.freeze({state:key,rank:2,cooldownMul:C.threatCooldownPredatory,maxFollowUps:1,firstFollowChance:C.predatoryFollowChance,lullMul:0.42});
+  if(key==='HUNTING')return Object.freeze({state:key,rank:1,cooldownMul:C.threatCooldownHunting,maxFollowUps:0,firstFollowChance:0,lullMul:0.86});
+  return Object.freeze({state:key,rank:0,cooldownMul:C.threatCooldownControlled,maxFollowUps:0,firstFollowChance:0,lullMul:1.18});
+}
+function currentThreatAttackProfile(){return threatAttackProfile(YetiAttackTelemetry.threatSnapshot().threatState);}
+function attackCooldownRange(D,P,source){
+  // Training-wheel attack cadence remains unchanged before 500 m.
+  const profile=S.depth<C.chaseAfter?threatAttackProfile('HUNTING'):currentThreatAttackProfile();
+  let lo,hi;
+  if(source==='persistent-chase'){
+    lo=S.depth>=C.chaseAfter?lerp(8.8,3.1,P):lerp(C.lungeMin,3.4,D.attack);
+    hi=S.depth>=C.chaseAfter?lerp(13.0,5.4,P):lerp(C.lungeMax,6.0,D.attack);
+  }else{
+    lo=lerp(12.5,3.6,clamp(P*0.78+debtLevel()*0.22,0,1));
+    hi=lo*1.24;
+  }
+  const debtMul=1-0.12*debtLevel(),overtimeMul=1-0.10*D.overtime,deep=deepYetiProfile(S.depth);
+  const deepMul=profile.rank>=2?deep.cooldownMul:(profile.rank===1?lerp(1,deep.cooldownMul,0.28):1);
+  return Object.freeze({state:profile.state,lo:Math.max(1.2,lo*profile.cooldownMul*debtMul*overtimeMul*deepMul),hi:Math.max(1.3,hi*profile.cooldownMul*debtMul*overtimeMul*deepMul),deepEscalation:deep.escalation});
+}
+function schedulePersistentAttack(D,P){
+  const range=attackCooldownRange(D,P,'persistent-chase');
+  const delay=range.lo+Math.random()*Math.max(0,range.hi-range.lo);
+  S.yeti.next=S.time+delay;S.yeti.lastCooldownThreat=range.state;
+  return Object.freeze({state:range.state,delay,lo:range.lo,hi:range.hi});
+}
+function queueConditionalFollowUp(kind){
+  const Y=S&&S.yeti;if(!Y||Y.pass!==2||S.depth<C.chaseAfter||Y.attackSeqStarted<1)return false;
+  const snap=YetiAttackTelemetry.threatSnapshot(),profile=threatAttackProfile(snap.threatState);
+  const already=Math.max(0,Y.followUpsGranted||0);
+  if(already>=1){CompactTelemetry.noteAttackDecision('FOLLOWUP_SUPPRESSED',Object.assign({},snap,{reason:'twoLungeCap'}));return false;} // one follow-up maximum: two total lunges, never a third
+  if(profile.maxFollowUps<=0){CompactTelemetry.noteAttackDecision('FOLLOWUP_SUPPRESSED',Object.assign({},snap,{reason:'threat'}));return false;}
+  // A protected clean-skiing window blocks Predatory chaining. Critical threat can still earn one follow-up,
+  // but the player may cancel that queued attack by collecting a clean flag during the dodge window.
+  if((Y.cleanProtectT||0)>0&&profile.rank<3){CompactTelemetry.noteAttackDecision('FOLLOWUP_SUPPRESSED',Object.assign({},snap,{reason:'cleanProtection'}));return false;}
+  let chance=profile.firstFollowChance;
+  const deep=deepYetiProfile(S.depth);
+  if(profile.state==='PREDATORY'){
+    chance=clamp(chance+0.10*debtLevel()+0.08*unresolvedMistakeLevel()+0.12*deep.escalation+(Y.followUpBias||0),0,0.92);
+  }else if(profile.state==='CRITICAL')chance=1;
+  const granted=Math.random()<chance;
+  Y.followUpBias=0;
+  if(!granted){CompactTelemetry.noteAttackDecision('FOLLOWUP_SUPPRESSED',Object.assign({},snap,{reason:'chance'}));return false;}
+  Y.passLunges=Math.min(1,(Y.passLunges||0)+1);Y.passTotal=Math.min(2,(Y.passTotal||1)+1);Y.followUpsGranted=already+1;
+  Y.passT=Math.max(Y.passT,2.7+1.35*Y.passLunges);CompactTelemetry.noteAttackDecision('FOLLOWUP_QUEUED',snap);
+  try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent('YETI_CONDITIONAL_FOLLOWUP',{kind:String(kind||'dodge'),threatState:profile.state,chance:+chance.toFixed(3),followUpNumber:Y.followUpsGranted,debt:+debtLevel().toFixed(3),unresolved:+(S.unresolvedMistakes||0).toFixed(2)},null);}catch(e){}
+  return true;
+}
+
+function predictiveAimProfile(state){
+  const key=Object.prototype.hasOwnProperty.call(THREAT_ATTACK_RANK,state)?state:'CONTROLLED';
+  if(key==='CRITICAL')return Object.freeze({state:key,strength:0.88,maxLead:C.predictiveLeadCritical,steerBlend:0.58,rhythm:0.68});
+  if(key==='PREDATORY')return Object.freeze({state:key,strength:0.72,maxLead:C.predictiveLeadPredatory,steerBlend:0.48,rhythm:0.50});
+  if(key==='HUNTING')return Object.freeze({state:key,strength:0.42,maxLead:C.predictiveLeadHunting,steerBlend:0.36,rhythm:0});
+  return Object.freeze({state:key,strength:0.18,maxLead:C.predictiveLeadControlled,steerBlend:0.24,rhythm:0});
+}
+function playerReversalSnapshot(){
+  if(!S)return Object.freeze({age:99,interval:0,consistency:0,direction:0,count:0});
+  return Object.freeze({age:Math.max(0,S.time-(S.lastReversalAt||-99)),interval:Math.max(0,S.reversalInterval||0),consistency:clamp(S.reversalConsistency||0,0,1),direction:S.reversalDir||0,count:S.reversalCount||0});
+}
+function predictYetiAimFromMotion(motion,state,followUp,training){
+  const x=clamp(+motion.x||LW/2,EDGE,LW-EDGE),profile=predictiveAimProfile(state);
+  if(training)return Object.freeze({aimX:x,startX:x,leadPx:0,mode:'DIRECT',threat:profile.state,horizonSec:0,rhythmWeight:0});
+  const speed=Math.max(0,+motion.speed||0),theta=clamp(+motion.theta||0,-C.thetaMax,C.thetaMax),turnVel=clamp(+motion.turnVel||0,-C.turnRate,C.turnRate);
+  const steerSm=clamp(+motion.steerSm||0,-1,1),telegraphSec=clamp(+motion.telegraphSec||C.teleT,0.35,0.80);
+  const horizon=clamp((telegraphSec+C.lungeT*0.45)*(0.68+0.32*profile.strength),0.28,0.78);
+  const steerTarget=steerSm*C.thetaMax;
+  const futureTheta=clamp(theta+turnVel*horizon*0.24+(steerTarget-theta)*profile.steerBlend,-C.thetaMax,C.thetaMax);
+  const motionConfidence=clamp(0.48*Math.abs(theta)/(C.thetaMax*0.55)+0.34*Math.abs(steerSm)+0.30*Math.abs(turnVel)/(C.turnRate*0.72),0,1);
+  let lead=speed*PXM*Math.sin((theta+futureTheta)*0.5)*horizon*profile.strength*lerp(0.34,1,motionConfidence);
+  let mode=Math.abs(lead)>2?'MOTION':'DIRECT',rhythmWeight=0;
+  const age=Math.max(0,+motion.reversalAge||99),interval=Math.max(0,+motion.reversalInterval||0),consistency=clamp(+motion.reversalConsistency||0,0,1),count=Math.max(0,+motion.reversalCount||0);
+  if(profile.rhythm>0&&count>=2&&interval>=C.predictiveReversalMinInterval&&interval<=C.predictiveReversalMaxInterval&&consistency>=C.predictiveRhythmMinConsistency){
+    const expected=interval-age;
+    if(expected>=-0.10&&expected<=horizon+0.14){
+      const currentDir=Math.sign(steerSm)||Math.sign(theta)||Math.sign(+motion.reversalDir||0)||1,nextDir=-currentDir;
+      const afterTurn=Math.max(0.12,horizon-Math.max(0,expected));
+      const rhythmLead=nextDir*speed*PXM*Math.sin(C.thetaMax*0.52)*afterTurn*0.70;
+      const timing=1-clamp(Math.abs(expected-horizon*0.42)/(horizon+0.14),0,1);
+      rhythmWeight=clamp(consistency*profile.rhythm*(0.42+0.58*timing),0,0.68);
+      lead=lerp(lead,rhythmLead,rhythmWeight);if(rhythmWeight>0.16)mode='RHYTHM';
+    }
+  }
+  const cap=profile.maxLead*(followUp?1.08:1);
+  lead=clamp(lead,-cap,cap);
+  const aimX=clamp(x+lead,EDGE+24,LW-EDGE-24),actualLead=aimX-x;
+  return Object.freeze({aimX,startX:x,leadPx:actualLead,mode:Math.abs(actualLead)<1?'DIRECT':mode,threat:profile.state,horizonSec:horizon,rhythmWeight});
+}
+function predictiveYetiAim(source,followUp){
+  const Y=S.yeti,snap=YetiAttackTelemetry.threatSnapshot(),state=S.depth<C.chaseAfter?'HUNTING':snap.threatState,rev=playerReversalSnapshot();
+  const result=predictYetiAimFromMotion({x:S.x,speed:S.speed,theta:S.theta,turnVel:S.turnVel,steerSm:S.steerSm,telegraphSec:Y.teleMax||C.teleT,
+    reversalAge:rev.age,reversalInterval:rev.interval,reversalConsistency:rev.consistency,reversalDir:rev.direction,reversalCount:rev.count},state,!!followUp,S.depth<C.chaseAfter);
+  Y.aimX=result.aimX;Y.aimStartX=result.startX;Y.aimLeadPx=result.leadPx;Y.aimMode=result.mode;Y.aimThreat=result.threat;Y.aimHorizonSec=result.horizonSec;Y.aimLockedAt=S.time;Y.aimSource=String(source||'player');
+  Y.aimFollowUp=!!followUp;Y.aimPeakEscapePx=Math.abs(S.x-Y.aimX);Y.aimLineBroken=false;
+  return result;
+}
+function cancelCleanProtection(reason){
+  const Y=S&&S.yeti;if(!Y)return false;
+  const active=(Y.cleanProtectT||0)>0;
+  Y.cleanProtectT=0;Y.cleanProtectFloor=0;Y.cleanProtectStrength=0;
+  if(active&&reason){try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent('CLEAN_PROTECTION_CANCELLED',{reason:String(reason),debt:+debtLevel().toFixed(3),unresolved:+(S.unresolvedMistakes||0).toFixed(2)},null);}catch(e){}}
+  return active;
+}
+function registerUnresolvedMistake(severity,source){
+  const D=Difficulty.profile(S.depth),scaled=Math.max(0,+severity||0)*D.hard;
+  if(scaled<=0)return Object.freeze({added:0,total:S.unresolvedMistakes||0,chain:S.mistakeChain||0});
+  S.cleanRecoveryStreak=0;
+  S.unresolvedMistakes=clamp((S.unresolvedMistakes||0)+scaled,0,6);
+  S.mistakeChain=Math.min(6,Math.max(1,Math.ceil(S.unresolvedMistakes)));
+  S.streak=S.mistakeChain;S.lastMistake=S.time;
+  S.missStreak=Math.min(4,Math.max(S.missStreak||0,Math.ceil(S.unresolvedMistakes)));
+  cancelCleanProtection(source||'mistake');
+  return Object.freeze({added:scaled,total:S.unresolvedMistakes,chain:S.mistakeChain});
+}
+function cleanProtectionActive(Y){return !!Y&&(Y.cleanProtectT||0)>0&&Y.tele<=0&&Y.burst<=0&&Y.npcTele<=0&&Y.npcBurst<=0;}
+function protectedYetiCorrection(Y,correction){
+  if(!cleanProtectionActive(Y))return correction;
+  const gap=S.depth-Y.d,floor=Math.max(0,Y.cleanProtectFloor||0);
+  if(floor>0&&gap<floor-0.05){
+    const recovery=-clamp((floor-gap)*1.25,0.35,4.2);
+    return Math.min(correction,recovery);
+  }
+  return Math.min(correction,C.cleanProtectReclaim);
+}
+function protectedYetiAdvance(Y,advance){
+  if(!cleanProtectionActive(Y))return advance;
+  const gap=S.depth-Y.d,floor=Math.max(0,Y.cleanProtectFloor||0);
+  if(floor>0&&gap<floor-0.05){
+    const outrun=clamp((floor-gap)*1.25,0.35,4.2);
+    return Math.min(advance,Math.max(0,S.speed-outrun));
+  }
+  return Math.min(advance,S.speed+C.cleanProtectReclaim);
 }
 function yetiVisualReady(Y,gapTol,xTol){
   const actualGap=clamp(S.depth-Y.d,0,90);
@@ -3307,46 +3697,62 @@ function updateYetiVisual(Y,dt){
   Y.renderYOffset=approachLimited(Y.renderYOffset,offsetTarget,violent?10:4.2,violent?48:25,dt);
 }
 
-function addCleanDebt(amount){
-  const D=Difficulty.profile(S.depth);
-  S.cleanDebt=clamp((S.cleanDebt||0)+Math.max(0,amount||0)*D.hard,0,10);
+function addCleanDebt(amount,options){
+  const D=Difficulty.profile(S.depth),ambient=!!(options&&options.ambient);
+  const compound=ambient?1:clamp(1+0.18*Math.max(0,(S.unresolvedMistakes||0)-1),1,1.9);
+  const deep=deepYetiProfile(S.depth);
+  const added=Math.max(0,+amount||0)*D.hard*compound*(ambient?lerp(1,deep.mistakeMul,0.55):deep.mistakeMul);
+  S.cleanDebt=clamp((S.cleanDebt||0)+added,0,12);
+  return added;
 }
-function registerFlagMiss(baseFury,debtAdd,extraLungeChance){
+function registerFlagMiss(baseFury,debtAdd,extraLungeChance,severity=1,source='flag-miss'){
   const D=Difficulty.profile(S.depth),Y=S.yeti,missMul=DevTuning.missPressure;
-  S.missStreak=D.hard<0.15?0:Math.min(4,(S.missStreak||0)+1);
-  addCleanDebt(debtAdd*missMul);
+  const mistake=registerUnresolvedMistake(severity,source);
+  if(D.hard<0.15)S.missStreak=0;
+  const debtAdded=addCleanDebt(debtAdd*missMul);
   const n=S.missStreak;
-  const streakBonus=([0,0.025,0.12,0.22,0.28][n]||0.28)*D.hard;
+  const streakBonus=([0,0.025,0.12,0.22,0.30][n]||0.30)*D.hard;
   const gain=addFury((baseFury+streakBonus)*missMul,Math.min(0.98,((extraLungeChance||0)+0.13*Math.max(0,n-1))*Math.sqrt(Math.max(0,missMul))));
   let nudge=0;
   if(Y.on&&D.hard>0.1){
-    nudge=([0,2.0,4.5,7.0,8.0][n]||8.0)*D.hard*missMul;
+    nudge=([0,2.0,4.5,7.0,8.5][n]||8.5)*D.hard*missMul;
     // Queue forward pressure instead of visibly teleporting the yeti toward the player.
     Y.gapImpulse=clamp((Y.gapImpulse||0)-nudge,-14,12);
-    Y.surge=Math.max(Y.surge,([0,1.1,1.9,2.6,2.9][n]||2.9)*D.hard*missMul);
-    Y.surgePower=Math.max(Y.surgePower,(([0,4.0,8.5,12.5,14.0][n]||14.0)*D.hard+2.5*debtLevel())*missMul);
+    Y.surge=Math.max(Y.surge,([0,1.1,1.9,2.6,3.0][n]||3.0)*D.hard*missMul);
+    Y.surgePower=Math.max(Y.surgePower,(([0,4.0,8.5,12.5,14.5][n]||14.5)*D.hard+2.8*debtLevel())*missMul);
     if(n===1)Difficulty.hurryPass(2.2);
     else if(n===2){
       Difficulty.hurryPass(0.38);Y.next=Math.min(Y.next||Infinity,S.time+0.38);
-      if(Y.pass===2&&Y.passTotal<3){Y.passLunges++;Y.passTotal++;}
+      if(Y.pass===2)Y.followUpBias=Math.max(Y.followUpBias||0,0.10);
       sfx.growl();S.shake=Math.max(S.shake,5);vib(24);
     }else if(n>=3){
       Difficulty.hurryPass(0.12);Y.next=Math.min(Y.next||Infinity,S.time+0.12);
-      if(Y.pass===2&&Y.passTotal<3){Y.passLunges++;Y.passTotal++;}
+      if(Y.pass===2)Y.followUpBias=Math.max(Y.followUpBias||0,0.20);
       sfx.roar();S.shake=Math.max(S.shake,9);vib(42);
     }
   }
-  return Object.freeze({gain,nudge,missStreak:n,debtAdded:debtAdd*missMul,multiplier:missMul});
+  return Object.freeze({gain,nudge,missStreak:n,debtAdded,mistakeAdded:mistake.added,unresolvedMistakes:S.unresolvedMistakes||0,compoundMultiplier:debtAdded/Math.max(0.0001,debtAdd*missMul*D.hard),multiplier:missMul});
 }
 function updateCleanSkiingPressure(dt){
   const D=Difficulty.profile(S.depth),Y=S.yeti;
-  if(S.depth<500){S.neglectK=0;S.neglectWarn=0;return;}
+  if(S.depth<500){S.neglectK=0;S.neglectWarn=0;S.lowSpeedExposure=0;return;}
   const sinceClean=S.depth-Math.max(500,S.lastCleanFlagD||500);
-  // A legal deep carve plus phrase setup can approach 50 m. Neglect now begins only after
+  // A legal deep carve plus phrase setup can approach 50 m. Neglect begins only after
   // that clean opportunity window and reaches full strength after sustained course avoidance.
   const target=clamp((sinceClean-56)/62,0,1);
   const old=S.neglectK||0;
   S.neglectK+=(target-S.neglectK)*Math.min(1,3.2*dt);
+  const lowK=clamp((C.lowSpeedDebtThreshold-S.speed)/10,0,1)*clamp((sinceClean-18)/42,0,1);
+  if(lowK>0.08)S.lowSpeedExposure=Math.min(8,(S.lowSpeedExposure||0)+dt*lowK);
+  else S.lowSpeedExposure=Math.max(0,(S.lowSpeedExposure||0)-dt*1.5);
+  const sustainedLow=S.lowSpeedExposure>C.lowSpeedDebtGrace?lowK:0;
+  const ambientRate=0.06*S.neglectK+0.14*sustainedLow;
+  if(ambientRate>0){
+    const ambient=ambientRate*dt;
+    addCleanDebt(ambient,{ambient:true});
+    S.unresolvedMistakes=clamp((S.unresolvedMistakes||0)+ambient*0.42,0,6);
+    if(sustainedLow>0.35)S.cleanRecoveryStreak=0;
+  }
   if(S.neglectK>0){
     Y.fury=Math.min(1,Y.fury+(0.0035+0.0165*S.neglectK)*dt);
     if(Y.on){
@@ -3358,18 +3764,17 @@ function updateCleanSkiingPressure(dt){
   if(old<0.42&&S.neglectK>=0.42){sfx.growl();S.shake=Math.max(S.shake,3);S.neglectWarn=1;}
   if(old<0.82&&S.neglectK>=0.82){sfx.roar();S.shake=Math.max(S.shake,7);vib(28);S.neglectWarn=2;}
 }
-function addFury(base,extraLungeChance){ // immediate fury; longer-term cleanliness debt is layered on separately
+function addFury(base,extraLungeChance){ // immediate fury; longer-term unresolved debt is registered by the triggering mistake
   const D=Difficulty.profile(S.depth),Y=S.yeti;
-  if(S.time-S.lastMistake<=6)S.mistakeChain=Math.min(4,S.mistakeChain+1);
-  else S.mistakeChain=1;
-  S.lastMistake=S.time;S.streak=S.mistakeChain;
-  const chainMul=[1,1,1.30,1.58,1.75][S.mistakeChain]||1.75;
+  const chain=Math.min(6,Math.max(1,Math.ceil(S.unresolvedMistakes||1)));
+  S.mistakeChain=chain;S.streak=chain;S.lastMistake=S.time;
+  const chainMul=[1,1,1.24,1.48,1.68,1.82,1.92][chain]||1.92;
   const post500Mul=lerp(1,1.55,D.hard);
   const gain=base*D.pressure*chainMul*post500Mul;
   Y.fury=Math.min(1,Y.fury+gain);
   // Calm is conditional: a fresh mistake immediately brings the predator back into the chase.
   if(Y.lull>0&&D.hard>0.35){Y.lull=0;Y.lullBack=0;Y.next=Math.min(Y.next||Infinity,S.time+0.55);}
-  // Past 500 m pressure is operational, not cosmetic: it wakes the yeti, advances the hunt clock,
+  // Past 500 m pressure is operational: it wakes the yeti, advances the hunt clock,
   // and makes a close predator prepare its next strike immediately.
   if(Y.on){
     const P=effectiveYetiPressure(D);
@@ -3381,10 +3786,11 @@ function addFury(base,extraLungeChance){ // immediate fury; longer-term cleanlin
       if(D.hard>=0.95&&P>=0.78)Y.next=Math.min(Y.next||Infinity,S.time+0.30);
     }
   }
-  // A collision during an active hunt can authorize one extra follow-up, never beyond three total.
-  if(extraLungeChance&&Y.pass===2&&D.training>0.55&&Y.passTotal<3){
-    const chance=Math.min(0.98,extraLungeChance*D.training+0.16*debtLevel());
-    if(Math.random()<chance){Y.passLunges++;Y.passTotal++;}
+  // Active-hunt mistakes increase the next post-dodge follow-up decision rather than silently
+  // preloading an additional attack before the first committed lunge has resolved.
+  if(extraLungeChance&&Y.pass===2&&D.training>0.55){
+    const bias=Math.min(0.24,extraLungeChance*D.training+0.08*debtLevel());
+    Y.followUpBias=Math.max(Y.followUpBias||0,bias);
   }
   return gain;
 }
@@ -3408,7 +3814,13 @@ function cleanFlag(g,px){
   const feedbackBefore=FeedbackBaseline.capture();
   // Diminishing fuel growth: combo remains valuable without one flag refilling the whole pool.
   const fuel=C.flagFuel*M.fuel*(1+Math.min(S.combo,C.comboFuelCap)*C.fuelPerCombo);
-  S.fuel=Math.min(S.fuel+fuel,C.poolCap); S.combo++; S.comboPulse=1;
+  // 10B.1b: the retired instant-recovery path no longer sets this telemetry value.
+  // Keep the field explicitly false so the telemetry schema stays stable without a runtime reference error.
+  const momentumRecovered=false;
+  // Every clean flag uses the ordinary fuel-pool acceleration path. There is no
+  // special post-impact snap to maximum speed; recovery is governed by the existing fuel pour.
+  S.fuel=Math.min(S.fuel+fuel,C.poolCap);
+  S.combo++; S.comboPulse=1;
   recordFlagAttempt(true);S.bestCombo=Math.max(S.bestCombo,S.combo);
   S.scoreFlag+=30;S.scoreCombo+=4*Math.min(S.combo,20);
   const milestone=S.combo===5||S.combo===10||S.combo===15||S.combo===20;
@@ -3417,36 +3829,50 @@ function cleanFlag(g,px){
     const bf=520+S.combo*9;
     tone(bf,bf*1.5,0.35,'triangle',0.25);tone(bf*1.25,bf*1.9,0.35,'triangle',0.18);vib(35);
   }
-  S.streak=0;S.mistakeChain=0;S.lastMistake=-99;S.missStreak=0;
-  S.lastCleanFlagD=S.depth;S.neglectK=0;S.neglectWarn=0;
-  const tight=applyTightPass(g,px);
-  const D=Difficulty.profile(S.depth);
-  let relief=(0.40+0.20*tight)*D.hard*DevTuning.cleanRelief;
+  const tight=applyTightPass(g,px),D=Difficulty.profile(S.depth),dodgeRecovery=S.yeti.cleanWindow>0;
+  S.cleanRecoveryStreak=Math.min(6,(S.cleanRecoveryStreak||0)+1);
+  const resolved=1.0+0.30*tight+0.22*Math.min(3,S.cleanRecoveryStreak-1)+(milestone?0.75:0)+(dodgeRecovery?0.35:0);
+  S.unresolvedMistakes=Math.max(0,(S.unresolvedMistakes||0)-resolved);
+  S.missStreak=Math.max(0,Math.min(4,Math.ceil(S.unresolvedMistakes||0)));
+  S.mistakeChain=Math.max(0,Math.ceil(S.unresolvedMistakes||0));S.streak=S.mistakeChain;
+  if((S.unresolvedMistakes||0)<=0.01)S.lastMistake=-99;
+  S.lastCleanFlagD=S.depth;S.neglectK=0;S.neglectWarn=0;S.lowSpeedExposure=Math.max(0,(S.lowSpeedExposure||0)-0.8);
+  let relief=(0.72+0.22*tight+0.14*Math.min(4,S.cleanRecoveryStreak))*D.hard*DevTuning.cleanRelief;
   if(S.combo===5)relief+=0.75*D.hard*DevTuning.cleanRelief;
   else if(S.combo===10)relief+=1.25*D.hard*DevTuning.cleanRelief;
   else if(S.combo===15||S.combo===20)relief+=0.75*D.hard*DevTuning.cleanRelief;
+  if(dodgeRecovery)relief+=0.35*D.hard*DevTuning.cleanRelief;
   S.cleanDebt=Math.max(0,(S.cleanDebt||0)-relief);
   const calm=(C.furyCalm+Math.min(0.03,S.combo*0.003)+(milestone?0.04:0)+0.025*tight)*DevTuning.cleanRelief;
   S.yeti.fury=Math.max(0,S.yeti.fury-calm);
   S.yeti.surge=Math.max(0,S.yeti.surge-0.55*DevTuning.cleanRelief);S.yeti.surgePower=Math.max(0,S.yeti.surgePower-(2.5+2*tight)*DevTuning.cleanRelief);
   // Past 500 m, every clean flag buys literal space. Tight passes and milestones buy more.
-  let push=0,lullStarted=false;
+  let push=0,lullStarted=false,protectedDuration=0,protectedFloor=0;
   if(S.yeti.on&&S.depth>=C.chaseAfter){
+    const gapBefore=S.depth-S.yeti.d;
     push=(1.15+1.45*tight+(milestone?0.85:0))*D.hard*DevTuning.cleanPush;
     // Clean skiing buys space gradually; the creature no longer hops backward at each pole.
     S.yeti.gapImpulse=clamp((S.yeti.gapImpulse||0)+push,-14,12);
+    protectedDuration=clamp(C.cleanProtectMin+0.08*Math.min(4,S.cleanRecoveryStreak-1)+0.16*tight+(milestone?0.12:0)+(dodgeRecovery?0.18:0),C.cleanProtectMin,C.cleanProtectMax);
+    const protectedGain=push*(0.78+0.10*tight)+(dodgeRecovery?1.15:0);
+    protectedFloor=clamp(Math.max(S.yeti.cleanProtectFloor||0,gapBefore+protectedGain),0,C.cleanProtectFloorMax);
+    S.yeti.cleanProtectT=Math.max(S.yeti.cleanProtectT||0,protectedDuration);
+    S.yeti.cleanProtectFloor=protectedFloor;
+    S.yeti.cleanProtectStrength=Math.max(S.yeti.cleanProtectStrength||0,clamp(protectedGain/4,0,1));
+    S.yeti.cleanProtectEvents=(S.yeti.cleanProtectEvents||0)+1;
     if(milestone&&S.yeti.pass!==2&&Math.random()<(S.combo>=10?0.68:0.44)){
       lullStarted=startYetiLull('clean',1.0,2.35,1.0+1.4*tight);
     }
   }
   // A clean flag immediately after a clean dodge can cancel one queued follow-up lunge.
   if(S.yeti.pass===2&&S.yeti.cleanWindow>0&&S.yeti.passLunges>0){
-    S.yeti.passLunges--;S.yeti.cleanWindow=0;
+    S.yeti.passLunges--;S.yeti.cleanWindow=0;S.yeti.followUpBias=0;CompactTelemetry.noteAttackDecision('FOLLOWUP_CANCELLED_BY_CLEAN',YetiAttackTelemetry.threatSnapshot());
+    try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent('YETI_FOLLOWUP_CANCELLED_BY_CLEAN',{threatState:YetiAttackTelemetry.threatSnapshot().threatState,combo:S.combo},null);}catch(e){}
     tone(620,820,0.12,'triangle',0.10);
   }
   ringAt(g.x,g.d,'rgba('+heatRGB()+',.9)',Math.min(S.combo,20)*2.2);
   sfx.gate(S.combo);
-  const telemetryEffect={tight,relief,calm,push,milestone,lullStarted,combo:S.combo};
+  const telemetryEffect={tight,relief,calm,push,milestone,lullStarted,combo:S.combo,momentumRecovered,resolvedMistakes:resolved,unresolvedAfter:S.unresolvedMistakes||0,cleanRecoveryStreak:S.cleanRecoveryStreak||0,protectedDuration,protectedFloor,dodgeRecovery};
   FeedbackBaseline.noteFlag('clean',feedbackBefore,telemetryEffect);CompactTelemetry.noteFlag('clean',feedbackBefore,telemetryEffect);
 }
 function softMiss(g){ // reached the side but did not truly commit around the flag
@@ -3454,7 +3880,7 @@ function softMiss(g){ // reached the side but did not truly commit around the fl
   recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',8,62);
   S.combo=0;
-  const feedbackPressure=registerFlagMiss(0.10,1.0,0.14);
+  const feedbackPressure=registerFlagMiss(0.10,1.0,0.14,1.0,'soft-miss');
   FeedbackBaseline.noteFlag('soft-miss',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('soft-miss',feedbackBefore,feedbackPressure);
   ringAt(g.x,g.d,'rgba(185,195,205,.75)',14);
   tone(210,155,0.11,'sine',0.13);
@@ -3464,7 +3890,7 @@ function wrongSide(g){ // no speed punishment; the cost is broken rhythm and ris
   recordFlagAttempt(false);
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0;
-  const feedbackPressure=registerFlagMiss(0.16,1.25,0.32);
+  const feedbackPressure=registerFlagMiss(0.16,1.25,0.32,1.25,'wrong-side');
   FeedbackBaseline.noteFlag('wrong-side',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('wrong-side',feedbackBefore,feedbackPressure);
   ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
   burstAt(g.x,g.d,'#9aa5b5',8,60);
@@ -3476,7 +3902,7 @@ function faultFlag(g){
   const k=Difficulty.profile(S.depth).penalty;
   if(S.combo>=4)burstAt(S.x,S.depth,'#cfd8e0',10,70);
   S.combo=0; S.speed*=lerp(C.faultCut,0.69,k); S.flash=Math.max(S.flash,0.25);
-  const feedbackPressure=registerFlagMiss(C.furyFault+0.03,1.75,0.48);
+  const feedbackPressure=registerFlagMiss(C.furyFault+0.03,1.75,0.48,1.6,'pole-fault');
   FeedbackBaseline.noteFlag('pole-fault',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('pole-fault',feedbackBefore,feedbackPressure);
   ringAt(g.x,g.d,'rgba(255,140,70,.9)',0); sfx.miss(); vib(20);
 }
@@ -3492,7 +3918,7 @@ function crash(){
   DEF.stamp('dark',S.x,S.depth,15,0.5);
   DEF.stamp('lip',S.x-12,S.depth,6,0.35);DEF.stamp('lip',S.x+12,S.depth,6,0.35);
   bloodSmear(S.x,S.depth,Math.sin(S.theta),Math.cos(S.theta),1);
-  addCleanDebt(2.0);addFury(C.furyCrash+0.05,0.78);
+  registerUnresolvedMistake(2.0,'terrain-crash');addCleanDebt(2.0);addFury(C.furyCrash+0.05,0.78);
   const ng=gates.find(g=>!g.done&&g.d>S.depth+48&&g.d<S.depth+95);
   if(ng){const away=S.x<LW/2?1:-1;
     ng.side=away;ng.x=clamp(S.x-away*60,EDGE+115,LW-EDGE-115);}
@@ -3508,6 +3934,89 @@ function fatalTerrain(cause,x,d){
   bloodSmear(x,d,Math.sin(S.theta),Math.cos(S.theta),1.15);
   die(cause,{x,d,theta:S.theta});
 }
+function tickFullMomentumNpcImpactEase(dt){
+  if(!S.fullMomentumNpcImpactEaseActive)return false;
+  const duration=Math.max(0.001,APP_CONFIG.fullMomentum.npcImpactEaseSec||0.22);
+  S.fullMomentumNpcImpactEaseT=Math.min(duration,(S.fullMomentumNpcImpactEaseT||0)+dt);
+  const u=clamp(S.fullMomentumNpcImpactEaseT/duration,0,1);
+  const smooth=u*u*(3-2*u);
+  const curve=lerp(S.fullMomentumNpcImpactEaseStart,S.fullMomentumNpcImpactEaseTarget,smooth);
+  // The impact curve may reduce speed, but it never raises speed after a second penalty.
+  S.speed=Math.min(S.speed,curve);
+  if(u>=1){
+    S.speed=Math.min(S.speed,S.fullMomentumNpcImpactEaseTarget);
+    S.fullMomentumNpcImpactEaseActive=false;
+    S.fullMomentumNpcImpactEaseT=0;
+    return true; // skip ordinary bleed/fuel pour on the completion frame
+  }
+  return true;
+}
+function startNpcBloodCarry(){
+  const total=Math.max(0.1,APP_CONFIG.fullMomentum.npcBloodCarryDistance||8.0);
+  S.npcBloodCarryTotal=total;S.npcBloodCarryRemaining=total;
+  // The collision is detected after the frame's trail sample, so stain that exact sample
+  // to make the blood begin at contact rather than one movement step later.
+  if(S.trail&&S.trail.length)S.trail[S.trail.length-1].blood=1;
+}
+function fullMomentumNpcImpact(n){
+  if(!n||n.dead||n.down>0||!S.fullMomentumArmed||S.mode!=='play')return false;
+  const comboBefore=S.combo|0;
+  const speedBefore=S.speed;
+  const impactTarget=Math.max(C.glide,C.speedMax*(APP_CONFIG.fullMomentum.npcImpactTargetRatio||0.90));
+  // Preserve most of the player's momentum and ease the loss over a short physical interval.
+  // Fuel and temporary overspeed are consumed, but the speed value itself is not snapped down.
+  S.fuel=0;S.tightBoost=0;
+  S.fullMomentumNpcImpactEaseActive=true;
+  S.fullMomentumNpcImpactEaseT=0;
+  S.fullMomentumNpcImpactEaseStart=speedBefore;
+  S.fullMomentumNpcImpactEaseTarget=impactTarget;
+  S.fullMomentumNpcKills=(S.fullMomentumNpcKills||0)+1;
+  FullMomentum.forceOff('npc-impact');
+  S.iframe=Math.max(S.iframe,0.24);S.hitstop=Math.max(S.hitstop,0.035);
+
+  // The approved player-impact path keeps the static fallen placeholder: no launch, tumble or downhill slide.
+  n.dead=true;n.fullMomentumKilled=true;n.deathAt=S.time;n.down=1;
+  n.deathTheta=S.theta;n.deathSide=Math.sign(n.x-S.x)||Math.sign(S.theta)||1;
+  n.route.length=0;n.planCD=999;n.vx=0;n.spd=0;n.snowEmit=false;n.snowAccum=0;
+  if(S.yeti.npcTarget===n){S.yeti.npcTarget=null;S.yeti.npcTele=0;S.yeti.npcBurst=0;if(S.yeti.pass===4)S.yeti.pass=0;}
+
+  // Snow opens the hit; blood transfers onto the player's skis and is then deposited
+  // by the ordinary twin-track path, including every subsequent carve during the carry.
+  burstAt(n.x,n.d,'#fff1d2',8,72);
+  burstAt(n.x,n.d,'#a41320',11,86);
+  startNpcBloodCarry();
+  tone(245,118,0.10,'square',0.12);vib(16);
+  try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent('FULL_MOMENTUM_NPC_KILL',{
+    speedBefore:+speedBefore.toFixed(2),speedTarget:+impactTarget.toFixed(2),easeSec:+APP_CONFIG.fullMomentum.npcImpactEaseSec.toFixed(2),bloodCarryDistance:+S.npcBloodCarryTotal.toFixed(2),comboPreserved:comboBefore,kills:S.fullMomentumNpcKills
+  },null);}catch(e){}
+  return true;
+}
+function avalancheBoulderNpcImpact(n,b){
+  if(!n||!b||n.dead||S.mode!=='play')return false;
+  const heading=Math.atan2((b.vx||0)/PXM,Math.max(0.001,b.spd||0.001));
+  n.dead=true;n.boulderKilled=true;n.deathCause='avalanche-boulder';n.deathAt=S.time;n.down=1;
+  n.deathTheta=heading;n.deathSide=Math.sign(b.vx)||Math.sign(n.x-b.x)||1;
+  n.route.length=0;n.planCD=999;n.vx=0;n.spd=0;n.snowEmit=false;n.snowAccum=0;
+  n.trailX=n.x;n.trailD=n.d;n.trailTheta=n.theta||heading;
+  if(S.yeti.npcTarget===n){S.yeti.npcTarget=null;S.yeti.npcTele=0;S.yeti.npcBurst=0;if(S.yeti.pass===4)S.yeti.pass=0;}
+
+  // The boulder remains fully active. Blood attaches to the rolling mass and is then
+  // deposited into the world-space snow layer on subsequent movement frames.
+  const total=Math.max(0.1,APP_CONFIG.avalancheBoulder.npcBloodCarryDistance||14.0);
+  const wasCarrying=(b.bloodCarryRemaining||0)>0;
+  b.bloodCarryTotal=total;b.bloodCarryRemaining=Math.max(b.bloodCarryRemaining||0,total);
+  if(!wasCarrying){b.bloodX=b.x;b.bloodD=b.d;}
+  b.npcKills=(b.npcKills||0)+1;
+
+  burstAt(n.x,n.d,'#f7fbff',12,92);
+  burstAt(n.x,n.d,'#a41320',14,98);
+  const lateral=clamp((b.vx||0)/(Math.max(1,b.spd||1)*PXM),-0.75,0.75);
+  bloodSmear(n.x,n.d,lateral,1,0.62);
+  try{if(RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent('AVALANCHE_BOULDER_NPC_KILL',{
+    bloodCarryDistance:+total.toFixed(2),boulderNpcKills:b.npcKills
+  },null);}catch(e){}
+  return true;
+}
 function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   recordCollision(250);
   const k=Difficulty.profile(S.depth).penalty;
@@ -3515,7 +4024,7 @@ function shove(n){ // a skier bump is physical, and the commotion draws the yeti
   S.x=clamp(S.x+dir*26,EDGE+8,LW-EDGE-8);
   S.speed*=lerp(0.85,0.72,k); S.iframe=0.5;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(0,4,k));
-  addCleanDebt(2.0);addFury(0.24,0.62);
+  registerUnresolvedMistake(1.6,'npc-shove');addCleanDebt(2.0);addFury(0.24,0.62);
   n.down=0.8; n.x=clamp(n.x-dir*20,EDGE+10,LW-EDGE-10);
   burstAt((S.x+n.x)/2,S.depth,'#e8eef4',10,80);
   S.shake=Math.max(S.shake,5);
@@ -3526,7 +4035,7 @@ function barge(n){
   const k=Difficulty.profile(S.depth).penalty;
   S.speed*=lerp(0.50,0.39,k); S.iframe=0.4; S.hitstop=0.05;
   S.combo=0;S.fuel=Math.max(0,S.fuel-lerp(3,8,k));
-  addCleanDebt(2.0);addFury(0.34,0.86);
+  registerUnresolvedMistake(2.0,'npc-barge');addCleanDebt(2.0);addFury(0.34,0.86);
   S.shake=Math.max(S.shake,9); S.flash=Math.max(S.flash,0.2);
   n.down=1.2;
   burstAt(n.x,n.d,'#ffffff',18,120);
@@ -3540,7 +4049,7 @@ function startYetiLull(reason,minT,maxT,back){
   const nextBack=Math.max(Y.lullBack,back||1.5),extraBack=Math.max(0,nextBack-Y.lullBack);
   Y.lull=Math.max(Y.lull,dur);Y.lullBack=nextBack;
   Y.gapImpulse=clamp((Y.gapImpulse||0)+extraBack,-14,12);
-  Y.pass=0;Y.tele=0;Y.burst=0;Y.passLunges=0;Y.passTotal=0;
+  Y.pass=0;Y.tele=0;Y.burst=0;Y.passLunges=0;Y.passTotal=0;Y.followUpsGranted=0;Y.followUpBias=0;Y.sequenceThreat='CONTROLLED';
   Y.next=Math.max(Y.next||0,S.time+dur+0.8);
   Y.passNext=Math.max(Y.passNext||0,S.time+dur+0.8);
   Y.lullNext=S.time+16+Math.random()*16;
@@ -3572,14 +4081,16 @@ function maybeStartNpcHunt(Y,P){
 }
 function passBreak(){ // a successful escape buys only modest space; clean flags create the real separation
   const Y=S.yeti,D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
-  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(2.5,1.3,Math.max(D.attack,debt)));Y.tele=0;Y.burst=0;
-  Y.passLunges=0;Y.passTotal=0;Y.cleanWindow=0;
+  if(Y.tele>0||Y.burst>0)YetiAttackTelemetry.interrupt('pass-break');
+  Y.pass=3;Y.tired=Math.max(Y.tired,lerp(2.5,1.3,Math.max(D.attack,debt))*deepYetiProfile(S.depth).restMul);Y.tele=0;Y.burst=0;
+  Y.passLunges=0;Y.passTotal=0;Y.followUpsGranted=0;Y.followUpBias=0;Y.sequenceThreat='CONTROLLED';Y.cleanWindow=0;
   if(S.depth>=C.chaseAfter){
-    const delay=lerp(12.5,3.6,clamp(P*0.78+debt*0.22,0,1))*(0.88+Math.random()*0.24);
-    Y.passNext=S.time+Math.max(3.0,delay);
+    const range=attackCooldownRange(D,P,'completed-hunt');
+    const delay=range.lo+Math.random()*Math.max(0,range.hi-range.lo);
+    Y.passNext=S.time+Math.max(2.2,delay);Y.lastCooldownThreat=range.state;
     Y.next=Math.max(Y.next||0,S.time+Math.max(1.2,delay*0.45));
-    // Some completed hunts end with a short atmospheric drop-back, not a full reset.
-    const lullChance=lerp(0.34,0.10,P);
+    // Controlled skiing earns more atmospheric breathing room; Critical threat suppresses lulls.
+    const attackProfile=threatAttackProfile(range.state),lullChance=lerp(0.34,0.10,P)*attackProfile.lullMul*deepYetiProfile(S.depth).lullMul;
     if(Math.random()<lullChance)startYetiLull('hunt',1.0,2.3,1.0+Math.random()*1.6);
   }else{
     const passK=Math.max(D.attack,D.hard*0.92,debt*0.95);
@@ -3588,24 +4099,34 @@ function passBreak(){ // a successful escape buys only modest space; clean flags
     Y.passNext=S.time+Math.max(lerp(5.0,1.9,Math.max(D.hard,debt)),delay);
   }
 }
+function counterplayDodgeFeedback(kind){
+  const Y=S.yeti,escape=Math.abs(S.x-Y.aimX),lineBroken=!!Y.aimLineBroken||escape>=C.grabR+C.counterplayBreakMargin;
+  Y.counterplayPulse=C.counterplayPulseSec;Y.counterplayAimX=Y.aimX;Y.counterplayPlayerX=S.x;Y.counterplayD=S.depth;
+  Y.counterplayEscapePx=escape;Y.counterplayLineBroken=lineBroken;Y.counterplayFollowUp=!!Y.aimFollowUp;
+  Y.counterplayThreat=String(Y.aimThreat||'CONTROLLED');Y.counterplayKind=String(kind||'dodge');
+  ringAt(S.x,S.depth,'rgba(155,235,255,0.92)',18);
+  return Object.freeze({targetEscapePx:escape,lineBroken,followUp:!!Y.aimFollowUp,threat:Y.counterplayThreat});
+}
 function whiff(){ // it swiped where you were; a clean dodge buys a brief recovery opportunity
-  const Y=S.yeti;
-  Y.d=S.depth-C.whiffBack; S.buffer=C.whiffBack; Y.stag=C.whiffStag; Y.tele=0; Y.burst=0;
+  const Y=S.yeti,beforeGap=S.depth-Y.d,wasLunge=Y.burst>0||YetiAttackTelemetry.hasOpenLunge();
+  Y.d=S.depth-C.whiffBack; S.buffer=C.whiffBack; Y.stag=C.whiffStag*deepYetiProfile(S.depth).stagMul; Y.tele=0; Y.burst=0;
   Y.fury=Math.max(0,Y.fury-0.06);Y.cleanWindow=1.8;
   burstAt(Y.x,S.depth-0.5,'#ffffff',26,140);
   S.shake=Math.max(S.shake,12); S.hitstop=Math.max(S.hitstop,0.08);
-  CompactTelemetry.noteAttackOutcome('dodge');sfx.roar(); vib(50);
+  if(wasLunge){const cp=counterplayDodgeFeedback('gap-cross-whiff');YetiAttackTelemetry.lungeDodge('gap-cross-whiff',beforeGap,S.buffer,cp);queueConditionalFollowUp('gap-cross-whiff');}else YetiAttackTelemetry.passiveWhiff(beforeGap,S.buffer);sfx.roar(); vib(50);
 }
 function lungeMiss(){ // committed dive hit empty snow
-  const Y=S.yeti;
-  Y.d-=C.lungeMissBack; Y.stag=C.lungeMissStag;
+  const Y=S.yeti,beforeGap=S.depth-Y.d;
+  Y.d-=C.lungeMissBack; Y.stag=C.lungeMissStag*deepYetiProfile(S.depth).stagMul;
   Y.fury=Math.max(0,Y.fury-0.03);Y.cleanWindow=1.8;
   burstAt(Y.x,Y.d+1,'#ffffff',16,110);
-  CompactTelemetry.noteAttackOutcome('dodge');S.shake=Math.max(S.shake,6); tone(140,60,0.22,'square',0.22);
+  const cp=counterplayDodgeFeedback('committed-dive-miss');YetiAttackTelemetry.lungeDodge('committed-dive-miss',beforeGap,S.depth-Y.d,cp);queueConditionalFollowUp('committed-dive-miss');S.shake=Math.max(S.shake,6); tone(140,60,0.22,'square',0.22);
 }
 function die(cause,spot){
   if(S.mode!=='play')return;
+  if(cause==='caught')YetiAttackTelemetry.catchPlayer();else YetiAttackTelemetry.interrupt('hazard-death');
   stage.classList.remove('gameplay-input');pup();
+  FullMomentum.forceOff('death');
   S.cause=cause;
   S.deathX=spot&&Number.isFinite(spot.x)?spot.x:S.x;
   S.deathDepth=spot&&Number.isFinite(spot.d)?spot.d:S.depth;
@@ -3656,7 +4177,7 @@ function finalizePlayerDeath(){
     if(ArcadeLeaderboard.on()){renderBoard();ArcadeLeaderboard.refresh();InitialsMountain.refresh();}
   }else{
     $('lbWrap').style.display='none';
-    $('lbRunSummary').textContent='Online leaderboard unavailable';
+    $('lbRunSummary').textContent='FULL MOMENTUM LOCAL TEST · NOT SUBMITTED';
   }
   const anyRecord=newScore||newDistance;
   if(anyRecord){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
@@ -3721,9 +4242,13 @@ function update(dt){
    S.sink+=(sinkT-S.sink)*Math.min(1,3.5*dt);}
   // speed economy; tight flag passes temporarily raise the speed ceiling, then release it smoothly.
   S.tightBoost=Math.max(0,(S.tightBoost||0)-4.0*dt);
-  S.speed+=(C.glide-S.speed)*C.bleed*M.bleed*dt;
-  const pour=Math.min(S.fuel,C.fuelRate*dt);S.fuel-=pour;
-  S.speed=Math.min(C.speedMax+S.tightBoost,S.speed+pour);
+  const impactEaseActive=tickFullMomentumNpcImpactEase(dt);
+  if(!impactEaseActive){
+    S.speed+=(C.glide-S.speed)*C.bleed*M.bleed*dt;
+    const pour=Math.min(S.fuel,C.fuelRate*dt);S.fuel-=pour;
+    S.speed=Math.min(C.speedMax+S.tightBoost,S.speed+pour);
+  }
+  FullMomentum.tick(dt);
   // phase
   if(S.depth>S.phaseAt)switchPhase();
   // snowfall
@@ -3754,7 +4279,16 @@ function update(dt){
   S.edgeSnap=Math.max(0,S.edgeSnap-dt*4.5);
   const sdir=Math.sign(S.steer);
   const snapped=S.active&&sdir&&sdir!==S.lastDir&&Math.abs(S.steer)>0.5&&S.speed>15;
-  if(snapped)S.edgeSnap=1;
+  if(snapped){
+    S.edgeSnap=1;
+    const interval=S.time-(S.lastReversalAt||-99);
+    if((S.reversalCount||0)>0&&interval>=C.predictiveReversalMinInterval&&interval<=C.predictiveReversalMaxInterval){
+      const prior=S.reversalInterval||interval,similarity=1-clamp(Math.abs(interval-prior)/Math.max(0.24,prior),0,1);
+      S.reversalConsistency=lerp(S.reversalConsistency||0,similarity,0.45);S.reversalInterval=lerp(prior,interval,0.35);
+    }else if((S.reversalCount||0)===0){S.reversalInterval=0;S.reversalConsistency=0;}
+    else S.reversalConsistency*=0.55;
+    S.lastReversalAt=S.time;S.reversalDir=sdir;S.reversalCount=(S.reversalCount||0)+1;
+  }else S.reversalConsistency=Math.max(0,(S.reversalConsistency||0)-dt*0.025);
   if(sdir)S.lastDir=sdir;
   const speedK=clamp((S.speed-8)/(C.speedMax-8),0,1);
   const edgeK=Math.abs(Math.sin(S.theta));
@@ -3770,8 +4304,9 @@ function update(dt){
   if(AC&&sndOn){ensureHiss();if(hiss){
     const hk=clamp(S.turnPressure,0,1.2);
     hiss.g.gain.value=Math.min(0.12,hk*0.105);hiss.bp.frequency.value=1250+S.speed*42+rateK*450;
-    const spk=S.speed/C.speedMax;
-    hiss.g2.gain.value=Math.min(0.13,spk*spk*0.065+S.powK*0.065+hk*0.025);}}
+    const spk=S.speed/C.speedMax,fm=S.fullMomentumVisual||0;
+    hiss.g2.gain.value=Math.min(0.22,spk*spk*0.065+S.powK*0.065+hk*0.025+fm*0.095);
+    if(hiss.lp)hiss.lp.frequency.value=220-72*fm;}}
   else if(hiss){hiss.g.gain.value=0;hiss.g2.gain.value=0;}
 
   // motion
@@ -3781,42 +4316,79 @@ function update(dt){
   if(S.x<=EDGE||S.x>=LW-EDGE){S.x=clamp(S.x,EDGE,LW-EDGE);die('edge');return;}
 
   // layered powder displacement: dense contact snow, suspended mist, and heavy chunks
-  const pressure=S.turnPressure;
+  const pressure=S.turnPressure,fm=S.fullMomentumVisual||0,fmActive=!!S.fullMomentumArmed;
   const out=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
   const powMass=0.70+1.15*S.powK;
   if(S.speed>11&&pressure>0.08){
     const denseN=Math.max(2,Math.round((2+pressure*8.0)*powMass*Q.fx));
-    for(let i=0;i<denseN;i++)pushSpray({type:'dense',front:Math.random()<0.16,
+    for(let i=0;i<denseN;i++)pushSpray({type:'dense',front:Math.random()<0.16,fmUphill:fmActive,
       x:S.x+out*(7+Math.random()*7),y:PIN_Y+(S.bodyY||0)+8+Math.random()*6,
-      vx:out*(78+S.speed*2.8+Math.random()*92),vy:-42+Math.random()*84,
-      gravity:250,t:0.28+Math.random()*0.22,r:1.4+Math.random()*2.3});
+      vx:out*(78+S.speed*2.8+Math.random()*92)*(1+0.24*fm),vy:fmActive?-(82+Math.random()*118):(-42+Math.random()*84),
+      gravity:fmActive?70:250,t:0.28+Math.random()*0.22,r:(1.4+Math.random()*2.3)*(1+0.18*fm)});
     const mistN=Math.max(1,Math.round((pressure*6.8+S.powK*4.0)*Q.fx));
-    for(let i=0;i<mistN;i++)pushSpray({type:'mist',front:Math.random()<0.22,
+    for(let i=0;i<mistN;i++)pushSpray({type:'mist',front:Math.random()<0.22,fmUphill:fmActive,
       x:S.x+out*(4+Math.random()*13),y:PIN_Y+(S.bodyY||0)+7+Math.random()*10,
-      vx:out*(36+Math.random()*80),vy:-48+Math.random()*60,
-      gravity:80,t:0.50+Math.random()*0.34,r:2.6+Math.random()*5.0});
+      vx:out*(36+Math.random()*80)*(1+0.18*fm),vy:fmActive?-(68+Math.random()*92):(-48+Math.random()*60),
+      gravity:fmActive?24:80,t:0.50+Math.random()*0.34,r:(2.6+Math.random()*5.0)*(1+0.15*fm)});
     const chunkChance=clamp(0.06+0.16*S.powK+0.18*pressure,0,0.34);
     const chunkN=Math.round((pressure*1.8+S.powK*0.9)*Q.fx);
-    for(let i=0;i<chunkN;i++)if(Math.random()<chunkChance)pushSpray({type:'chunk',front:false,
+    for(let i=0;i<chunkN;i++)if(Math.random()<chunkChance)pushSpray({type:'chunk',front:false,fmUphill:fmActive,
       x:S.x+out*(7+Math.random()*9),y:PIN_Y+(S.bodyY||0)+11,
-      vx:out*(88+Math.random()*120),vy:-54+Math.random()*84,
-      gravity:310,t:0.34+Math.random()*0.26,r:1.8+Math.random()*2.8,rot:Math.random()*6.28,vr:(Math.random()-0.5)*14});
+      vx:out*(88+Math.random()*120),vy:fmActive?-(92+Math.random()*116):(-54+Math.random()*84),
+      gravity:fmActive?105:310,t:0.34+Math.random()*0.26,r:1.8+Math.random()*2.8,rot:Math.random()*6.28,vr:(Math.random()-0.5)*14});
   }
   // skis plane through deep powder even while running nearly flat
   if(S.speed>16&&S.powK>0.22){
     const n=Math.max(2,Math.round((S.powK*3.4+speedK*1.1)*Q.fx));
-    for(let i=0;i<n;i++){const sd=i%2?-1:1;pushSpray({type:'mist',front:Math.random()<0.24,
+    for(let i=0;i<n;i++){const sd=i%2?-1:1;pushSpray({type:'mist',front:Math.random()<0.24,fmUphill:fmActive,
       x:S.x+sd*(5+Math.random()*6),y:PIN_Y+(S.bodyY||0)+12,
-      vx:sd*(18+Math.random()*34)-Math.sin(S.theta)*30,vy:-20+Math.random()*28,
-      gravity:70,t:0.34+Math.random()*0.22,r:2.2+Math.random()*3.6});}
+      vx:sd*(18+Math.random()*34)-Math.sin(S.theta)*30,vy:fmActive?-(62+Math.random()*76):(-20+Math.random()*28),
+      gravity:fmActive?22:70,t:0.34+Math.random()*0.22,r:2.2+Math.random()*3.6});}
+  }
+  // Full Momentum is carried by the skier: dense contact snow and a compact wake
+  // remain active even in a straight tuck. This is visual-only and uses no gameplay RNG.
+  if(fm>0.08&&S.speed>FullMomentum.threshold()-0.7){
+    const tick=(S.time*60)|0,n=Math.max(2,Math.round((2+4.5*fm)*Q.fx));
+    for(let i=0;i<n;i++){
+      const sk=i%2?-1:1,r0=hshG(tick*13.17+i*7.7),r1=hshG(tick*23.31+i*5.9);
+      pushSpray({type:i%3===0?'fm':'mist',front:i%5===0,fmUphill:true,
+        x:S.x+sk*(4.5+r0*6.5),y:PIN_Y+(S.bodyY||0)+10+r1*4,
+        vx:sk*(12+r0*30)-Math.sin(S.theta)*(16+r1*20),vy:-(76+r1*92),
+        gravity:i%3===0?48:20,t:0.20+r0*0.24,r:(1.7+r1*3.8)*(0.75+0.35*fm),seed:r0*1000+r1*29});
+    }
+    // 10A.4 body-flow stream pass: the effect must clearly start at the front of the skier,
+    // travel through the body, and then peel off behind in a continuous stream.
+    const streamN=Math.max(4,Math.round((3.2+5.0*fm)*Q.fx));
+    for(let i=0;i<streamN;i++){
+      const sk=i%2?-1:1,r0=hshG(tick*17.91+i*4.1),r1=hshG(tick*29.41+i*8.3),r2=hshG(tick*7.77+i*11.4);
+      const hotSlot=i%7,streamType=hotSlot===0?'streamRed':hotSlot<3?'streamHot':'stream';
+      pushSpray({type:streamType,front:(i%3===0),fmUphill:true,
+        x:S.x+sk*(0.8+r0*3.9)-Math.sin(S.theta)*(0.9+r1*1.5),
+        y:PIN_Y+(S.bodyY||0)+8-r1*5.0,
+        vx:sk*(1.5+r0*10)-Math.sin(S.theta)*(6+r1*12),
+        vy:-(86+r1*92), gravity:streamType==='stream'?10:5,
+        t:0.14+r0*0.16, r:(0.95+r2*1.25)*(0.82+0.26*fm), seed:r0*301+r1*17+r2*700});
+    }
+    // Full Momentum snow-slip layer: starts near the front / lower body and is dragged backward
+    // so the snow itself joins the slipstream instead of only puffing beside the skis.
+    const slipN=Math.max(2,Math.round((1.6+3.2*fm)*Q.fx));
+    for(let i=0;i<slipN;i++){
+      const sk=i%2?-1:1,r0=hshG(tick*19.73+i*6.7),r1=hshG(tick*31.81+i*3.3),r2=hshG(tick*11.27+i*9.5);
+      pushSpray({type:i%3===0?'streamSnow':'streamMist',front:false,fmUphill:true,
+        x:S.x+sk*(1.6+r0*4.8)-Math.sin(S.theta)*(0.6+r1*1.2),
+        y:PIN_Y+(S.bodyY||0)+8-r1*4.0,
+        vx:sk*(4+r0*14)-Math.sin(S.theta)*(8+r1*16),
+        vy:-(72+r1*88), gravity:i%3===0?42:24,
+        t:0.16+r0*0.20, r:(1.2+r2*1.8)*(0.85+0.32*fm), seed:r0*611+r1*37+r2*919});
+    }
   }
   // edge-bite: a high-pressure burst when the carve snaps direction
   if(snapped){
     const n=Math.max(7,Math.round(13*Q.fx));
-    for(let i=0;i<n;i++)pushSpray({type:i%4===0?'chunk':'dense',front:i%7===0,
+    for(let i=0;i<n;i++)pushSpray({type:i%4===0?'chunk':'dense',front:i%7===0,fmUphill:fmActive,
       x:S.x-sdir*8,y:PIN_Y+(S.bodyY||0)+10,
-      vx:-sdir*(120+Math.random()*165),vy:-48+Math.random()*92,
-      gravity:i%4===0?320:250,t:0.34+Math.random()*0.22,r:1.7+Math.random()*2.4,
+      vx:-sdir*(120+Math.random()*165),vy:fmActive?-(94+Math.random()*126):(-48+Math.random()*92),
+      gravity:fmActive?(i%4===0?110:72):(i%4===0?320:250),t:0.34+Math.random()*0.22,r:1.7+Math.random()*2.4,
       rot:Math.random()*6.28,vr:(Math.random()-0.5)*17});
     S.shake=Math.max(S.shake,2);tone(950,320,0.07,'triangle',0.08);
   }
@@ -3826,9 +4398,9 @@ function update(dt){
     for(let i=0;i<tipN;i++){
       const sk=i%2?-1:1, th=S.theta, sn=Math.sin(th), off=(9+10*Math.abs(sn))*0.42;
       const sx=S.x+Math.cos(th)*off*sk-sn*4, sy=PIN_Y+(S.bodyY||0)+4+Math.random()*4;
-      pushSpray({type:i%2===0?'dense':'mist',front:true,
+      pushSpray({type:i%2===0?'dense':'mist',front:true,fmUphill:fmActive,
         x:sx,y:sy, vx:sk*(6+Math.random()*22)-Math.sin(th)*(18+Math.random()*16),
-        vy:-14+Math.random()*22, gravity:i%2===0?220:76, t:0.14+Math.random()*0.10, r:1.4+Math.random()*1.8});
+        vy:fmActive?-(74+Math.random()*82):(-14+Math.random()*22), gravity:fmActive?(i%2===0?62:20):(i%2===0?220:76), t:0.14+Math.random()*0.10, r:1.4+Math.random()*1.8});
     }
   }
   // delayed sluff: larger powder cuts shed a little snow that releases from the outside berm
@@ -3860,9 +4432,11 @@ function update(dt){
     }
   }
   for(let i=spray.length-1;i>=0;i--){const p=spray[i];p.t-=dt;
-    const drag=p.type==='mist'?Math.exp(-1.8*dt):Math.exp(-0.35*dt);
+    const drag=(p.type==='mist'||p.type==='stream'||p.type==='streamHot'||p.type==='streamRed'||p.type==='streamSnow'||p.type==='streamMist')?Math.exp(-2.1*dt):Math.exp(-0.35*dt);
     p.vx*=drag;p.vy+=(p.gravity||220)*dt;
-    p.x+=p.vx*dt;p.y+=(p.vy+S.speed*PXM*(p.type==='mist'?0.40:0.50))*dt;
+    p.x+=p.vx*dt;
+    if(p.fmUphill)p.y+=(p.vy-S.speed*PXM*0.46)*dt;
+    else p.y+=(p.vy+S.speed*PXM*((p.type==='mist'||p.type==='stream'||p.type==='streamHot'||p.type==='streamRed'||p.type==='streamSnow'||p.type==='streamMist')?0.42:0.50))*dt;
     if(p.rot!==undefined)p.rot+=p.vr*dt;
     if(p.t<=0){
       if(p.type==='chunk'){
@@ -3892,18 +4466,35 @@ function update(dt){
     if(p.t<=0)sluff.splice(i,1);
   }
 
-  // fresh visual trail close to the skier; the persistent deformation carries older history
-  pushTrailSample(S.x,S.depth,S.theta,2+(S.speed/C.speedMax)*9);
+  // Fresh visual trail close to the skier; the persistent deformation carries older history.
+  // NPC-impact blood is distance-limited while it is being laid down, but each deposited
+  // segment is also baked into the world-space snow layer so it lingers after the skis clean off.
+  let bloodTrackK=0;
+  {const bloodTotal=Math.max(0.1,S.npcBloodCarryTotal||APP_CONFIG.fullMomentum.npcBloodCarryDistance||8.0);
+   const bloodRaw=clamp((S.npcBloodCarryRemaining||0)/bloodTotal,0,1);
+   // Hold a saturated stain for the first third of the carry, then wash it out gradually.
+   bloodTrackK=bloodRaw>0.66?1:Math.pow(clamp(bloodRaw/0.66,0,1),0.72);
+   pushTrailSample(S.x,S.depth,S.theta,2+(S.speed/C.speedMax)*9,bloodTrackK);
+   if(S.npcBloodCarryRemaining>0){
+     const traveled=Math.hypot((S.x-S.prevX)/PXM,S.depth-S.prevD);
+     S.npcBloodCarryRemaining=Math.max(0,S.npcBloodCarryRemaining-traveled);
+   }}
   { // continuous directional ski cuts: trench + compression + displaced outside berm
     const off0=(10+12*Math.abs(Math.sin(theta0)))/2,off1=(10+12*Math.abs(Math.sin(S.theta)))/2;
     const pw=1+0.65*S.powK;
-    const cutR=(3.1+3.6*clamp(pressure,0,1.15))*pw;
-    const cutA=(0.050+0.22*clamp(pressure,0,1.15))*pw;
+    const fmCut=S.fullMomentumVisual||0;
+    const cutR=(3.1+3.6*clamp(pressure,0,1.15)+1.35*fmCut)*pw;
+    const cutA=(0.050+0.22*clamp(pressure,0,1.15)+0.075*fmCut)*pw;
     const outside=-(Math.sign(S.turnVel)||Math.sign(S.theta)||1);
     for(const sk of[-1,1]){
       const x0=S.prevX+Math.cos(theta0)*off0*sk,d0=S.prevD-Math.sin(theta0)*off0*sk/PXM;
       const x1=S.x+Math.cos(S.theta)*off1*sk,d1=S.depth-Math.sin(S.theta)*off1*sk/PXM;
       DEF.gougeSegment(x0,d0,x1,d1,cutR*(sk===outside?1.16:0.74),cutA*(sk===outside?1.04:0.66),outside);
+      if(bloodTrackK>0.01){
+        // Bake the blood into the same scrolling world-space snow canvas as the ski cuts.
+        // This preserves the exact carve without reconnecting old trail points later.
+        DEF.bloodSkiSegment(x0,d0,x1,d1,Math.max(1.6,cutR*0.38),bloodTrackK);
+      }
     }
   }
   genTo();
@@ -3969,7 +4560,10 @@ function update(dt){
   for(let i=npcs.length-1;i>=0;i--){
     const n=npcs[i];n.tw+=dt;n.sprayCD=Math.max(0,(n.sprayCD||0)-dt);
     const x0=n.x,d0=n.d,theta0=n.theta||0;
-    if(n.down>0){n.down-=dt;n.d+=n.spd*0.3*dt;n.route.length=0;
+    if(n.dead){
+      n.route.length=0;n.snowEmit=false;n.snowAccum=0;
+      n.trailX=n.x;n.trailD=n.d;n.trailTheta=n.theta||0;
+    }else if(n.down>0){n.down-=dt;n.d+=n.spd*0.3*dt;n.route.length=0;
       n.snowAccum=0;n.trailX=n.x;n.trailD=n.d;n.trailTheta=n.theta||0;}
     else{
       n.planCD=Math.max(0,(n.planCD||0)-dt);
@@ -4052,13 +4646,15 @@ function update(dt){
         if(Math.abs(o.x-n.x)<o.r*C.forgive+10){
           n.down=1+Math.random()*0.2;burstAt(n.x,n.d,'#ffb066',12,80);
           bloodSmear(n.x,n.d,Math.sign(n.vx)||0,1,0.6);break;}}
-      // npc hits player
+      // npc hits player. Armed Full Momentum resolves exactly one lethal skier impact;
+      // all below-threshold collision behavior remains unchanged.
       if(S.iframe<=0&&Math.abs(n.d-S.depth)<1.5&&Math.abs(n.x-S.x)<PR+11){
-        if(S.speed>=0.6*C.speedMax)barge(n);else shove(n);}
+        if(S.fullMomentumArmed)fullMomentumNpcImpact(n);
+        else if(S.speed>=0.6*C.speedMax)barge(n);else shove(n);}
     }
     n.prevX=n.x;n.prevD=n.d;
     // Eaten only when the yeti actually reaches the skier's lane. Targeted feeds are visible and spatial.
-    if(Y.on&&Y.eat<=0&&Y.npcTele<=0&&n.d<=Y.d+1.5&&Math.abs(n.x-Y.x)<44){
+    if(!n.dead&&Y.on&&Y.eat<=0&&Y.npcTele<=0&&n.d<=Y.d+1.5&&Math.abs(n.x-Y.x)<44){
       consumeNpc(n);continue;
     }
     if(n.d<S.depth-50)npcs.splice(i,1);
@@ -4096,27 +4692,41 @@ function update(dt){
         return;
       }
     }
-    for(const n of npcs)if(n.down<=0&&Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10){n.down=1.2;burstAt(n.x,n.d,'#ffb066',10,70);
-      bloodSmear(n.x,n.d,Math.sign(b.vx)||0,1,0.9);}
+    // Meaningful avalanche kills are presentation-gated: both physical silhouettes must
+    // overlap the visible viewport on this frame. Off-screen simulation continues, but it
+    // cannot change an NPC into a corpse or begin blood effects the player never witnessed.
+    const boulderNpcKillVisible=APP_CONFIG.avalancheBoulder.npcKillViewportGate===false||avalancheBoulderSilhouetteOnScreen(b);
+    if(boulderNpcKillVisible){
+      for(const n of npcs){
+        if(n.dead)continue;
+        if(APP_CONFIG.avalancheBoulder.npcKillViewportGate!==false&&!npcSilhouetteOnScreen(n))continue;
+        if(Math.abs(b.d-n.d)<2&&Math.abs(b.x-n.x)<b.r*0.8+10)avalancheBoulderNpcImpact(n,b);
+      }
+    }
+    if(b.bloodCarryRemaining>0){
+      const sx=Number.isFinite(b.bloodX)?b.bloodX:b.x,sd=Number.isFinite(b.bloodD)?b.bloodD:b.d;
+      const bloodTravel=Math.hypot((b.x-sx)/PXM,b.d-sd);
+      if(bloodTravel>0.0001){
+        const total=Math.max(0.1,b.bloodCarryTotal||APP_CONFIG.avalancheBoulder.npcBloodCarryDistance||14.0);
+        const raw=clamp((b.bloodCarryRemaining||0)/total,0,1);
+        const bloodK=raw>0.55?1:Math.pow(clamp(raw/0.55,0,1),0.72);
+        DEF.boulderBloodSegment(sx,sd,b.x,b.d,b.r,bloodK,b.snowPhase);
+        b.bloodCarryRemaining=Math.max(0,b.bloodCarryRemaining-bloodTravel);
+      }
+      b.bloodX=b.x;b.bloodD=b.d;
+    }
     if(b.d>S.depth+62)balls.splice(i,1);
   }
   // yeti brain
-  function choosePassLunges(D,pressure){
-    if(S.depth<500)return 1; // full multi-lunge behavior begins when training wheels come off
-    const debt=debtLevel(),miss=clamp((S.missStreak||0)/3,0,1);
-    const secondChance=clamp(0.07+0.72*pressure+0.13*debt+0.12*miss,0,0.96);
-    let n=Math.random()<secondChance?2:1;
-    if(n===2&&S.depth>=2000&&pressure>0.52){
-      const late=clamp((S.depth-2000)/2600,0,1);
-      const thirdChance=late*clamp(0.015+0.15*pressure+0.09*debt+0.07*miss,0,0.27);
-      if(Math.random()<thirdChance)n=3;
-    }
-    return n;
+  function choosePassLunges(){
+    // Every sequence begins with one committed attack. Additional lunges are granted only after
+    // a visible miss and only if the current threat state still justifies a follow-up.
+    return 1;
   }
   if(!Y.on&&S.depth>C.yetiGrace){const D=Difficulty.profile(S.depth);Y.on=true;Y.d=S.depth-C.yetiStart;Y.x=S.x;
     Y.gapImpulse=0;Y.renderGap=C.yetiStart;Y.renderX=S.x;Y.renderScale=0.98;Y.renderPosture=1;Y.renderYOffset=0;
     Y.walkPhase=0;Y.moveSpeed=0;Y.lateralSpeed=0;Y.bodyPhase=0;Y.visualBreathPhase=0;
-    const lo=lerp(C.lungeMin,3.4,D.attack),hi=lerp(C.lungeMax,6.0,D.attack);Y.next=S.time+lo+Math.random()*(hi-lo);
+    schedulePersistentAttack(D,effectiveYetiPressure(D));
     Y.lullNext=S.time+14+Math.random()*12;Y.npcNext=S.time+5+Math.random()*7;}
   if(Y.on){
     const D=Difficulty.profile(S.depth),P=effectiveYetiPressure(D),debt=debtLevel();
@@ -4124,7 +4734,10 @@ function update(dt){
     Y.diagTarget=S.depth>=C.chaseAfter?chaseTargetGap(D,P):C.SAFE;Y.diagMatch=0;Y.diagCorrection=0;Y.diagSurge=0;Y.diagMode='STATE';
     if(Math.abs(Y.gapImpulse||0)>0.001){
       const attackLocked=Y.burst>0||Y.npcBurst>0;
-      const resolveSpeed=attackLocked?2.4:(Y.tele>0||Y.npcTele>0)?3.4:5.6;
+      let resolveSpeed=attackLocked?2.4:(Y.tele>0||Y.npcTele>0)?3.4:5.6;
+      // A completed clean pass protects its earned space from queued ordinary chase pressure.
+      // Committed attacks still resolve normally, and any new mistake cancels the protection.
+      if(Y.gapImpulse<0&&cleanProtectionActive(Y)&&!attackLocked)resolveSpeed=Math.min(resolveSpeed,C.cleanProtectReclaim);
       const step=clamp(Y.gapImpulse,-resolveSpeed*dt,resolveSpeed*dt);
       Y.d-=step;Y.gapImpulse-=step;
     }
@@ -4132,16 +4745,20 @@ function update(dt){
     const st=S.buffer>20?0:S.buffer>7?1:2;
     if(st>Y.st){sfx.roar();S.shake=Math.max(S.shake,8+st*3);vib(40);}
     Y.st=st;
-    Y.fury=Math.max(0,Y.fury-C.furyDecay*lerp(1,0.12,D.hard)*dt);
+    const deepState=deepYetiProfile(S.depth);
+    Y.fury=Math.max(0,Y.fury-C.furyDecay*lerp(1,0.12,D.hard)*deepState.furyDecayMul*dt);
     Y.cleanWindow=Math.max(0,Y.cleanWindow-dt);
+    const cleanProtectionPaused=Y.pass===2||Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0;
+    if(!cleanProtectionPaused&&Y.cleanProtectT>0)Y.cleanProtectT=Math.max(0,Y.cleanProtectT-dt);
+    if(Y.cleanProtectT<=0){Y.cleanProtectT=0;Y.cleanProtectFloor=0;Y.cleanProtectStrength=0;}
     if(Y.surge>0)Y.surge=Math.max(0,Y.surge-dt);
     else Y.surgePower=Math.max(0,Y.surgePower-7.5*dt);
     // sprint/rest: a predator can't run forever — fury lengthens sprints, shortens rests
     if(Y.tired>0){Y.tired-=dt;Y.pant-=dt;
       if(Y.pant<=0){Y.pant=0.6;tone(95,70,0.16,'sawtooth',0.12);}}
     else if(st>=1&&Y.pass===0){Y.press+=dt;
-      const sprint=lerp(7.0,12.0,D.attack)+C.sprintFury*P;
-      if(Y.press>sprint){Y.tired=Math.max(1.5,lerp(4.5,2.2,D.attack)-C.restFury*P);Y.press=0;}}
+      const deepPressure=deepYetiProfile(S.depth),sprint=(lerp(7.0,12.0,D.attack)+C.sprintFury*P)*(1+0.16*deepPressure.escalation);
+      if(Y.press>sprint){Y.tired=Math.max(1.2,(lerp(4.5,2.2,D.attack)-C.restFury*P)*deepPressure.restMul);Y.press=0;}}
     else Y.press=Math.max(0,Y.press-dt*0.5);
     if(P>0.55){Y.snarl-=dt;if(Y.snarl<=0){Y.snarl=3+Math.random()*2;sfx.growl();S.shake=Math.max(S.shake,3);}}
     // Persistent proximity has an audible cadence even between attacks.
@@ -4152,7 +4769,8 @@ function update(dt){
       if(!Y.npcNext)Y.npcNext=S.time+4+Math.random()*6;
       if(Y.pass===0&&Y.lull<=0&&Y.eat<=0&&Y.stag<=0&&Y.tele<=0&&Y.burst<=0){
         if(S.time>Y.lullNext){
-          if(P<0.74&&Math.random()<lerp(0.56,0.16,P))startYetiLull('natural',1.0,2.6,1.0+Math.random()*1.8);
+          const lullProfile=currentThreatAttackProfile();
+          if(P<0.74&&Math.random()<lerp(0.56,0.16,P)*lullProfile.lullMul*deepYetiProfile(S.depth).lullMul)startYetiLull('natural',1.0,2.6,1.0+Math.random()*1.8);
           else Y.lullNext=S.time+7+Math.random()*10;
         }
         if(Y.lull<=0)maybeStartNpcHunt(Y,P);
@@ -4192,10 +4810,11 @@ function update(dt){
     else if(Y.pass===1){ // pressure determines how decisively it closes, while the warning remains intact
       Y.foot-=dt;if(Y.foot<=0){Y.foot=0.5;tone(72,50,0.09,'square',0.15);}
       adv=S.speed+Math.max(6,S.buffer/2.5)*(1+0.38*P*D.training)+(Y.surge>0?Y.surgePower:0);
+      adv=protectedYetiAdvance(Y,adv);
       if(S.buffer<=12){
         if(yetiVisualReady(Y,3.5,42)){
-          Y.pass=2;
-          Y.passLunges=choosePassLunges(D,P);Y.passTotal=Y.passLunges;
+          Y.pass=2;Y.attackSeqStarted=0;Y.followUpsGranted=0;Y.followUpBias=0;Y.sequenceThreat=currentThreatAttackProfile().state;
+          Y.passLunges=choosePassLunges();Y.passTotal=Y.passLunges;
           Y.passT=3.7+2.0*Y.passTotal+2.0*deepK+1.15*P+0.8*D.overtime;
         }else{
           // Hold a small physical gap while the body catches up; no invisible pre-telegraph grab.
@@ -4208,13 +4827,13 @@ function update(dt){
       if(Y.tele>0){Y.tele-=dt;adv=S.speed; // crouches, matching your pace
         if(Y.tele<=0){
           if(!yetiVisualReady(Y,2.6,20))Y.tele=0.04;
-          else{Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}
+          else{Y.burst=C.lungeT;YetiAttackTelemetry.lungeStart('hunting-pass');sfx.roar();S.shake=Math.max(S.shake,8);}
         }}
       else if(Y.burst>0){Y.burst-=dt;adv=S.speed+C.lungeBoost; // the strike always resolves: catch, or whiff past you
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=S.speed+4+(Y.surge>0?Y.surgePower*0.35:0);
         if(Y.passLunges>0&&S.buffer<6){
-          Y.passLunges--;Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
+          Y.passLunges--;const followUp=(Y.attackSeqStarted||0)>0;Y.attackSeqStarted=(Y.attackSeqStarted||0)+1;Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);predictiveYetiAim('hunting-pass',followUp);YetiAttackTelemetry.telegraphStart('hunting-pass',followUp);sfx.growl();
         }else if(Y.passLunges<=0&&Y.stag<=0)passBreak();}
       if(Y.passT<=0)passBreak();
     }
@@ -4231,6 +4850,7 @@ function update(dt){
         const match=S.speed*DevTuning.paceMatch;
         let correction=clamp(err*0.88,-5.8,10.0)*DevTuning.chaseCorrection;
         if(Y.tired>0&&correction>0)correction*=0.55;
+        correction=protectedYetiCorrection(Y,correction);
         const surgeTerm=Y.surge>0?Y.surgePower*0.55:0;
         ys=clamp(match+correction+surgeTerm,0,C.speedMax+6);
         Y.diagTarget=target;Y.diagMatch=match;Y.diagCorrection=correction;Y.diagSurge=surgeTerm;Y.diagMode='PERSISTENT_CHASE';
@@ -4240,15 +4860,13 @@ function update(dt){
       }
       if(Y.tele>0){Y.tele-=dt;if(Y.tele<=0){
         if(!yetiVisualReady(Y,2.6,20))Y.tele=0.04;
-        else{Y.burst=C.lungeT;sfx.roar();S.shake=Math.max(S.shake,8);}
+        else{Y.burst=C.lungeT;YetiAttackTelemetry.lungeStart('persistent-chase');sfx.roar();S.shake=Math.max(S.shake,8);}
       }}
       else if(Y.burst>0){Y.burst-=dt;adv=ys+C.lungeBoost;
         if(Y.burst<=0&&Math.abs(Y.x-S.x)>C.grabR)lungeMiss();}
       else{adv=ys;
-        if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);Y.aimX=S.x;sfx.growl();
-          const lo=S.depth>=C.chaseAfter?lerp(8.8,3.1,P):lerp(C.lungeMin,3.4,D.attack);
-          const hi=S.depth>=C.chaseAfter?lerp(13.0,5.4,P):lerp(C.lungeMax,6.0,D.attack);
-          Y.next=S.time+(lo+Math.random()*(hi-lo))*(1-0.12*debt)*(1-0.10*D.overtime);}}
+        if(st>=1&&Y.tired<=0&&S.time>Y.next){Y.attackSeqStarted=1;Y.tele=Y.teleMax=lerp(C.teleT,0.43,D.attack);predictiveYetiAim('persistent-chase',false);YetiAttackTelemetry.telegraphStart('persistent-chase',false);sfx.growl();
+          schedulePersistentAttack(D,P);}}
     }
     Y.diagAdv=adv;Y.diagRequested=adv;
     if(Y.diagMode==='STATE'){Y.diagMatch=S.speed;Y.diagCorrection=adv-S.speed;Y.diagSurge=0;}
@@ -4264,6 +4882,10 @@ function update(dt){
       if(Y.step<=0){Y.step=1.1;Y.pside=-Y.pside;DEF.gouge(Y.x+Y.pside*10,Y.d,5,0.3);}
       if(Y.burst>0)DEF.gouge(Y.x,Y.d,6,0.25);
     }
+    // Track how decisively the skier leaves the committed target lane. This is telemetry and
+    // presentation only; it never changes the locked target, hitbox, lunge speed, or outcome.
+    if(Y.tele>0||Y.burst>0){const escape=Math.abs(S.x-Y.aimX);Y.aimPeakEscapePx=Math.max(Y.aimPeakEscapePx||0,escape);if(escape>=C.grabR+C.counterplayBreakMargin)Y.aimLineBroken=true;}
+    Y.counterplayPulse=Math.max(0,(Y.counterplayPulse||0)-dt);
     // committed lunges dive at where you WERE; staggering can't track
     const tx=(Y.tele>0||Y.burst>0||Y.npcTele>0||Y.npcBurst>0)?Y.aimX:S.x;
     const xr=Y.stag>0?0.3:((Y.burst>0||Y.npcBurst>0)?4:lerp(C.yetiXL,2.8,D.attack)+0.25*D.overtime);
@@ -4295,8 +4917,9 @@ function update(dt){
 function spawnBall(){const x=EDGE+30+Math.random()*(LW-2*EDGE-60),d=S.depth-PIN_Y/PXM-3;
   balls.push({x,d,prevX:x,prevD:d,r:18+Math.random()*17,vx:(Math.random()*2-1)*45,
     spd:Math.max(S.speed*1.35,24),re:1+Math.random(),snowPhase:Math.random()*1000,
-    snowX:x,snowD:d,snowAccum:0});}
-const Simulation=Object.freeze({update,spawnBall,segDist});
+    snowX:x,snowD:d,snowAccum:0,bloodCarryRemaining:0,
+    bloodCarryTotal:Math.max(0.1,APP_CONFIG.avalancheBoulder.npcBloodCarryDistance||14.0),bloodX:x,bloodD:d,npcKills:0});}
+const Simulation=Object.freeze({update,spawnBall,segDist,avalancheBoulderNpcImpact,npcSilhouetteOnScreen,avalancheBoulderSilhouetteOnScreen});
 /* ============================ PALETTE ============================ */
 const PAL_CYCLE=5600;
 const smooth01=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
@@ -4329,20 +4952,41 @@ const rgb=c=>`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
    player row, and scroll speed per row matches its scale — real, consistent parallax. */
 let CZ=220;
 function projD(x,u){const s=CZ/(CZ-u);return{x:LW/2+(x-LW/2)*s,y:PIN_Y+PXM*u*s,s};}
+function screenRectOverlapsViewport(cx,cy,halfW,halfH){
+  return cx+halfW>=0&&cx-halfW<=LW&&cy+halfH>=0&&cy-halfH<=LH;
+}
+function npcSilhouetteOnScreen(n){
+  if(!n)return false;
+  const u=n.d-S.depth;
+  // Match the NPC render gate exactly; projected extents then handle partial overlap
+  // at the left and right boundaries rather than requiring the center to be visible.
+  if(u<UTOP||u>UBOT)return false;
+  const p=projD(n.x,u),sc=p.s*1.28;
+  return screenRectOverlapsViewport(p.x,p.y,20*sc,20*sc);
+}
+function avalancheBoulderSilhouetteOnScreen(b){
+  if(!b)return false;
+  const u=b.d-S.depth;
+  // Above UTOP the renderer shows only an incoming shadow telegraph, not the boulder body.
+  // The three-meter bottom allowance mirrors the existing body-render window.
+  if(u<UTOP||u>UBOT+3)return false;
+  const p=projD(b.x,clamp(u,UTOP,UBOT)),r=Math.max(1,b.r*p.s*1.05);
+  return screenRectOverlapsViewport(p.x,p.y,r,r);
+}
 const uOfz=(Y,Z)=>(Y-PIN_Y)*Z/(PXM*Z+Y-PIN_Y);
 let UTOP=uOfz(-120,CZ),UBOT=uOfz(LH+100,CZ);
 const wy=d=>PIN_Y+(d-S.depth)*PXM; // legacy flat mapping (debug only)
 let VW=720,VH=1280,SCL=1;
-function pushTrailSample(x,d,th,w){
+function pushTrailSample(x,d,th,w,blood){
   const tr=S.trail;
-  const sample={x,d,th,w};
+  const sample={x,d,th,w,blood:clamp(blood||0,0,1)};
   if(!tr.length){tr.push(sample);return;}
   const last=tr[tr.length-1];
   const span=Math.hypot((x-last.x)/PXM,(d-last.d));
   const steps=span<0.20?1:Math.min(8,Math.max(1,Math.ceil(span/0.5)));
   for(let i=1;i<=steps;i++){
     const k=i/steps;
-    tr.push({x:lerp(last.x,x,k),d:lerp(last.d,d,k),th:lerp(last.th||th,th,k),w:lerp(last.w||w,w,k)});
+    tr.push({x:lerp(last.x,x,k),d:lerp(last.d,d,k),th:lerp(last.th||th,th,k),w:lerp(last.w||w,w,k),blood:lerp(last.blood||0,sample.blood,k)});
   }
   if(tr.length>140)tr.splice(0,tr.length-140);
 }
@@ -4361,17 +5005,24 @@ function drawPlayerTracks(){
   const build=sk=>{
     const pts=[];
     for(const q of S.trail){
-      const u=q.d-S.depth;if(u<Math.max(UTOP,-12.5)||u>1.5)continue;
+      const u=q.d-S.depth;
+      const blood=clamp(q.blood||0,0,1);
+      // Keep only the crisp near-skier overlay in this compact window. Older blood is
+      // rendered from the stable world-space deformation canvas rather than this point history.
+      const bloodBack=Math.max(UTOP,-12.5);
+      if(u<bloodBack||u>1.5)continue;
       const th=q.th||0,sn=Math.sin(th),off=(10+12*Math.abs(sn))/2;
       const p=projD(q.x+Math.cos(th)*off*sk,u-sn*off*sk/PXM);
       const outside=(sk===-(Math.sign(sn)||1))?Math.abs(sn):0;
       const fresh=clamp(1+u/12.5,0,1);
-      pts.push({x:p.x,y:p.y,fresh,w:Math.max(0.48,q.w*(0.17+0.06*outside)*p.s),core:Math.max(0.16,q.w*(0.040+0.015*outside)*p.s)});
+      const bloodVis=clamp(1+u/Math.abs(bloodBack),0,1);
+      pts.push({x:p.x,y:p.y,fresh,blood,bloodVis,w:Math.max(0.48,q.w*(0.17+0.06*outside)*p.s),core:Math.max(0.16,q.w*(0.040+0.015*outside)*p.s)});
     }
     return pts;
   };
   const drawOne=pts=>{
     if(pts.length<2)return;
+    const fm=S.fullMomentumVisual||0;
     const bands=4;
     for(let b=0;b<bands;b++){
       const a=Math.floor((pts.length-1)*b/bands),z=Math.min(pts.length,Math.ceil((pts.length-1)*(b+1)/bands)+2);
@@ -4380,13 +5031,34 @@ function drawPlayerTracks(){
       const avgW=seg.reduce((s,p)=>s+p.w,0)/seg.length;
       const avgC=seg.reduce((s,p)=>s+p.core,0)/seg.length;
       ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.strokeStyle=`rgba(255,255,255,${(0.009+0.030*fresh).toFixed(3)})`;
-      ctx.lineWidth=avgW;smoothStroke(seg);
-      ctx.strokeStyle=`rgba(88,108,128,${(0.003+0.010*fresh).toFixed(3)})`;
-      ctx.lineWidth=avgC;smoothStroke(seg);
+      ctx.strokeStyle=`rgba(255,255,255,${(0.009+0.030*fresh+0.028*fm*fresh).toFixed(3)})`;
+      ctx.lineWidth=avgW*(1+0.18*fm);smoothStroke(seg);
+      ctx.strokeStyle=`rgba(62,79,98,${(0.003+0.010*fresh+0.045*fm*fresh).toFixed(3)})`;
+      ctx.lineWidth=avgC*(1+0.65*fm);smoothStroke(seg);
     }
   };
-  drawOne(build(-1));drawOne(build(1));
+  const drawBlood=pts=>{
+    if(pts.length<2)return;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    for(let i=1;i<pts.length;i++){
+      const a=pts[i-1],b=pts[i],blood=clamp((a.blood+b.blood)*0.5,0,1);
+      if(blood<0.012)continue;
+      const bloodVis=clamp(((a.bloodVis??a.fresh)+(b.bloodVis??b.fresh))*0.5,0,1);
+      const wet=Math.pow(blood,0.72),r=Math.round(lerp(220,100,wet)),g=Math.round(lerp(105,8,wet)),bl=Math.round(lerp(112,18,wet));
+      // Broad wet edge plus a darker ski-cut core. Both remain separate per ski.
+      ctx.strokeStyle=`rgba(${r},${g},${bl},${((0.24+0.58*wet)*(0.32+0.68*bloodVis)).toFixed(3)})`;
+      ctx.lineWidth=Math.max(1.35,((a.w+b.w)*0.5)*1.28);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.strokeStyle=`rgba(68,4,12,${((0.20+0.58*wet)*(0.38+0.62*bloodVis)).toFixed(3)})`;
+      ctx.lineWidth=Math.max(0.72,((a.core+b.core)*0.5)*2.35);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  };
+  const left=build(-1),right=build(1);
+  drawOne(left);drawOne(right);
+  // The near-skier blood overlay stays crisp; the matching world-space stain underneath
+  // remains visible after this short point-history window has passed.
+  drawBlood(left);drawBlood(right);
 }
 function snowRGB(pal,bright){
   const base=bright?[244,248,252]:[228,236,244];
@@ -4406,6 +5078,50 @@ function drawSprayLayer(front,pal){
       ctx.globalAlpha=fade*(front?0.10:0.12);
       ctx.fillStyle=`rgb(${soft[0]|0},${soft[1]|0},${soft[2]|0})`;
       ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*1.18,p.r*0.76,p.vx*0.0015,0,6.283);ctx.fill();
+    }else if(p.type==='stream'){
+      const ang=Math.atan2(p.vy+S.speed*PXM*0.35,p.vx||0.0001);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(ang+1.5708);
+      ctx.globalAlpha=fade*(front?0.28:0.18);
+      ctx.fillStyle='rgba(246,251,255,0.94)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.75,p.r*3.2,0,0,6.283);ctx.fill();
+      ctx.restore();
+    }else if(p.type==='streamHot'){
+      const ang=Math.atan2(p.vy+S.speed*PXM*0.35,p.vx||0.0001);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(ang+1.5708);
+      ctx.globalAlpha=fade*(front?0.31:0.20);
+      ctx.fillStyle='rgba(255,245,220,0.96)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.86,p.r*4.0,0,0,6.283);ctx.fill();
+      ctx.globalAlpha=fade*(front?0.24:0.15);
+      ctx.fillStyle='rgba(255,158,54,0.90)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.54,p.r*2.7,0,0,6.283);ctx.fill();
+      ctx.restore();
+    }else if(p.type==='streamRed'){
+      const ang=Math.atan2(p.vy+S.speed*PXM*0.35,p.vx||0.0001);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(ang+1.5708);
+      ctx.globalAlpha=fade*(front?0.30:0.19);
+      ctx.fillStyle='rgba(255,220,176,0.96)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.88,p.r*4.1,0,0,6.283);ctx.fill();
+      ctx.globalAlpha=fade*(front?0.25:0.16);
+      ctx.fillStyle='rgba(255,92,38,0.92)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.57,p.r*2.9,0,0,6.283);ctx.fill();
+      ctx.globalAlpha=fade*(front?0.15:0.09);
+      ctx.fillStyle='rgba(193,30,24,0.80)';
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.34,p.r*1.9,0,0,6.283);ctx.fill();
+      ctx.restore();
+    }else if(p.type==='streamSnow'){
+      const ang=Math.atan2(p.vy+S.speed*PXM*0.38,p.vx||0.0001);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(ang+1.5708);
+      ctx.globalAlpha=fade*(front?0.18:0.28);
+      ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.86,p.r*3.6,0,0,6.283);ctx.fill();
+      ctx.restore();
+    }else if(p.type==='streamMist'){
+      const ang=Math.atan2(p.vy+S.speed*PXM*0.38,p.vx||0.0001);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(ang+1.5708);
+      ctx.globalAlpha=fade*(front?0.12:0.20);
+      ctx.fillStyle=`rgb(${soft[0]|0},${soft[1]|0},${soft[2]|0})`;
+      ctx.beginPath();ctx.ellipse(0,0,p.r*0.90,p.r*2.8,0,0,6.283);ctx.fill();
+      ctx.restore();
     }else if(p.type==='chunk'){
       ctx.globalAlpha=fade*0.54;ctx.fillStyle=`rgb(${base[0]|0},${base[1]|0},${base[2]|0})`;
       ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot||0);
@@ -4490,6 +5206,9 @@ function drawCarvePlume(pal,front){
 
 /* ====================== SHARED MEMORIAL RENDERING ======================
    v8e renders compatible initials-best records already held by SharedMemorials. Dense groups use one ranked visual anchor, restrained secondary ground effects and stable label selection.
+   Phase 10B.1d extends the memorial-card proximity window by another 50% while retaining the hard body-on-screen gate.
+   Phase 10B.3 leaves memorial and player-impact behavior unchanged while making moving avalanche boulders lethal to NPC skiers and adding a world-space boulder-carried blood smear.
+   Phase 10B.3a requires both the boulder body and skier silhouette to overlap the visible viewport before that lethal interaction can occur.
    UID-derived outfits, deterministic overlap groups, distance-based detail and
    performance budgets require no added Firebase fields. The matching current-user
    local stain is suppressed in the private-history layer immediately below. */
@@ -4671,12 +5390,20 @@ function prepareMemorialGroups(items,Q){
   }
   return {groups:priority.filter(g=>g.render&&g.render.length).sort((a,b)=>a.representative.u-b.representative.u||a.representative.m.rank-b.representative.m.rank),budgetSkipped};
 }
+function memorialBodyOnScreenForLabel(item){
+  // Hard-gate labels to the body's actual projected silhouette. The timing range may
+  // expand, but the initials/score card can never lead a body onto the screen or
+  // remain after that body has completely left it.
+  const p=item&&item.p;if(!p)return false;
+  const halfExtent=26*Math.max(0.55,Number.isFinite(p.s)?p.s:1);
+  return p.x+halfExtent>=0&&p.x-halfExtent<=LW&&p.y+halfExtent>=0&&p.y-halfExtent<=LH;
+}
 function chooseMemorialLabel(visible){
   if(S.mode!=='play'&&!String(S.mode).startsWith('dying'))return null;
   const eligible=[];
   for(const item of visible){
     const d=memorialDistance(item.m,item.u);
-    if(d>=MEMORIAL_LABEL_RANGE||item.p.y<36||item.p.y>LH-58)continue;
+    if(d>=MEMORIAL_LABEL_RANGE||!memorialBodyOnScreenForLabel(item))continue;
     eligible.push(Object.assign({},item,{distance:d}));
   }
   eligible.sort((a,b)=>a.distance-b.distance||a.m.rank-b.m.rank||a.m.uid.localeCompare(b.m.uid));
@@ -4871,13 +5598,9 @@ function render(){
        const gp=projD(gx,gu);ctx.fillStyle='rgba(255,255,255,0.16)';
        ctx.beginPath();ctx.arc(gp.x,gp.y,1.0*gp.s,0,6.283);ctx.fill();}
    }}
-  // speed streaks (world-anchored: true parallax)
-  if(S.speed>26){ctx.strokeStyle='rgba(255,255,255,0.35)';
-    const s0=Math.floor((S.depth+UTOP)/5)*5;
-    for(let d=s0;d<S.depth+UBOT;d+=5){const u=d-S.depth;if(u<UTOP)continue;
-      for(const x of[EDGE+8,LW-EDGE-8]){
-        const a=projD(x,u),b=projD(x,Math.min(u+1.6,UBOT));
-        ctx.lineWidth=3*a.s;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}}
+  // Phase 10B.3: armed player/NPC collisions retain the one-skier kill rule and approved speed ease.
+  // Avalanche boulders now kill NPC skiers and carry a separate broad blood smear down their actual rolling path.
+  // Phase 10B.3a: an avalanche/NPC kill can start only while both visible silhouettes overlap the viewport.
   // debug corridor
   if(debugOn){ctx.strokeStyle='rgba(0,255,120,0.4)';ctx.lineWidth=2;
     for(const c of corDbg){const u=c.d-S.depth;if(u<UTOP||u>UBOT)continue;
@@ -4997,6 +5720,43 @@ function edgeGlow(x,dir,k){
   gr.addColorStop(0,'rgba(255,40,30,'+(0.4*k)+')');gr.addColorStop(1,'rgba(255,40,30,0)');
   ctx.fillStyle=gr;ctx.fillRect(dir>0?x:x-140,-30,140,LH+60);
 }
+function drawCommittedYetiAim(Y){
+  const tele=Y.tele>0,lunging=Y.burst>0,feedback=(Y.counterplayPulse||0)>0;
+  if(!tele&&!lunging&&!feedback)return;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  if(tele||lunging){
+    const ap=projD(Y.aimX,0),sp=projD(Y.aimStartX,0),teleK=tele?clamp(1-Y.tele/(Y.teleMax||C.teleT),0,1):1;
+    const strikeK=lunging?clamp(1-Y.burst/C.lungeT,0,1):0,follow=!!Y.aimFollowUp,predictive=Math.abs(Y.aimLeadPx||0)>2;
+    const alpha=tele?lerp(0.34,0.88,smooth01(teleK)):lerp(0.78,0.42,strikeK);
+    // A short, restrained snow seam communicates prediction direction without becoming a HUD arrow.
+    if(predictive){
+      ctx.globalAlpha=alpha*(lunging?0.62:0.76);ctx.strokeStyle=follow?'rgba(255,226,184,0.92)':'rgba(190,232,255,0.92)';ctx.lineWidth=2.2;
+      ctx.setLineDash([7,8]);ctx.lineDashOffset=-S.time*28;ctx.beginPath();ctx.moveTo(sp.x,sp.y+13);ctx.quadraticCurveTo((sp.x+ap.x)/2,sp.y-8,ap.x,ap.y-5);ctx.stroke();ctx.setLineDash([]);
+      const dx=ap.x-sp.x,dir=Math.sign(dx)||1;
+      for(let i=1;i<=3;i++){const q=i/4,x=lerp(sp.x,ap.x,q),y=lerp(sp.y+10,ap.y-4,q)-Math.sin(q*Math.PI)*7;
+        ctx.globalAlpha=alpha*(0.42+0.13*i);ctx.strokeStyle=follow?'rgba(255,226,184,0.95)':'rgba(205,240,255,0.95)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(x-dir*6,y-4);ctx.lineTo(x,y);ctx.lineTo(x-dir*6,y+4);ctx.stroke();}
+    }
+    // The target persists through the lunge, proving that the attack remains committed rather than homing.
+    ctx.globalAlpha=alpha;ctx.strokeStyle=follow?'rgba(255,224,178,0.96)':'rgba(205,238,255,0.96)';ctx.lineWidth=lunging?3.2:2.7;
+    const r=lunging?20+5*strikeK:18+4*Math.sin(teleK*Math.PI);
+    ctx.beginPath();ctx.arc(ap.x,ap.y,r,-0.95,0.95);ctx.arc(ap.x,ap.y,r,Math.PI-0.95,Math.PI+0.95);ctx.stroke();
+    ctx.globalAlpha=alpha*0.84;ctx.beginPath();ctx.moveTo(ap.x-7,ap.y);ctx.lineTo(ap.x+7,ap.y);ctx.moveTo(ap.x,ap.y-7);ctx.lineTo(ap.x,ap.y+7);ctx.stroke();
+    if(follow){ctx.globalAlpha=alpha*0.62;ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(ap.x,ap.y,r+7,-0.82,0.82);ctx.arc(ap.x,ap.y,r+7,Math.PI-0.82,Math.PI+0.82);ctx.stroke();}
+    if(tele){for(let i=0;i<2;i++){const kk=(teleK+i*0.5)%1;ctx.globalAlpha=0.34*(1-kk);ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(ap.x,ap.y,10+kk*42,0,6.283);ctx.stroke();}}
+  }
+  if(feedback){
+    const maxT=C.counterplayPulseSec,k=clamp(1-Y.counterplayPulse/maxT,0,1),u=(Y.counterplayD||S.depth)-S.depth;
+    if(u>=UTOP&&u<=UBOT){const aim=projD(Y.counterplayAimX,u),esc=projD(Y.counterplayPlayerX,u),a=(1-k)*(Y.counterplayLineBroken?0.92:0.58);
+      ctx.setLineDash([5,7]);ctx.lineDashOffset=k*24;ctx.globalAlpha=a*0.72;ctx.strokeStyle='rgba(156,238,255,0.96)';ctx.lineWidth=2.4;
+      ctx.beginPath();ctx.moveTo(aim.x,aim.y);ctx.lineTo(esc.x,esc.y);ctx.stroke();ctx.setLineDash([]);
+      ctx.globalAlpha=a;ctx.lineWidth=3;const spread=5+18*k;
+      ctx.beginPath();ctx.arc(aim.x-spread*0.28,aim.y,16+7*k,0.72,2.55);ctx.arc(aim.x+spread*0.28,aim.y,16+7*k,Math.PI+0.72,Math.PI+2.55);ctx.stroke();
+      ctx.globalAlpha=a*0.82;ctx.beginPath();ctx.arc(esc.x,esc.y,10+28*k,0,6.283);ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
 function drawYetiLayer(nightK){
   const Y=S.yeti,buf=Number.isFinite(Y.renderGap)?Y.renderGap:S.buffer;
   const prox=clamp(1-buf/C.SAFE,0,1);
@@ -5004,11 +5764,7 @@ function drawYetiLayer(nightK){
     fr.addColorStop(0,'rgba(190,225,255,'+(0.55*prox)+')');fr.addColorStop(1,'rgba(190,225,255,0)');
     ctx.fillStyle=fr;ctx.fillRect(-30,-30,LW+60,LH*0.4+30);}
   if(S.mode==='dying'&&S.cause==='caught')return;
-  if(Y.tele>0){ // snow-ripple at the committed player lunge aim: the dodge is readable
-    const k=1-Y.tele/(Y.teleMax||C.teleT),ap=projD(Y.aimX,0);
-    for(let i=0;i<2;i++){const kk=(k+i*0.5)%1;
-      ctx.strokeStyle='rgba(200,225,255,'+(0.35*(1-kk))+')';ctx.lineWidth=2.5;
-      ctx.beginPath();ctx.arc(ap.x,ap.y,10+kk*44,0,6.283);ctx.stroke();}}
+  drawCommittedYetiAim(Y);
   if(Y.npcTele>0&&Y.npcTarget){
     const u=Y.npcTarget.d-S.depth;
     if(u>=UTOP&&u<=UBOT){const ap=projD(Y.npcTarget.x,u),k=1-Y.npcTele/0.74;
@@ -5083,6 +5839,13 @@ function drawBall(b){
   ctx.lineWidth=3;ctx.strokeStyle='rgba(150,165,185,0.55)';
   for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,b.r*(0.35+i*0.24),rot+i,rot+i+1.6);ctx.stroke();}
   ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(-b.r*0.3,-b.r*0.35,b.r*0.35,0,6.283);ctx.fill();
+  const blood=clamp((b.bloodCarryRemaining||0)/Math.max(0.1,b.bloodCarryTotal||1),0,1);
+  if(blood>0.01){
+    ctx.fillStyle='rgba(112,5,16,'+(0.24+0.46*blood).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(0,b.r*0.46,b.r*0.62,b.r*0.20,rot*0.14,0,6.283);ctx.fill();
+    ctx.strokeStyle='rgba(70,2,10,'+(0.22+0.48*blood).toFixed(3)+')';ctx.lineWidth=Math.max(2,b.r*0.10);
+    ctx.beginPath();ctx.arc(0,0,b.r*0.76,0.30,1.36);ctx.stroke();
+  }
 }
 function pole(x,y,col){
   ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x,y+4);ctx.lineTo(x,y-26);ctx.stroke();
@@ -5097,6 +5860,15 @@ function drawSingle(g1){
   ctx.beginPath();ctx.moveTo(dir*20,-8);ctx.lineTo(dir*38,-2);ctx.lineTo(dir*20,4);ctx.closePath();ctx.fill();
 }
 function drawNPC(n){
+  if(n.dead){
+    ctx.save();ctx.rotate(-(n.deathTheta||0)*0.30+(n.deathSide||1)*0.28);
+    ctx.strokeStyle='#3a2a1c';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-15,-4);ctx.lineTo(14,4);ctx.moveTo(-13,4);ctx.lineTo(16,-3);ctx.stroke();
+    ctx.fillStyle=n.skill==='aggressive'?'#5d4a38':n.skill==='competent'?'#66513d':'#6b4a2e';
+    ctx.beginPath();ctx.ellipse(0,0,10,6,(n.deathSide||1)*0.18,0,6.283);ctx.fill();
+    ctx.fillStyle='#e8d2b8';ctx.beginPath();ctx.arc(-7,-3,3.4,0,6.283);ctx.fill();
+    ctx.restore();return;
+  }
   if(n.down>0){ctx.save();ctx.rotate(n.down*9);ctx.strokeStyle='#ff9a3a';ctx.lineWidth=5;
     ctx.beginPath();ctx.moveTo(-9,-9);ctx.lineTo(9,9);ctx.moveTo(9,-9);ctx.lineTo(-9,9);ctx.stroke();ctx.restore();return;}
   ctx.save();
@@ -5114,8 +5886,48 @@ function drawNPC(n){
 function drawPlayer(){
   const y=PIN_Y+(S.bodyY||0),pal=palette(S.depth),snowC=snowRGB(pal,true);
   ctx.save();ctx.translate(S.x,y);
+  const fm=S.fullMomentumVisual||0,pulse=S.fullMomentumPulse||0;
+  if(fm>0.02){
+    // Compact physical wake: turbulent snow clumps remain attached to the skis
+    // instead of forming long lines or an aura around the screen.
+    ctx.save();ctx.rotate(-S.bank*0.24);
+    for(const sk of[-1,1]){
+      for(let j=0;j<4;j++){
+        const fade=1-j*0.18,yy=7-j*(7.0+1.2*fm),xx=sk*(6.5+j*(1.6+0.6*fm));
+        ctx.fillStyle=`rgba(250,253,255,${((0.10+0.24*fm+0.10*pulse)*fade).toFixed(3)})`;
+        ctx.beginPath();ctx.ellipse(xx,yy,2.5+j*1.05+fm*1.0,4.2+j*1.9+fm*1.5,sk*0.08,0,6.283);ctx.fill();
+      }
+    }
+    // Short compression rim at the boot line; it reads as snow pressure, not a shield.
+    ctx.strokeStyle=`rgba(255,255,255,${(0.12+0.30*fm+0.16*pulse).toFixed(3)})`;ctx.lineWidth=2.0+2.0*fm;
+    ctx.beginPath();ctx.arc(0,9,11+4*fm,0.18*Math.PI,0.82*Math.PI);ctx.stroke();
+    for(let i=0;i<8;i++){
+      const side=i<4?-1:1,j=i%4,rr=1.4+j*0.55+fm*0.9;
+      ctx.fillStyle=`rgba(255,255,255,${(0.11+0.18*fm-0.014*j).toFixed(3)})`;
+      ctx.beginPath();ctx.arc(side*(7+j*2.8),11+j*3.7,rr,0,6.283);ctx.fill();
+    }
+    // 10A.4: the visual stream should begin at the front of the body and continue through
+    // the skier into a trailing flow. Keep the cue tight, but make the direction unmistakable.
+    const sourceY=11.5+1.0*fm;
+    ctx.fillStyle=`rgba(255,250,236,${(0.16+0.12*fm+0.08*pulse).toFixed(3)})`;
+    ctx.beginPath();ctx.ellipse(0,sourceY,2.1+0.7*fm,3.4+0.9*fm,0,0,6.283);ctx.fill();
+    // central ski/front-to-uphill stream
+    ctx.strokeStyle=`rgba(250,252,255,${(0.10+0.16*fm+0.06*pulse).toFixed(3)})`;ctx.lineWidth=1.0+0.8*fm;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,sourceY);ctx.quadraticCurveTo(0,-1.5,0,-18.0-5.0*fm);ctx.stroke();
+    ctx.strokeStyle=`rgba(255,216,146,${(0.05+0.07*fm).toFixed(3)})`;ctx.lineWidth=0.7+0.4*fm;
+    ctx.beginPath();ctx.moveTo(0,sourceY-1);ctx.quadraticCurveTo(0,-1.0,0,-13.5-3.5*fm);ctx.stroke();
+    for(const sk of[-1,1]){
+      ctx.strokeStyle=`rgba(248,252,255,${(0.10+0.14*fm+0.05*pulse).toFixed(3)})`;ctx.lineWidth=0.9+0.7*fm;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(sk*5.8,10.5);ctx.quadraticCurveTo(sk*(3.0+0.8*fm),-1.0,sk*(5.0+1.2*fm),-17.0-4.0*fm);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,216,146,${(0.04+0.06*fm).toFixed(3)})`;ctx.lineWidth=0.65+0.35*fm;
+      ctx.beginPath();ctx.moveTo(sk*5.0,9.0);ctx.quadraticCurveTo(sk*(2.4+0.6*fm),-0.5,sk*(3.8+0.9*fm),-12.0-3.0*fm);ctx.stroke();
+    }
+    ctx.restore();
+  }
   const ab=Math.min(1,Math.abs(S.bank)/C.thetaMax);
-  ctx.scale(1.28*(1+ab*0.08),1.28*(1-ab*0.11));
+  // Full Momentum lowers the center of mass and locks the skier into a compact tuck.
+  ctx.translate(Math.sin(S.time*52)*0.34*fm,2.2*fm+Math.cos(S.time*47)*0.20*fm);
+  ctx.scale(1.28*(1+ab*0.08-fm*0.016),1.28*(1-ab*0.11-fm*0.010));
   if(S.stun>0){ctx.rotate(S.time*14);ctx.strokeStyle='#ff4a3a';ctx.lineWidth=6;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(-11,-11);ctx.lineTo(11,11);ctx.moveTo(11,-11);ctx.lineTo(-11,11);ctx.stroke();
     ctx.restore();return;}
@@ -5137,16 +5949,38 @@ function drawPlayer(){
       if(skSink>0){ctx.strokeStyle='rgba(28,40,54,0.18)';ctx.lineWidth=4.5;
         ctx.beginPath();ctx.moveTo(sk*6,-15);ctx.lineTo(sk*6,entry);ctx.stroke();}
       // exposed portion: solid
-      ctx.strokeStyle='#1c2836';ctx.lineWidth=4.5;
-      ctx.beginPath();ctx.moveTo(sk*6,entry);ctx.lineTo(sk*6,15);ctx.stroke();
+      ctx.strokeStyle='#1c2836';ctx.lineWidth=4.5+0.7*fm;
+      ctx.beginPath();ctx.moveTo(sk*6,entry);ctx.lineTo(sk*6,15+2*fm);ctx.stroke();
+      if(fm>0.04){ctx.strokeStyle=`rgba(238,248,252,${(0.12+0.36*fm).toFixed(3)})`;ctx.lineWidth=1.0+0.6*fm;
+        ctx.beginPath();ctx.moveTo(sk*6.8,entry+1);ctx.lineTo(sk*6.8,14+2*fm);ctx.stroke();
+        ctx.strokeStyle=`rgba(255,212,134,${(0.10+0.22*fm).toFixed(3)})`;ctx.lineWidth=0.8+0.45*fm;
+        ctx.beginPath();ctx.moveTo(sk*6.2,-15);ctx.lineTo(sk*6.2,-5.5+fm);ctx.stroke();}
     }
     // live trench walls hugging the skis, flowing into the stamped ruts behind
-    ctx.strokeStyle='rgba(78,102,126,'+(0.10+0.18*edgeI).toFixed(2)+')';ctx.lineWidth=1.15;
+    ctx.strokeStyle='rgba(78,102,126,'+(0.10+0.18*edgeI+0.12*fm).toFixed(2)+')';ctx.lineWidth=1.15+0.45*fm;
     ctx.beginPath();ctx.moveTo(-9.4,-14);ctx.lineTo(-9.4,11);ctx.moveTo(9.4,-14);ctx.lineTo(9.4,11);ctx.stroke();
   }
-  ctx.fillStyle='#e33b3b';ctx.beginPath();ctx.arc(0,0,8.5,0,6.283);ctx.fill();
-  ctx.fillStyle='#f3dcc0';ctx.beginPath();ctx.arc(0,-9,4,0,6.283);ctx.fill();
-  ctx.fillStyle='#2a72c8';ctx.beginPath();ctx.arc(0,-11,4,Math.PI,0);ctx.fill();
+  // Arms pull tight and back as the torso drops into the Full Momentum tuck.
+  if(fm>0.03){ctx.strokeStyle='#203d57';ctx.lineWidth=3.0;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-5.5,-1);ctx.lineTo(-8.5,4+2*fm);ctx.lineTo(-5.2,10+3*fm);
+    ctx.moveTo(5.5,-1);ctx.lineTo(8.5,4+2*fm);ctx.lineTo(5.2,10+3*fm);ctx.stroke();}
+  if(fm<=0.03){
+    ctx.fillStyle='#e33b3b';ctx.beginPath();ctx.arc(0,0,8.5,0,6.283);ctx.fill();
+  }else{
+    // Tapered jacket silhouette: broad loaded shoulders, narrow hips, compact tail.
+    const sh=8.6+0.5*fm,hip=6.0+0.15*fm,front=-7.9+0.3*fm,back=9.9+0.7*fm,ty=1.0*fm;
+    const jacket=()=>{ctx.beginPath();ctx.moveTo(0,front+ty);
+      ctx.bezierCurveTo(-sh,front+1.0+ty,-sh,-0.8+ty,-hip,4.0+ty);
+      ctx.bezierCurveTo(-hip,8.1+ty,-2.8,back+ty,0,back+ty);
+      ctx.bezierCurveTo(2.8,back+ty,hip,8.1+ty,hip,4.0+ty);
+      ctx.bezierCurveTo(sh,-0.8+ty,sh,front+1.0+ty,0,front+ty);ctx.closePath();};
+    ctx.strokeStyle=`rgba(83,20,25,${(0.22+0.42*fm).toFixed(3)})`;ctx.lineWidth=1.4+0.7*fm;jacket();ctx.stroke();
+    ctx.fillStyle='#e33b3b';jacket();ctx.fill();
+    ctx.fillStyle=`rgba(255,116,94,${(0.10+0.22*fm).toFixed(3)})`;ctx.beginPath();ctx.ellipse(0,-3.0+ty,5.0+0.7*fm,2.7+0.7*fm,0,0,6.283);ctx.fill();
+  }
+  const headY=-9+2.8*fm;
+  ctx.fillStyle='#f3dcc0';ctx.beginPath();ctx.arc(0,headY,4,0,6.283);ctx.fill();
+  ctx.fillStyle='#2a72c8';ctx.beginPath();ctx.arc(0,headY-2,4,Math.PI,0);ctx.fill();
   if(S.powK>0.10||S.sink>0.08){
     const bury=clamp(0.26+1.12*S.sink+0.42*S.powK,0,1.28);
     const t=S.time;
@@ -5312,6 +6146,14 @@ const DEF=(()=>{
     strokeSegment('255,255,255',x0+out*r*0.82,d0-0.04,x1+out*r*0.82,d1-0.04,r*0.92,a*0.76);
     strokeSegment('245,250,255',x0-out*r*0.22,d0-0.02,x1-out*r*0.22,d1-0.02,r*0.24,a*0.05);
   }
+  function bloodSkiSegment(x0,d0,x1,d1,w,a){
+    if(!on||a<=0)return;
+    const wet=clamp(a,0,1);
+    // A broad absorbed stain with a darker ski-cut center. Because this is drawn into
+    // the deformation canvas, it remains fixed to the snow and exits naturally uphill.
+    strokeSegment('150,22,30',x0,d0,x1,d1,w*1.26,0.64*wet);
+    strokeSegment('74,4,12',x0,d0,x1,d1,w*0.50,0.72*wet);
+  }
   function npcWake(x0,d0,x1,d1,w,a){
     if(!on)return;
     // Visible compressed wake, still softer and shorter-lived than the player's carve.
@@ -5353,11 +6195,22 @@ const DEF=(()=>{
       strokeSegment('175,190,204',x0+ix,d0+id,x1+ix,d1+id,r*0.22,a*0.20);
     }
   }
+  function boulderBloodSegment(x0,d0,x1,d1,r,a,phase){
+    if(!on||a<=0)return;
+    const wet=clamp(a,0,1),dx=x1-x0,dy=(d1-d0)*PXM,len=Math.max(0.001,Math.hypot(dx,dy));
+    const px=-dy/len,py=dx/len,wiggle=Math.sin((phase||0)*2.7)*r*0.08;
+    const ox=px*wiggle,od=py*wiggle/PXM;
+    // One broad absorbed streak follows the rolling mass, with an irregular dark churned center.
+    // It is baked into the deformation canvas, so it remains fixed to the mountain after the boulder moves on.
+    strokeSegment('150,18,28',x0+ox,d0+od,x1+ox,d1+od,r*0.82,0.60*wet);
+    strokeSegment('78,3,12',x0-ox*0.35,d0-od*0.35,x1-ox*0.35,d1-od*0.35,r*0.34,0.76*wet);
+    strokeSegment('201,54,62',x0+px*r*0.30,d0+py*r*0.30/PXM,x1+px*r*0.30,d1+py*r*0.30/PXM,r*0.16,0.26*wet);
+  }
   function gouge(x,d,r,a){ // compact actors still use a local embossed footprint
     stamp('lip',x-2.2,d-0.14,r,a*0.55);
     stamp('dark',x+0.8,d+0.05,r,a);
   }
-  return{init,reset,tick,stamp,gouge,gougeSegment,npcWake,npcSkiSegment,rockBed,boulderSegment,draw,on:()=>on};
+  return{init,reset,tick,stamp,gouge,gougeSegment,bloodSkiSegment,npcWake,npcSkiSegment,rockBed,boulderSegment,boulderBloodSegment,draw,on:()=>on};
 })();
 DEF.init();
 /* ============================ HUD ============================ */
@@ -5475,7 +6328,7 @@ function beginRun(source='api'){
   if(S.mode==='play'||S.mode==='dying'||S.mode==='starting')return false;
   if(RunContext.isPlaytest()&&!FeedbackBaseline.testerReady())return FeedbackBaseline.promptTester();
   Audio.ac();if(fromIntro)introAudioRequested=true;
-  Generation.fresh();S.runContext=RunContext.begin();if(lastDeathReal)S.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext);PublicFeedback.beginRun(S.runContext);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun();
+  Generation.fresh();S.runContext=RunContext.begin();if(lastDeathReal)S.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext);PublicFeedback.beginRun(S.runContext);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun();YetiAttackTelemetry.begin();
   $('btnRow').style.display='flex';el.tune.classList.remove('show');$('bTune').classList.remove('active');
   setOverlayVisible(el.results,false);setOverlayVisible(el.leaderboard,false);
   if(fromIntro){
@@ -5496,7 +6349,7 @@ function showResults(){
   if(S.mode!=='dead'||!overlayVisible(el.leaderboard))return false;
   setOverlayVisible(el.leaderboard,false);setOverlayVisible(el.results,true);return true;
 }
-/* v9b.0c.6: iOS-safe result actions. The visual rectangle is the hit rectangle.
+/* v10a: iOS-safe result actions. The visual rectangle is the hit rectangle.
    Route pointerdown geometrically at the results-overlay capture phase so no child,
    text node, legacy overlay, or delayed synthesized click can create partial dead zones. */
 const ResultActionRouter=(()=>{
@@ -5881,7 +6734,7 @@ const Modules=Object.freeze({
   arcadeLeaderboard:ArcadeLeaderboard,initialsMountain:InitialsMountain,arcadeFoundationCheck:ArcadeFoundationCheck,
   mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,
   performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,
-  audio:Audio,leaderboard:ArcadeLeaderboard,difficulty:Difficulty,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
+  audio:Audio,leaderboard:ArcadeLeaderboard,difficulty:Difficulty,fullMomentum:FullMomentum,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -5906,7 +6759,7 @@ window.__EP={
   arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeLeaderboard:ArcadeLeaderboard,
   initialsMountain:InitialsMountain,arcadeReleaseValidation:ArcadeReleaseValidation,localHistoryValidation:LocalHistoryValidation,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
   leaderboardMountainIntegration:LeaderboardMountainIntegration,performanceStability:PerformanceStability,
-  sharedMemorials:SharedMemorials,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
+  sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
   difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg}),
   setQuality:n=>PerfBudget.setLevel(n),setSteer:v=>{S.active=v!==0;S.steer=clamp(v,-1,1);},resetDevTuning
 };
