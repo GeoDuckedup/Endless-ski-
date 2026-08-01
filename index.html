@@ -881,7 +881,7 @@ function removeSwapAt(list,index){
    submissions, and initials_bests remains the all-time mountain source.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_phase6d1_open_ski_live.html","normalizedArtifactSha256":"1a4a984c2b7058ce7a8a94fcdaabb9d884a0cf4524e3d575e24ff8a3f32ca425","sourceSha256":"fb2f7e08a46f6a1d56b0988bf0ceea7b9d1e84874e942333b77d69e129bfc110","profileSha256":"013ca406cbe7969edbc80f2e88bc986d1bf0aa198a3faba71f333426331dcb23","tuningSha256":"97f2dbff539bbb8ec80e8069be453a1721ba38cf7bc80833ed4dc86afac900bf","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
+  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_phase6d1_open_ski_live.html","normalizedArtifactSha256":"3a29fea689861c0aeb72cfa1661341f485e198cc856d44608f0dec3f005bd37a","sourceSha256":"c21a96312f3114c19ae3d51f0e47ec206c94c1b591abeed531b743316fe2ffc3","profileSha256":"013ca406cbe7969edbc80f2e88bc986d1bf0aa198a3faba71f333426331dcb23","tuningSha256":"59bee367382f3f0fca758ba040d0a3d72d1c2048aa5aceb0d6a8d15df4a869d8","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
   experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 6C PRODUCTION CANDIDATE'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   course:Object.freeze({
@@ -895,7 +895,7 @@ const APP_CONFIG=Object.freeze({
     projectId:'endless-powder',
     databaseUrl:'https://endless-powder-default-rtdb.firebaseio.com',
     apiKey:'AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI',
-    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',openSkiLeaderboardRuns:'/endless_powder/modes/open_ski/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
+    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',openSkiLeaderboardRuns:'/endless_powder/modes/open_ski/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',publicAnalyticsRuns:'/endless_powder/public_analytics_runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
     auth:Object.freeze({
       signUpEndpoint:'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
       refreshEndpoint:'https://securetoken.googleapis.com/v1/token',
@@ -1096,6 +1096,7 @@ const OPEN_SKI_BOARD_MAX=APP_CONFIG.schemas.openSkiBoard.maxRecords;
 const SEASON_VIEW_KEY=APP_CONFIG.storage.seasonView;
 const INITIALS_BEST_PATH=APP_CONFIG.firebase.paths.initialsBests;
 const TELEMETRY_RUN_PATH=APP_CONFIG.firebase.paths.telemetryRuns;
+const PUBLIC_ANALYTICS_RUN_PATH=APP_CONFIG.firebase.paths.publicAnalyticsRuns;
 const PUBLIC_FEEDBACK_PATH=APP_CONFIG.firebase.paths.feedback;
 const PLAYTEST_REPORT_PATH=APP_CONFIG.firebase.paths.playtests;
 const RUN_RECORD_SCHEMA_VERSION=APP_CONFIG.schemas.runRecord.version;
@@ -1154,7 +1155,7 @@ const Configuration=Object.freeze({
   values:APP_CONFIG,
   audit:()=>Object.freeze({
     buildVersion:BUILD_VERSION,buildProfile:BUILD_PROFILE,testOnly:APP_CONFIG.build.testOnly===true,sourceBaseline:APP_CONFIG.build.sourceBaseline,worldVersion:WORLD_VERSION,databaseUrl:FIREBASE_DB_URL,
-    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,openSkiRunPath:OPEN_SKI_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
+    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,openSkiRunPath:OPEN_SKI_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicAnalyticsRunPath:PUBLIC_ANALYTICS_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
     runRecordSchemaVersion:RUN_RECORD_SCHEMA_VERSION,arcadeRunSchemaVersion:ARCADE_RUN_SCHEMA_VERSION,arcadeQueueSchemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,
     localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
     localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,telemetrySummarySchema:TELEMETRY_SUMMARY_SCHEMA_VERSION,telemetryQueueSchema:TELEMETRY_QUEUE_SCHEMA_VERSION,
@@ -1165,7 +1166,7 @@ const Configuration=Object.freeze({
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
     maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
     memorialCacheEntries:PERFORMANCE_CONFIG.memorialCacheEntries,transientCaps:Object.assign({},PERFORMANCE_CONFIG.transientCaps),
-    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,openSkiLeaderboardRuns,playtests,season2LeaderboardRuns,telemetryRuns',
+    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,openSkiLeaderboardRuns,playtests,publicAnalyticsRuns,season2LeaderboardRuns,telemetryRuns',
     frozen:Object.isFrozen(APP_CONFIG),launchMode:RunContext.status().launchMode,developerTools:RunContext.status().launchDevtools
   })
 });
@@ -5424,6 +5425,25 @@ const CompactTelemetry=(()=>{
   function broadBrowser(){const ua=String(navigator.userAgent||'');if(/Edg\//.test(ua))return'edge';if(/Firefox\//.test(ua))return'firefox';if(/CriOS|Chrome\//.test(ua))return'chrome';if(/Safari\//.test(ua))return'safari';return'other';}
   const stateName=Y=>AttackVocabulary.state(Y);
   function blankCounters(){return Object.fromEntries(AttackVocabulary.STATES.map(name=>[name,0]));}
+  const ATTACK_PERFORMANCE_BANDS=Object.freeze(['STRUGGLING','STABLE','FAST','HOT']),ATTACK_RANGE_BANDS=Object.freeze(['SHORT','MID','LONG']),ATTACK_KINDS=Object.freeze(['lunges','charges','boulders']);
+  function blankAttackMix(){return Object.fromEntries(ATTACK_PERFORMANCE_BANDS.map(performance=>[performance,Object.fromEntries(ATTACK_RANGE_BANDS.map(range=>[range,Object.fromEntries(ATTACK_KINDS.map(kind=>[kind,0]))]))]));}
+  function attackBandSnapshot(snapshot){
+    const snap=snapshot&&typeof snapshot==='object'?snapshot:{},Y=S&&S.yeti||{},gap=Number.isFinite(+snap.gap)?+snap.gap:(Y.on&&S&&S.player?S.player.depth-Y.d:null),speed=Number.isFinite(+snap.speed)?Math.max(0,+snap.speed):Math.max(0,+(S&&S.player&&S.player.speed)||0);
+    if(!Number.isFinite(gap))return null;
+    const injectedPerformance=String(snap.performanceBand||'').toUpperCase(),injectedRange=String(snap.rangeBand||'').toUpperCase();
+    let performance=ATTACK_PERFORMANCE_BANDS.includes(injectedPerformance)?injectedPerformance:'';
+    if(!performance){
+      let signals=null,mix=null;try{signals=YetiAttackArbiter.performanceSignals(Y);}catch(e){}try{mix=YetiBoulderThrow.attackMixSnapshot();}catch(e){}
+      const hot=Math.max(0,+((mix&&mix.hot)||0)),clean=Math.max(0,+((mix&&mix.clean)||0));
+      performance=signals&&(signals.severe||signals.entry)?'STRUGGLING':hot>=0.5&&clean>=0.6?'HOT':speed>=30?'FAST':'STABLE';
+    }
+    const range=ATTACK_RANGE_BANDS.includes(injectedRange)?injectedRange:gap<15?'SHORT':gap<30?'MID':'LONG';
+    return Object.freeze({performance,range,gap:round(gap,2),speed:round(speed,2)});
+  }
+  function noteAttackMix(kind,snapshot){
+    if(!active||!ATTACK_KINDS.includes(kind))return false;const band=attackBandSnapshot(snapshot);if(!band)return false;
+    active.attackMix[band.performance][band.range][kind]++;return true;
+  }
   function observedStateCount(counters,names){counters=counters&&typeof counters==='object'?counters:{};return names.reduce((sum,name)=>sum+Math.max(0,Math.floor(+counters[name]||0)),0);}
   function begin(context,traceIdentity){
     if(!APP_CONFIG.telemetry.enabled||!consent()||!context||context.telemetryLevel!=='summary'){active=null;return null;}
@@ -5431,7 +5451,7 @@ const CompactTelemetry=(()=>{
     active={reportId:makeId('tr',12),traceRunId:String(traceIdentity&&traceIdentity.id||RunTraceIdentity.id()),context,startedAt:now,restartDelaySec:lastDeathAt===null?null:round(Math.max(0,now-lastDeathAt)/1000,2),
       elapsed:0,speedArea:0,maxSpeed:0,steerArea:0,hardCarveSec:0,directionReversals:0,lastSteerSign:0,
       gapArea:0,gapTime:0,minGap:null,targetArea:0,pressureArea:0,peakPressure:0,lastGap:null,secondsYetiGaining:0,secondsPlayerSeparating:0,
-      fpsArea:0,minFps:null,lowFpsFrames:0,frameSamples:0,state:'OFF',states:blankCounters(),telegraphSpeedSum:0,telegraphSpeedCount:0,lungeSpeedSum:0,lungeSpeedCount:0,
+      fpsArea:0,minFps:null,lowFpsFrames:0,frameSamples:0,state:'OFF',states:blankCounters(),attackMix:blankAttackMix(),telegraphSpeedSum:0,telegraphSpeedCount:0,lungeSpeedSum:0,lungeSpeedCount:0,
       telegraphStarts:0,committedLunges:0,lungeDodges:0,lungeHits:0,passiveCatches:0,passiveWhiffs:0,followUpLunges:0,predictiveTelegraphs:0,rhythmPredictions:0,aimLeadAbsSum:0,aimLeadSignedSum:0,aimLeadCount:0,lineBreakDodges:0,followUpLineBreakDodges:0,targetEscapeSum:0,targetEscapeCount:0,conditionalFollowUpsQueued:0,followUpsExecuted:0,followUpsSuperseded:0,followUpsCancelledByClean:0,followUpsCancelledOther:0,followUpsSuppressed:0,thirdLungeBlocks:0,followUpSuppressReasons:{threat:0,cleanProtection:0,chance:0,twoLungeCap:0},telegraphInterruptions:0,lungeInterruptions:0,boulderThrowTelegraphs:0,boulderThrowReleases:0,boulderThrowImpacts:0,boulderThrowDodges:0,boulderThrowPlayerDeaths:0,boulderThrowNpcHits:0,boulderThrowCancels:0,chargeTelegraphs:0,chargeCommits:0,chargeHits:0,chargeDodges:0,chargeWindupSum:0,chargeStartGapSum:0,chargeLeadAbsSum:0,chargeEscapeSum:0,chargeRecoverySum:0,catchType:null,
       threatExposureSec:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},followUpsQueuedByThreat:{CONTROLLED:0,HUNTING:0,PREDATORY:0,CRITICAL:0},
       attackTelegraphGapSum:0,attackTelegraphPressureSum:0,attackTelegraphDebtSum:0,attackTelegraphComboSum:0,attackLungeGapSum:0,attackLungePressureSum:0,attackLungeDebtSum:0,attackLungeComboSum:0,
@@ -5496,7 +5516,7 @@ const CompactTelemetry=(()=>{
     if(kind==='LUNGE_START'){
       active.committedLunges++;active.lungeSpeedSum+=Math.max(0,+snap.speed||0);active.lungeSpeedCount++;
       active.attackLungeGapSum+=+snap.gap||0;active.attackLungePressureSum+=+snap.pressure||0;active.attackLungeDebtSum+=+snap.debt||0;active.attackLungeComboSum+=Math.max(0,+snap.cleanCombo||0);
-      active.threatAtLunge[threat]++;if(extra&&extra.followUp)active.followUpLunges++;return true;
+      active.threatAtLunge[threat]++;noteAttackMix('lunges',snap);if(extra&&extra.followUp)active.followUpLunges++;return true;
     }
     if(kind==='LUNGE_DODGE'){
       active.lungeDodges++;
@@ -5508,7 +5528,7 @@ const CompactTelemetry=(()=>{
       return true;
     }
     if(kind==='CHARGE_TELEGRAPH'){active.chargeTelegraphs++;active.chargeWindupSum+=Math.max(0,+(extra&&extra.windupSec)||0);active.chargeStartGapSum+=Math.max(0,+(extra&&extra.startGap)||0);active.chargeLeadAbsSum+=Math.abs(+(extra&&extra.leadPx)||0);return true;}
-    if(kind==='CHARGE_COMMIT'){active.chargeCommits++;return true;}
+    if(kind==='CHARGE_COMMIT'){active.chargeCommits++;noteAttackMix('charges',snap);return true;}
     if(kind==='CHARGE_HIT'){active.chargeHits++;active.catchType='chargeHit';return true;}
     if(kind==='CHARGE_DODGE'){active.chargeDodges++;active.chargeEscapeSum+=Math.max(0,+(extra&&extra.targetEscapePx)||0);active.chargeRecoverySum+=Math.max(0,+(extra&&extra.recoverySec)||0);return true;}
     if(kind==='LUNGE_HIT'){active.lungeHits++;active.catchType='lungeHit';return true;}
@@ -5538,7 +5558,7 @@ const CompactTelemetry=(()=>{
     try{if(/^(THROW_RELEASE|THROW_DODGE|THROW_PLAYER_DEATH|THROW_NPC_HIT|THROW_CANCEL)$/.test(kind)&&RunContext.permits('allowDiagnosticReports',S.runContext||RunContext.current()))FeedbackBaseline.noteEvent(kind,extra||{},null);}catch(e){}
     if(!active)return false;
     if(kind==='THROW_TELEGRAPH')active.boulderThrowTelegraphs++;
-    else if(kind==='THROW_RELEASE')active.boulderThrowReleases++;
+    else if(kind==='THROW_RELEASE'){active.boulderThrowReleases++;if(Math.max(1,Math.floor(+(extra&&extra.salvo)||1))===1)noteAttackMix('boulders',extra);}
     else if(kind==='THROW_IMPACT')active.boulderThrowImpacts++;
     else if(kind==='THROW_DODGE')active.boulderThrowDodges++;
     else if(kind==='THROW_PLAYER_DEATH')active.boulderThrowPlayerDeaths++;
@@ -5571,7 +5591,7 @@ const CompactTelemetry=(()=>{
         averageSpeedAtTelegraph:mean(a.telegraphSpeedSum,a.telegraphSpeedCount,2),averageSpeedAtLunge:mean(a.lungeSpeedSum,a.lungeSpeedCount,2),
         averageGapAtTelegraph:mean(a.attackTelegraphGapSum,a.telegraphStarts,2),averagePressureAtTelegraph:mean(a.attackTelegraphPressureSum,a.telegraphStarts,3),averageMistakeDebtAtTelegraph:mean(a.attackTelegraphDebtSum,a.telegraphStarts,3),averageCleanComboAtTelegraph:mean(a.attackTelegraphComboSum,a.telegraphStarts,2),
         stateTransitions:Object.assign({},a.states),averageGapAtLunge:mean(a.attackLungeGapSum,a.committedLunges,2),averagePressureAtLunge:mean(a.attackLungePressureSum,a.committedLunges,3),averageMistakeDebtAtLunge:mean(a.attackLungeDebtSum,a.committedLunges,3),averageCleanComboAtLunge:mean(a.attackLungeComboSum,a.committedLunges,2),
-        threatAtTelegraph:Object.assign({},a.threatAtTelegraph),threatAtLunge:Object.assign({},a.threatAtLunge),averageImmediateDodgeRecovery:mean(a.recoveryImmediateSum,a.recoveryImmediateCount,2),retainedDodgeRecoveryAfter1s:mean(a.recoveryRetained1Sum,a.recoveryRetained1Count,2),retainedDodgeRecoveryAfter2s:mean(a.recoveryRetained2Sum,a.recoveryRetained2Count,2)},
+        threatAtTelegraph:Object.assign({},a.threatAtTelegraph),threatAtLunge:Object.assign({},a.threatAtLunge),attackMix:clone(a.attackMix),averageImmediateDodgeRecovery:mean(a.recoveryImmediateSum,a.recoveryImmediateCount,2),retainedDodgeRecoveryAfter1s:mean(a.recoveryRetained1Sum,a.recoveryRetained1Count,2),retainedDodgeRecoveryAfter2s:mean(a.recoveryRetained2Sum,a.recoveryRetained2Count,2)},
       performance:{averageFps:mean(a.fpsArea,duration,1),minimumFps:a.minFps===null?null:round(a.minFps,1),lowFpsFrames:a.lowFpsFrames}};
   }
   function enqueue(payload){
@@ -5594,17 +5614,17 @@ const CompactTelemetry=(()=>{
   function selfTest(){
     const sample={schema:TELEMETRY_SUMMARY_SCHEMA_VERSION,reportId:'tr_000000000000000000000000',timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,telemetryVersion:ENGINE_VERSION},session:{sessionId:'ts_test',runOrdinal:1,previousReportId:null,restartDelaySec:null},client:{clientId:'tc_00000000000000000000',inputType:'touch',deviceClass:'mobile',browserFamily:'safari',qualitySetting:'HIGH'},run:{distance:100,score:200,durationSec:10,averageSpeed:20,maximumSpeed:30,cleanFlags:4,attemptedFlags:5,bestCombo:4,collisions:1,deathCause:'caught',deathSpeed:12,deathCombo:0,catchType:'lungeHit'},steering:{averageAbsoluteSteer:.4,hardCarveSec:2,directionReversals:3},pursuit:{averageWorldGap:25,minimumWorldGap:-1,minimumResolvedWorldGap:0,averageTargetGap:20,averagePressure:.2,peakPressure:.7,secondsYetiGaining:3,secondsPlayerSeparating:2},performanceResponse:{averageMistakeDebt:.2,peakMistakeDebt:.8,averageUnresolvedMistakes:.4,peakUnresolvedMistakes:2,cleanProtectionEvents:2,protectedSecondsGranted:3,protectedPlaySec:2.5},flags:{cleanEvents:4,missEvents:1,queuedCleanGap:2,queuedMissNudge:4,retainedCleanGapAfter1s:1,retainedCleanGapAfter2s:.5,retainedMissGapAfter1s:-2,retainedMissGapAfter2s:-3},attacks:{huntCloses:1,telegraphs:1,lunges:1,dodges:1,recoveries:1,lulls:0,feedings:0,telegraphStarts:1,committedLunges:1,lungeDodges:1,lungeHits:0,passiveCatches:0,passiveWhiffs:0,followUpLunges:0,telegraphInterruptions:0,lungeInterruptions:0,stateObservedTelegraphs:1,stateObservedLunges:1,averageSpeedAtTelegraph:20,averageSpeedAtLunge:22,averageGapAtTelegraph:8,averagePressureAtTelegraph:.7,averageMistakeDebtAtTelegraph:.5,averageCleanComboAtTelegraph:4,averageGapAtLunge:6,averagePressureAtLunge:.7,averageMistakeDebtAtLunge:.5,averageCleanComboAtLunge:4,threatAtTelegraph:{CONTROLLED:0,HUNTING:0,PREDATORY:1,CRITICAL:0},threatAtLunge:{CONTROLLED:0,HUNTING:0,PREDATORY:1,CRITICAL:0},averageImmediateDodgeRecovery:7,retainedDodgeRecoveryAfter1s:5,retainedDodgeRecoveryAfter2s:3},performance:{averageFps:60,minimumFps:54,lowFpsFrames:0}};
     const q=normalizeQueue({version:TELEMETRY_QUEUE_SCHEMA_VERSION,items:Array.from({length:8},(_,i)=>({reportId:'x'+i,payload:{i}}))});
-    return Object.freeze({passed:byteSize(sample)<MAX_BYTES&&q.items.length===MAX_PENDING&&TELEMETRY_CLIENT_ID_RE.test(clientId)&&TELEMETRY_SESSION_ID_RE.test(sessionId),sampleBytes:byteSize(sample),queueCap:q.items.length,clientIdShape:TELEMETRY_CLIENT_ID_RE.test(clientId),sessionIdShape:TELEMETRY_SESSION_ID_RE.test(sessionId)});
+    const matrix=blankAttackMix(),shape=ATTACK_PERFORMANCE_BANDS.every(performance=>ATTACK_RANGE_BANDS.every(range=>ATTACK_KINDS.every(kind=>matrix[performance][range][kind]===0)));
+    return Object.freeze({passed:byteSize(sample)<MAX_BYTES&&q.items.length===MAX_PENDING&&TELEMETRY_CLIENT_ID_RE.test(clientId)&&TELEMETRY_SESSION_ID_RE.test(sessionId)&&shape,sampleBytes:byteSize(sample),queueCap:q.items.length,clientIdShape:TELEMETRY_CLIENT_ID_RE.test(clientId),sessionIdShape:TELEMETRY_SESSION_ID_RE.test(sessionId),attackMixShape:shape});
   }
-  return Object.freeze({begin,tick,noteFlag,noteAttackEvent,noteAttackDecision,noteProjectileEvent,noteInput,finish,consent,setConsent,pending,nextPending,removePending,markAttempt,clearQueue,initUI,status,selfTest,lastSummary:()=>clone(lastSummary),byteSize});
+  return Object.freeze({begin,tick,noteFlag,noteAttackEvent,noteAttackDecision,noteProjectileEvent,noteInput,finish,consent,setConsent,pending,nextPending,removePending,markAttempt,clearQueue,initUI,status,selfTest,lastSummary:()=>clone(lastSummary),attackBandSnapshot,blankAttackMix,byteSize});
 })();
 
-/* ==================== PHASE 9B.0c.3: PRIVATE FIREBASE TELEMETRY TRANSPORT ====================
-   Uploads compact summaries only to /telemetry/runs/YYYY-MM/{auth.uid}/{reportId}.
-   Reads are never performed. Standard PUT is used; the server-side rule enforces
-   authentication, UID ownership, schema validation, and create-only behavior. */
+/* ==================== PHASE 9B.0c.3 + ANALYTICS A4.3: PAIRED TELEMETRY TRANSPORT ====================
+   Writes the private compact source first, then its identifier-free public analytics
+   projection. One bounded queue item remains pending until both immutable rows exist. */
 const TelemetryTransport=(()=>{
-  let drainPromise=null,last={status:'idle',trigger:'',reportId:'',httpStatus:0,error:'',sent:0,checkedAt:0};
+  let drainPromise=null,last={status:'idle',trigger:'',reportId:'',httpStatus:0,sourceStatus:0,publicStatus:0,publicResult:'',error:'',sent:0,checkedAt:0};
   const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
   const copy=v=>{try{return JSON.parse(JSON.stringify(v));}catch(e){return null;}};
   const WIRE_KEYS=Object.freeze({
@@ -5636,6 +5656,8 @@ const TelemetryTransport=(()=>{
     return out;
   }
   function monthKey(timestamp){const d=new Date(+timestamp||0);return Number.isFinite(d.getTime())?d.toISOString().slice(0,7):'';}
+  function canonical(value){if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])]));return value;}
+  function samePayload(a,b){try{return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));}catch(e){return false;}}
   function validItem(item){
     const p=item&&item.payload,month=monthKey(p&&p.timestamp);
     return !!item&&item.reportId===p?.reportId&&TELEMETRY_REPORT_ID_RE.test(String(item.reportId||''))&&
@@ -5644,19 +5666,37 @@ const TelemetryTransport=(()=>{
       CompactTelemetry.byteSize(p)<=APP_CONFIG.telemetry.summaryMaxBytes;
   }
   function recordPath(item,uid){const month=monthKey(item&&item.payload&&item.payload.timestamp);return validItem(item)&&ARCADE_UID_RE.test(String(uid||''))?TELEMETRY_RUN_PATH+'/'+month+'/'+uid+'/'+item.reportId:'';}
+  function publicRecordPath(item){const month=monthKey(item&&item.payload&&item.payload.timestamp);return validItem(item)?PUBLIC_ANALYTICS_RUN_PATH+'/'+month+'/'+item.reportId:'';}
   async function fetchTimed(url,options){return ServiceNetwork.fetchTimed(url,options,'telemetryUpload');}
   async function authFetch(raw,options){let url=await Identity.url(raw),response=await fetchTimed(url,options);if(response.status!==401)return response;await Identity.forceRefresh();url=await Identity.url(raw);return fetchTimed(url,options);}
   async function authenticatedUid(){if(!online())return'';await Identity.ensure(false);const auth=Identity.status();return auth.authenticated&&auth.tokenReady&&ARCADE_UID_RE.test(String(auth.uid||''))?String(auth.uid):'';}
+  async function reconcilePublic(raw,payload){
+    let response;try{response=await fetchTimed(raw,{method:'GET',headers:{'Accept':'application/json'}});}catch(e){return{ok:false,result:'public-reconcile-network',status:0,error:String((e&&e.message)||e)};}
+    if(!response.ok)return{ok:false,result:'public-reconcile-rejected',status:response.status};
+    let existing=null;try{existing=await response.json();}catch(e){}
+    return samePayload(existing,payload)?{ok:true,result:'public-reconciled',status:response.status}:{ok:false,result:'public-conflict',status:response.status};
+  }
+  async function uploadPublic(item){
+    const path=publicRecordPath(item),payload=PublicAnalyticsProjection.project(item&&item.payload);if(!path||!payload)return{ok:false,result:'invalid-public-projection',status:0,terminal:true};
+    const raw=FIREBASE_DB_URL+path+'.json';let response;
+    try{response=await authFetch(raw,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(e){return{ok:false,result:'public-network',status:0,error:String((e&&e.message)||e)};}
+    if(response.ok)return{ok:true,result:'public-created',status:response.status,path,payload};
+    if(response.status===401||response.status===403){const reconciled=await reconcilePublic(raw,payload);return Object.assign({path,payload},reconciled);}
+    return{ok:false,result:response.status===400?'invalid-public-payload':'public-server-rejected',status:response.status,path};
+  }
   async function upload(item){
     if(!validItem(item))return{ok:false,result:'invalid-local-item',status:0,terminal:true};
     const uid=await authenticatedUid();if(!uid)return{ok:false,result:'authentication-offline',status:0};
     const path=recordPath(item,uid);if(!path)return{ok:false,result:'invalid-path',status:0,terminal:true};
     const raw=FIREBASE_DB_URL+path+'.json',payload=wirePayload(item.payload);
     let response;try{response=await authFetch(raw,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(e){return{ok:false,result:'network',status:0,error:String((e&&e.message)||e)};}
-    if(response.ok)return{ok:true,result:'created',status:response.status,uid,path};
-    return{ok:false,result:response.status===400?'invalid-server-payload':response.status===401||response.status===403?'rules-auth-or-existing-record':'server-rejected',status:response.status,uid,path};
+    const sourceCreated=response.ok,sourceMayExist=response.status===403;
+    if(!sourceCreated&&!sourceMayExist)return{ok:false,result:response.status===400?'invalid-server-payload':response.status===401?'rules-auth-rejected':'server-rejected',status:response.status,uid,path};
+    const publicResult=await uploadPublic(item);
+    if(publicResult.ok)return{ok:true,result:sourceCreated?'created':'reconciled',status:publicResult.status,sourceStatus:response.status,publicStatus:publicResult.status,uid,path,publicPath:publicResult.path,publicResult:publicResult.result};
+    return{ok:false,result:publicResult.result,status:publicResult.status,sourceStatus:response.status,publicStatus:publicResult.status,uid,path,publicPath:publicResult.path,error:publicResult.error||''};
   }
-  function setLast(next){last=Object.assign({status:'idle',trigger:'',reportId:'',httpStatus:0,error:'',sent:0,checkedAt:Date.now()},next||{});return status();}
+  function setLast(next){last=Object.assign({status:'idle',trigger:'',reportId:'',httpStatus:0,sourceStatus:0,publicStatus:0,publicResult:'',error:'',sent:0,checkedAt:Date.now()},next||{});return status();}
   function drain(trigger){
     trigger=String(trigger||'manual').slice(0,32);
     if(!APP_CONFIG.telemetry.uploadEnabled)return Promise.resolve(setLast({status:'disabled',trigger}));
@@ -5670,9 +5710,9 @@ const TelemetryTransport=(()=>{
       while(true){
         const item=CompactTelemetry.nextPending();if(!item)break;
         const result=await upload(item);
-        if(result.ok){CompactTelemetry.removePending(item.reportId);sent++;setLast({status:result.result,trigger,reportId:item.reportId,httpStatus:result.status,sent});continue;}
+        if(result.ok){CompactTelemetry.removePending(item.reportId);sent++;setLast({status:result.result,trigger,reportId:item.reportId,httpStatus:result.status,sourceStatus:result.sourceStatus||0,publicStatus:result.publicStatus||0,publicResult:result.publicResult||'',sent});continue;}
         CompactTelemetry.markAttempt(item.reportId,result.result+(result.status?' '+result.status:''));
-        setLast({status:result.result,trigger,reportId:item.reportId,httpStatus:result.status,error:result.error||'',sent});break;
+        setLast({status:result.result,trigger,reportId:item.reportId,httpStatus:result.status,sourceStatus:result.sourceStatus||0,publicStatus:result.publicStatus||0,publicResult:result.publicResult||'',error:result.error||'',sent});break;
       }
       return status();
     })().catch(e=>setLast({status:'transport-error',trigger,error:String((e&&e.message)||e)})).finally(()=>{drainPromise=null;});
@@ -5680,16 +5720,56 @@ const TelemetryTransport=(()=>{
   }
   function identityChanged(){if(CompactTelemetry.pending().length&&RunContext.permits('allowTelemetryUploads'))setTimeout(()=>drain('identity-changed'),0);return true;}
   function onOnline(){if(CompactTelemetry.pending().length&&RunContext.permits('allowTelemetryUploads'))Identity.retry().finally(()=>drain('online'));}
-  function status(){return Object.freeze(Object.assign({},last,{busy:!!drainPromise,pending:CompactTelemetry.pending().length,online:online(),path:TELEMETRY_RUN_PATH,uploadEnabled:!!APP_CONFIG.telemetry.uploadEnabled}));}
+  function status(){return Object.freeze(Object.assign({},last,{busy:!!drainPromise,pending:CompactTelemetry.pending().length,online:online(),path:TELEMETRY_RUN_PATH,publicPath:PUBLIC_ANALYTICS_RUN_PATH,pairedUpload:true,uploadEnabled:!!APP_CONFIG.telemetry.uploadEnabled}));}
   function selfTest(){
     const sample={reportId:'tr_000000000000000000000000',payload:{schema:TELEMETRY_SUMMARY_SCHEMA_VERSION,reportId:'tr_000000000000000000000000',timestamp:Date.UTC(2026,6,20),session:{sessionId:'ts_00000000000000000000'},client:{clientId:'tc_00000000000000000000'}}};
-    const path=recordPath(sample,'test_uid'),wire=wirePayload(Object.assign({traceRunId:'run_test',course:{seedId:1}},sample.payload,{build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,telemetryVersion:'telemetry-engine-v2.8',profile:'private'},attacks:{huntCloses:0,stateTransitions:{OFF:1,LUNGE_COIL:2,LUNGE_EXECUTE:1}}}));
+    const path=recordPath(sample,'test_uid'),publicPath=publicRecordPath(sample),wire=wirePayload(Object.assign({traceRunId:'run_test',course:{seedId:1}},sample.payload,{build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,telemetryVersion:'telemetry-engine-v2.8',profile:'private'},attacks:{huntCloses:0,stateTransitions:{OFF:1,LUNGE_COIL:2,LUNGE_EXECUTE:1}}}));
     const exact=Object.keys(wire.build).sort().join(',')==='telemetryVersion,version,worldVersion'&&!('traceRunId' in wire)&&!('course' in wire)&&!('stateTransitions' in wire.attacks)&&wire.attacks.stateObservedTelegraphs===2&&wire.attacks.stateObservedLunges===1;
     const contexts=RunContext.selfTest();
-    return Object.freeze({passed:validItem(sample)&&path===TELEMETRY_RUN_PATH+'/2026-07/test_uid/'+sample.reportId&&contexts.normal.allowTelemetryUploads===ServiceCapabilities.allows('telemetryUpload')&&!contexts.playtest.allowTelemetryUploads&&exact,path,conditionalCreateHeader:false,createOnlyRule:true,publicReads:false,localOnly:APP_CONFIG.experiment.localOnly===true,exactWireShape:exact});
+    return Object.freeze({passed:validItem(sample)&&path===TELEMETRY_RUN_PATH+'/2026-07/test_uid/'+sample.reportId&&publicPath===PUBLIC_ANALYTICS_RUN_PATH+'/2026-07/'+sample.reportId&&contexts.normal.allowTelemetryUploads===ServiceCapabilities.allows('telemetryUpload')&&!contexts.openSki.allowTelemetryUploads&&!contexts.playtest.allowTelemetryUploads&&exact&&PublicAnalyticsProjection.selfTest().passed,path,publicPath,conditionalCreateHeader:false,createOnlyRule:true,publicReads:true,pairedUpload:true,localOnly:APP_CONFIG.experiment.localOnly===true,exactWireShape:exact});
   }
   if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('online',onOnline);
-  return Object.freeze({drain,status,selfTest,identityChanged,recordPath,wirePayload:p=>wirePayload(p)});
+  return Object.freeze({drain,status,selfTest,identityChanged,recordPath,publicRecordPath,wirePayload:p=>wirePayload(p),publicPayload:p=>PublicAnalyticsProjection.project(p)});
+})();
+/* ==================== ANALYTICS A4.2/A4.3: PUBLIC RUN PROJECTION ====================
+   Pure, identifier-free projection of a finished local telemetry summary. This module
+   owns no network path, auth flow, queue, or upload trigger; A4.3 transport stays in
+   the existing telemetry queue boundary. */
+const PublicAnalyticsProjection=(()=>{
+  const SCHEMA='public-analytics-run-v1';
+  const PERFORMANCE_BANDS=Object.freeze(['STRUGGLING','STABLE','FAST','HOT']);
+  const RANGE_BANDS=Object.freeze(['SHORT','MID','LONG']);
+  const ATTACK_KINDS=Object.freeze(['lunges','charges','boulders']);
+  const EXTENDED_COUNTS=Object.freeze(['boulderThrowTelegraphs','boulderThrowReleases','boulderThrowImpacts','boulderThrowDodges','boulderThrowPlayerDeaths','boulderThrowNpcHits','boulderThrowCancels','chargeTelegraphs','chargeCommits','chargeHits','chargeDodges','followUpsExecuted','followUpsSuperseded','followUpsCancelledOther']);
+  const EXTENDED_AVERAGES=Object.freeze(['averageChargeWindupSec','averageChargeStartGap','averageChargeLeadPx','averageChargeEscapePx','averageChargeRecoverySec']);
+  const PROHIBITED=Object.freeze(['uid','initials','timestamp','reportId','session','client','trace','samples','events','errors','comments','feedback','courseSeed']);
+  function clone(value){try{return JSON.parse(JSON.stringify(value));}catch(e){return null;}}
+  function boundedNumber(value,max,integer){const n=Number.isFinite(+value)?Math.max(0,Math.min(max,+value)):0;return integer?Math.floor(n):Math.round(n*1000)/1000;}
+  function normalizeAttackMix(source){
+    source=source&&typeof source==='object'?source:{};
+    return Object.fromEntries(PERFORMANCE_BANDS.map(performance=>[performance,Object.fromEntries(RANGE_BANDS.map(range=>[range,Object.fromEntries(ATTACK_KINDS.map(kind=>[kind,boundedNumber(source?.[performance]?.[range]?.[kind],99999,true)]))]))]));
+  }
+  function extendedAttacks(source){
+    source=source&&typeof source==='object'?source:{};const out={};
+    for(const key of EXTENDED_COUNTS)out[key]=boundedNumber(source[key],99999,true);
+    for(const key of EXTENDED_AVERAGES)out[key]=boundedNumber(source[key],key==='averageChargeRecoverySec'?86400:10000,false);
+    out.attackMix=normalizeAttackMix(source.attackMix);return out;
+  }
+  function project(localSummary){
+    const wire=TelemetryTransport.wirePayload(localSummary);
+    if(!wire||wire.schema!=='public-run-v2')return null;
+    const mirrored=['build','run','steering','pursuit','flags','performance','performanceResponse','deepMountain'];
+    if(mirrored.some(key=>!wire[key]||typeof wire[key]!=='object')||!wire.attacks||typeof wire.attacks!=='object')return null;
+    const out={schema:SCHEMA};for(const key of mirrored)out[key]=clone(wire[key]);
+    out.attacks={core:clone(wire.attacks),extended:extendedAttacks(localSummary&&localSummary.attacks)};
+    return out;
+  }
+  function selfTest(){
+    const local={schema:'public-run-v2',reportId:'tr_000000000000000000000000',timestamp:Date.now(),build:{version:'v12c.1',worldVersion:'mountain-v4-course-1',telemetryVersion:'telemetry-engine-v2.8'},run:{distance:10,score:20,durationSec:2,averageSpeed:5,maximumSpeed:6,cleanFlags:0,attemptedFlags:0,bestCombo:0,collisions:0,deathCause:'tree',deathSpeed:5,deathCombo:0},steering:{averageAbsoluteSteer:0,hardCarveSec:0,directionReversals:0},pursuit:{peakPressure:0,secondsYetiGaining:0,secondsPlayerSeparating:0},flags:{cleanEvents:0,missEvents:0,queuedCleanGap:0,queuedMissNudge:0},attacks:{huntCloses:0,telegraphs:0,lunges:1,dodges:0,recoveries:0,lulls:0,feedings:0,attackMix:{CRITICAL_POOR:{SHORT:{lunges:99}},STRUGGLING:{SHORT:{lunges:1}},HOT:{LONG:{boulders:2}}}},performance:{lowFpsFrames:0},performanceResponse:{peakMistakeDebt:0,peakUnresolvedMistakes:0,cleanProtectionEvents:0,protectedSecondsGranted:0,protectedPlaySec:0},deepMountain:{peakEscalation:0,predatoryExposureSec:0,criticalExposureSec:0}};
+    const value=project(local),keys=value?Object.keys(value):[],json=JSON.stringify(value||{}),shape=!!value&&PERFORMANCE_BANDS.every(performance=>RANGE_BANDS.every(range=>ATTACK_KINDS.every(kind=>Number.isInteger(value.attacks.extended.attackMix[performance][range][kind]))));
+    return Object.freeze({passed:!!value&&shape&&value.attacks.extended.attackMix.STRUGGLING.SHORT.lunges===1&&value.attacks.extended.attackMix.HOT.LONG.boulders===2&&PROHIBITED.every(key=>!keys.includes(key))&&!PROHIBITED.some(key=>json.includes('"'+key+'"')),schema:SCHEMA,shape,topLevelKeys:keys});
+  }
+  return Object.freeze({schema:SCHEMA,project,normalizeAttackMix,selfTest,prohibitedFields:PROHIBITED});
 })();
 /* ==================== PHASE 9B.0c.4: PUBLIC FEEDBACK + BUG REPORTING ====================
    Text-first voluntary feedback. Diagnostics are attached only when the player checks
@@ -10100,7 +10180,7 @@ const Modules=Object.freeze({
   arcadeLeaderboard:ArcadeLeaderboard,initialsMountain:InitialsMountain,arcadeFoundationCheck:ArcadeFoundationCheck,
   mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,
   performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,
-  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
+  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -10133,7 +10213,7 @@ window.__EP={
   arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,openSkiSubmission:OpenSkiSubmission,arcadeLeaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,
   initialsMountain:InitialsMountain,arcadeReleaseValidation:ArcadeReleaseValidation,localHistoryValidation:LocalHistoryValidation,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
   leaderboardMountainIntegration:LeaderboardMountainIntegration,performanceStability:PerformanceStability,playtestReport:PlaytestReport,playtestUpload:PlaytestUpload,
-  sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,yetiDiagnosticBatch:YetiDiagnosticBatch,yetiAttackArbiter:YetiAttackArbiter,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,telemetryEventPriority:TelemetryEventPriority,phase6aCorrectness2a:Object.freeze({playerDownhillVelocity,passiveCatchStatus:YetiAttackArbiter.passiveCatchStatus}),phase6aCorrectness2b:Object.freeze({telemetryEventPriority:TelemetryEventPriority,queuedFollowUpStatus:YetiAttackArbiter.queuedFollowUpStatus,queueFollowUp:YetiAttackArbiter.queueFollowUp,finishQueuedFollowUp:YetiAttackArbiter.finishQueuedFollowUp}),phase6aTutorial2c:Object.freeze({FlagTutorial,config:APP_CONFIG.flagTutorial,status:FlagTutorial.status,selfTest:FlagTutorial.selfTest}),phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,softMiss,wrongSide,faultFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),phase12a2:Object.freeze({YetiBoulderThrow,spawnYetiThrownBoulder,spawnYetiThrownBoulders,drawYetiBoulderThrow,config:APP_CONFIG.yetiBoulderThrow}),phase12a2a:Object.freeze({YetiPresence,updateYetiVisual,drawYetiLayer,config:APP_CONFIG.yetiPresence}),phase12a2b:Object.freeze({YetiPhysicality,lungeTelegraphDuration,applyYetiSlamImpact,drawCommittedYetiAim,config:APP_CONFIG.yetiPhysicality}),phase12a2c:Object.freeze({YetiBoulderThrow,visibleForThrow:YetiBoulderThrow.visibleForThrow,silhouetteSnapshot:YetiBoulderThrow.silhouetteSnapshot,config:APP_CONFIG.yetiBoulderThrow}),phase12a2e:Object.freeze({hiddenOpening:true,YetiPresence,config:APP_CONFIG.yetiPresence}),phase12a2h:Object.freeze({hotStreakScore:YetiBoulderThrow.hotStreakScore,deferLunge:YetiBoulderThrow.deferLunge,accelerateHotStreakAttack:YetiBoulderThrow.accelerateHotStreakAttack,slamIndicator:false,config:APP_CONFIG.yetiBoulderThrow,physicality:APP_CONFIG.yetiPhysicality}),phase12a3c2:Object.freeze({YetiAttackArbiter,YetiBoulderThrow,config:APP_CONFIG.yetiAttackArbiter,status:YetiAttackArbiter.status,selfTest:YetiAttackArbiter.selfTest}),phase12c0:Object.freeze({YetiBoulderThrow,depthWindupMultiplier:YetiBoulderThrow.depthWindupMultiplier,config:APP_CONFIG.yetiBoulderThrow}),phase12c1:Object.freeze({YetiCharge,drawYetiChargeTell,config:APP_CONFIG.yetiCharge,status:YetiCharge.status,selfTest:YetiCharge.selfTest,relativeSweptDistance,collisionSelfTest:chargeCollisionSelfTest}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
+  sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,yetiDiagnosticBatch:YetiDiagnosticBatch,yetiAttackArbiter:YetiAttackArbiter,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,telemetryEventPriority:TelemetryEventPriority,phase6aCorrectness2a:Object.freeze({playerDownhillVelocity,passiveCatchStatus:YetiAttackArbiter.passiveCatchStatus}),phase6aCorrectness2b:Object.freeze({telemetryEventPriority:TelemetryEventPriority,queuedFollowUpStatus:YetiAttackArbiter.queuedFollowUpStatus,queueFollowUp:YetiAttackArbiter.queueFollowUp,finishQueuedFollowUp:YetiAttackArbiter.finishQueuedFollowUp}),phase6aTutorial2c:Object.freeze({FlagTutorial,config:APP_CONFIG.flagTutorial,status:FlagTutorial.status,selfTest:FlagTutorial.selfTest}),phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,softMiss,wrongSide,faultFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),phase12a2:Object.freeze({YetiBoulderThrow,spawnYetiThrownBoulder,spawnYetiThrownBoulders,drawYetiBoulderThrow,config:APP_CONFIG.yetiBoulderThrow}),phase12a2a:Object.freeze({YetiPresence,updateYetiVisual,drawYetiLayer,config:APP_CONFIG.yetiPresence}),phase12a2b:Object.freeze({YetiPhysicality,lungeTelegraphDuration,applyYetiSlamImpact,drawCommittedYetiAim,config:APP_CONFIG.yetiPhysicality}),phase12a2c:Object.freeze({YetiBoulderThrow,visibleForThrow:YetiBoulderThrow.visibleForThrow,silhouetteSnapshot:YetiBoulderThrow.silhouetteSnapshot,config:APP_CONFIG.yetiBoulderThrow}),phase12a2e:Object.freeze({hiddenOpening:true,YetiPresence,config:APP_CONFIG.yetiPresence}),phase12a2h:Object.freeze({hotStreakScore:YetiBoulderThrow.hotStreakScore,deferLunge:YetiBoulderThrow.deferLunge,accelerateHotStreakAttack:YetiBoulderThrow.accelerateHotStreakAttack,slamIndicator:false,config:APP_CONFIG.yetiBoulderThrow,physicality:APP_CONFIG.yetiPhysicality}),phase12a3c2:Object.freeze({YetiAttackArbiter,YetiBoulderThrow,config:APP_CONFIG.yetiAttackArbiter,status:YetiAttackArbiter.status,selfTest:YetiAttackArbiter.selfTest}),phase12c0:Object.freeze({YetiBoulderThrow,depthWindupMultiplier:YetiBoulderThrow.depthWindupMultiplier,config:APP_CONFIG.yetiBoulderThrow}),phase12c1:Object.freeze({YetiCharge,drawYetiChargeTell,config:APP_CONFIG.yetiCharge,status:YetiCharge.status,selfTest:YetiCharge.selfTest,relativeSweptDistance,collisionSelfTest:chargeCollisionSelfTest}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
   difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg,pacing:PerfBudget.snapshot()}),
   setQuality:n=>PerfBudget.setLevel(n),setSteer:v=>{S.player.active=v!==0;S.player.steer=clamp(v,-1,1);},resetDevTuning
 };
