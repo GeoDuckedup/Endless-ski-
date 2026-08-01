@@ -1,10 +1,10 @@
 {
   "schema": "endless-powder-community-summary-v1",
   "status": "ready",
-  "generatedAt": "2026-08-01T04:16:18.773Z",
+  "generatedAt": "2026-08-01T04:42:16.457Z",
   "sourceWindow": {
     "firstDay": "2026-07-23",
-    "lastDay": "2026-07-31"
+    "lastDay": "2026-08-01"
   },
   "privacy": {
     "rawRecordsIncluded": false,
@@ -96,8 +96,8 @@
       "duplicates": 0
     },
     "openSkiLeaderboard": {
-      "candidates": 0,
-      "accepted": 0,
+      "candidates": 1,
+      "accepted": 1,
       "invalid": 0,
       "duplicates": 0
     }
@@ -423,53 +423,53 @@
       }
     },
     "openSki": {
-      "submittedRuns": 0,
-      "approximateSubmitters": 0,
+      "submittedRuns": 1,
+      "approximateSubmitters": 1,
       "score": {
-        "count": 0,
-        "mean": null,
-        "median": null,
-        "p75": null,
-        "p90": null,
-        "max": null
+        "count": 1,
+        "mean": 20948,
+        "median": 20948,
+        "p75": 20948,
+        "p90": 20948,
+        "max": 20948
       },
       "distance": {
-        "count": 0,
-        "mean": null,
-        "median": null,
-        "p75": null,
-        "p90": null,
-        "max": null
+        "count": 1,
+        "mean": 4879,
+        "median": 4879,
+        "p75": 4879,
+        "p90": 4879,
+        "max": 4879
       },
       "flags": {
-        "clean": 0,
-        "attempted": 0,
-        "accuracy": null,
+        "clean": 158,
+        "attempted": 166,
+        "accuracy": 95.2,
         "bestCombo": {
-          "count": 0,
-          "mean": null,
-          "median": null,
-          "p75": null,
-          "p90": null,
-          "max": null
+          "count": 1,
+          "mean": 43,
+          "median": 43,
+          "p75": 43,
+          "p90": 43,
+          "max": 43
         }
       },
       "deaths": {
         "boulder": {
-          "count": 0,
-          "rate": null
+          "count": 1,
+          "rate": 100
         },
         "caught": {
           "count": 0,
-          "rate": null
+          "rate": 0
         },
         "edge": {
           "count": 0,
-          "rate": null
+          "rate": 0
         },
         "tree": {
           "count": 0,
-          "rate": null
+          "rate": 0
         }
       }
     }
