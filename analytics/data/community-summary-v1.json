@@ -1,7 +1,7 @@
 {
   "schema": "endless-powder-community-summary-v1",
   "status": "ready",
-  "generatedAt": "2026-08-01T03:33:10.587Z",
+  "generatedAt": "2026-08-01T04:16:18.773Z",
   "sourceWindow": {
     "firstDay": "2026-07-23",
     "lastDay": "2026-07-31"
@@ -37,7 +37,57 @@
           "label": "telemetry-engine-v2.6",
           "count": 134
         }
-      ]
+      ],
+      "cohorts": {
+        "currentRelease": {
+          "label": "CURRENT RELEASE",
+          "buildVersion": "v12c.1",
+          "telemetryVersion": "telemetry-engine-v2.8",
+          "status": "awaiting",
+          "accepted": 0,
+          "minimumRuns": 3,
+          "sourceWindow": {
+            "firstDay": null,
+            "lastDay": null
+          },
+          "buildVersions": [],
+          "telemetryVersions": [],
+          "metrics": {
+            "medianDistance": null,
+            "flagAccuracy": null,
+            "lungeDodgeRate": null,
+            "averageFps": null
+          }
+        },
+        "historical": {
+          "label": "HISTORICAL",
+          "status": "ready",
+          "accepted": 134,
+          "minimumRuns": 3,
+          "sourceWindow": {
+            "firstDay": "2026-07-23",
+            "lastDay": "2026-07-28"
+          },
+          "buildVersions": [
+            {
+              "label": "v11.0",
+              "count": 134
+            }
+          ],
+          "telemetryVersions": [
+            {
+              "label": "telemetry-engine-v2.6",
+              "count": 134
+            }
+          ],
+          "metrics": {
+            "medianDistance": 614.5,
+            "flagAccuracy": 87.3,
+            "lungeDodgeRate": 78.2,
+            "averageFps": 59.78
+          }
+        }
+      }
     },
     "pursuitLeaderboard": {
       "candidates": 7,

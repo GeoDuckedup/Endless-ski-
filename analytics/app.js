@@ -188,6 +188,66 @@
     legend.innerHTML = `<span style="--color:#88d5f7">Median distance</span><span style="--color:#f4c75d">${lastChartData.reduce((total, row) => total + (number(row.runs) || 0), 0)} recorded runs shown</span>`;
   }
 
+  function cohortWindowLabel(cohort) {
+    const window = safe(cohort.sourceWindow);
+    return window.firstDay && window.lastDay
+      ? `${dateLabel(window.firstDay)} — ${dateLabel(window.lastDay)}`
+      : "NO RECORDED WINDOW";
+  }
+
+  function coverageVersions(rows) {
+    return Array.isArray(rows) && rows.length
+      ? rows.map((row) => `${row.label} · ${fmt(row.count)}`).join(" / ")
+      : "NO RUNS YET";
+  }
+
+  function cohortStatus(cohort) {
+    const accepted = number(cohort.accepted) || 0;
+    const minimum = number(cohort.minimumRuns) || 3;
+    if (cohort.status === "ready") return "COMPARISON READY";
+    if (accepted > 0) return `${fmt(Math.max(0, minimum - accepted))} MORE TO UNLOCK`;
+    return "AWAITING RUNS";
+  }
+
+  function renderCohorts(summary) {
+    const telemetry = safe(safe(summary.coverage).pursuitTelemetry);
+    const cohorts = safe(telemetry.cohorts);
+    const current = safe(cohorts.currentRelease);
+    const historical = safe(cohorts.historical);
+    const currentStatus = $("currentCohortStatus");
+    const historicalStatus = $("historicalCohortStatus");
+    currentStatus.textContent = cohortStatus(current);
+    historicalStatus.textContent = cohortStatus(historical);
+    currentStatus.className = current.status === "ready" ? "ready" : "collecting";
+    historicalStatus.className = historical.status === "ready" ? "ready" : "collecting";
+    setText("currentCohortCount", fmt(current.accepted));
+    setText(
+      "currentCohortVersion",
+      `${current.buildVersion || "v12c.1"} · ${String(current.telemetryVersion || "telemetry-engine-v2.8").replace("telemetry-engine-", "engine ")}`
+    );
+    setText("currentCohortWindow", cohortWindowLabel(current));
+    setText("historicalCohortCount", fmt(historical.accepted));
+    setText("historicalCohortVersion", coverageVersions(historical.buildVersions));
+    setText("historicalCohortWindow", cohortWindowLabel(historical));
+    const currentMetrics = safe(current.metrics);
+    const historicalMetrics = safe(historical.metrics);
+    setText("currentCohortMedian", number(currentMetrics.medianDistance) === null ? "—" : `${fmt(currentMetrics.medianDistance)} m`);
+    setText("historicalCohortMedian", number(historicalMetrics.medianDistance) === null ? "—" : `${fmt(historicalMetrics.medianDistance)} m`);
+    setText("currentCohortFlags", number(currentMetrics.flagAccuracy) === null ? "—" : `${percent(currentMetrics.flagAccuracy)}%`);
+    setText("historicalCohortFlags", number(historicalMetrics.flagAccuracy) === null ? "—" : `${percent(historicalMetrics.flagAccuracy)}%`);
+    setText("currentCohortLunges", number(currentMetrics.lungeDodgeRate) === null ? "—" : `${percent(currentMetrics.lungeDodgeRate)}%`);
+    setText("historicalCohortLunges", number(historicalMetrics.lungeDodgeRate) === null ? "—" : `${percent(historicalMetrics.lungeDodgeRate)}%`);
+    setText("currentCohortFps", number(currentMetrics.averageFps) === null ? "—" : fmt(currentMetrics.averageFps, 1));
+    setText("historicalCohortFps", number(historicalMetrics.averageFps) === null ? "—" : fmt(historicalMetrics.averageFps, 1));
+    const minimum = number(current.minimumRuns) || 3;
+    setText(
+      "cohortAvailabilityNote",
+      current.status === "ready"
+        ? "Current-release comparisons use only exact v12c.1 / telemetry-engine-v2.8 records; historical runs never enter the current column."
+        : `Current-release metrics unlock after ${fmt(minimum)} recorded runs. Overall cards remain available, but historical data never fills the current column.`
+    );
+  }
+
   function renderPursuit(summary) {
     const pursuit = safe(summary.pursuit);
     const overview = safe(pursuit.overview);
@@ -200,6 +260,7 @@
       ? telemetryCoverage.buildVersions.map((row) => `${row.label} · ${fmt(row.count)} runs`).join(" / ")
       : "";
     setText("pursuitBuildCoverage", buildCoverage ? `Telemetry builds: ${buildCoverage}` : "Telemetry build unavailable");
+    renderCohorts(summary);
     setText("runsRecorded", fmt(overview.recordedRuns));
     setText("playersRecorded", `${fmt(overview.approximatePlayers)} approximate anonymous players`);
     setText("medianDistance", fmt(distance.median));
@@ -385,6 +446,12 @@
             submittedRuns: state.data.leaderboards.openSki.submittedRuns,
             medianDistance: state.data.leaderboards.openSki.distance.median,
             telemetryIncluded: false
+          }
+        : null,
+      cohorts: state.data && state.data.coverage
+        ? {
+            currentRelease: state.data.coverage.pursuitTelemetry.cohorts.currentRelease,
+            historical: state.data.coverage.pursuitTelemetry.cohorts.historical
           }
         : null,
       error: state.error

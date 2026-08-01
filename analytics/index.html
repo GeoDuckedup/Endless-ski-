@@ -92,6 +92,51 @@
           </article>
         </div>
 
+        <article class="report-card cohort-card" id="cohortCard">
+          <header>
+            <div><p class="eyebrow">DATA COHORTS</p><h3>Current release vs. mountain history</h3></div>
+            <span class="card-note">NEVER MIXED IN COMPARISON</span>
+          </header>
+          <div class="cohort-grid">
+            <section class="cohort-panel current" id="currentCohort">
+              <div class="cohort-panel-heading">
+                <span>CURRENT PRODUCTION</span>
+                <strong id="currentCohortStatus">—</strong>
+              </div>
+              <div class="cohort-run-count"><strong id="currentCohortCount">—</strong><span>recorded runs</span></div>
+              <p id="currentCohortVersion">v12c.1 · telemetry engine v2.8</p>
+              <small id="currentCohortWindow">—</small>
+            </section>
+            <section class="cohort-panel historical" id="historicalCohort">
+              <div class="cohort-panel-heading">
+                <span>HISTORICAL</span>
+                <strong id="historicalCohortStatus">—</strong>
+              </div>
+              <div class="cohort-run-count"><strong id="historicalCohortCount">—</strong><span>recorded runs</span></div>
+              <p id="historicalCohortVersion">—</p>
+              <small id="historicalCohortWindow">—</small>
+            </section>
+          </div>
+          <div class="cohort-comparison" role="table" aria-label="Current and historical telemetry comparison">
+            <div class="cohort-comparison-row heading" role="row">
+              <span role="columnheader">METRIC</span><strong role="columnheader">CURRENT</strong><strong role="columnheader">HISTORICAL</strong>
+            </div>
+            <div class="cohort-comparison-row" role="row">
+              <span role="rowheader">Median descent</span><strong id="currentCohortMedian">—</strong><strong id="historicalCohortMedian">—</strong>
+            </div>
+            <div class="cohort-comparison-row" role="row">
+              <span role="rowheader">Flag accuracy</span><strong id="currentCohortFlags">—</strong><strong id="historicalCohortFlags">—</strong>
+            </div>
+            <div class="cohort-comparison-row" role="row">
+              <span role="rowheader">Lunge dodge rate</span><strong id="currentCohortLunges">—</strong><strong id="historicalCohortLunges">—</strong>
+            </div>
+            <div class="cohort-comparison-row" role="row">
+              <span role="rowheader">Average FPS</span><strong id="currentCohortFps">—</strong><strong id="historicalCohortFps">—</strong>
+            </div>
+          </div>
+          <p class="availability-note" id="cohortAvailabilityNote"></p>
+        </article>
+
         <div class="report-grid two-one">
           <article class="report-card survival-card">
             <header>
