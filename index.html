@@ -193,11 +193,13 @@
     letter-spacing:.12em;border:1px solid rgba(241,245,247,.48);cursor:pointer;touch-action:manipulation
   }
   .introBtn.primary{background:#f2efe1;color:#09111a;border-color:#f2efe1}
+  .introBtn.openSki{margin-top:max(10px,calc(14*var(--u)));background:#d7f1ff;color:#07131d;border-color:#d7f1ff}
   .introBtn.secondary{margin-top:max(10px,calc(14*var(--u)));background:transparent;color:#edf4f8}
   .introBtn.quiet{margin-top:max(8px,calc(10*var(--u)));background:transparent;color:rgba(237,244,248,.72);border-color:transparent}
   .introBtn:active{transform:scale(.985);filter:brightness(.92)}
   .introBtn:focus-visible{outline:3px solid #8fd8ff;outline-offset:3px}
   #ovIntro .version{position:static;margin-top:max(9px,calc(12*var(--u)));font-size:max(10px,calc(13*var(--u)));color:rgba(220,232,244,.38)}
+  #stage.open-ski-mode #bDebug{display:none!important}
 
   #introHowPreview{
     position:absolute;inset:0;z-index:3;box-sizing:border-box;overflow:hidden;overscroll-behavior:contain;
@@ -643,6 +645,7 @@
     <div id="introPrompt">
       <div class="introView" id="introMenu">
         <button class="introBtn primary" id="introStart" type="button">START RUN</button>
+        <button class="introBtn openSki" id="introOpenSki" type="button">OPEN SKI</button>
         <button class="introBtn secondary" id="introHow" type="button" aria-controls="introHowPreview" aria-expanded="false">HOW TO PLAY</button>
         <button class="introBtn secondary" id="yetiBatchOpenIntro" type="button">TELEMETRY BATCH · 0 RUNS</button>
         <div class="version"></div>
@@ -864,7 +867,7 @@ function removeSwapAt(list,index){
    submissions, and initials_bests remains the all-time mountain source.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_phase6c6_live_feedback_trace_hotfix.html","normalizedArtifactSha256":"dd861b2a6b652f3851ebf5db1a1eb4ce36d03668ddf5bbe5dd621158c478b592","sourceSha256":"b57ae175e73c61ca9631906e9bc039e9800ed4978ad418e8b9800a372e8ec7af","profileSha256":"664c247249b83f342dfb940a27a8e7ae933ea1cd394ef305f1a7fa72c648da97","tuningSha256":"d1f1ebf889df0f178b923cbd34322fa52ea9e0a1887948f41dbc87a1e3be9a6a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
+  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_phase6d1_open_ski_live.html","normalizedArtifactSha256":"03cdf9073a92e31d070d69481b5be502e5004f735edde174f9ab6ced3033ea44","sourceSha256":"b7a09b2ca29be54a181c359c76af4032392a3d8e3a922bad85733225cf3959b1","profileSha256":"013ca406cbe7969edbc80f2e88bc986d1bf0aa198a3faba71f333426331dcb23","tuningSha256":"f2710e0c70579a1fa0e9898f45a1db260b12bb561b806acb559e8ff460682b7a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
   experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 6C PRODUCTION CANDIDATE'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   course:Object.freeze({
@@ -878,7 +881,7 @@ const APP_CONFIG=Object.freeze({
     projectId:'endless-powder',
     databaseUrl:'https://endless-powder-default-rtdb.firebaseio.com',
     apiKey:'AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI',
-    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
+    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',openSkiLeaderboardRuns:'/endless_powder/modes/open_ski/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
     auth:Object.freeze({
       signUpEndpoint:'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
       refreshEndpoint:'https://securetoken.googleapis.com/v1/token',
@@ -904,9 +907,15 @@ const APP_CONFIG=Object.freeze({
       version:'season-2-arcade-runs-v1',
       fields:Object.freeze(['runId','uid','initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions','deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp','season','rulesetVersion','courseVersion','courseSeedId'])
     }),
+    openSkiRun:Object.freeze({
+      version:'open-ski-arcade-runs-v1',
+      fields:Object.freeze(['runId','uid','initials','score','distance','cleanFlags','attemptedFlags','bestCombo','collisions','deathX','deathDepth','deathTheta','deathCause','worldVersion','timestamp','season','rulesetVersion','courseVersion','courseSeedId'])
+    }),
     arcadeQueue:Object.freeze({version:'arcade-submit-queue-s2-v2',maxPending:8,maxCompleted:64}),
+    openSkiQueue:Object.freeze({version:'open-ski-submit-queue-v1',maxPending:8,maxCompleted:64}),
     arcadeBoard:Object.freeze({version:'arcade-leaderboard-board-v1'}),
     season2PreviewBoard:Object.freeze({version:'season-2-leaderboard-board-v1',season:2,rulesetVersion:'pursuit-v2',maxRecords:75}),
+    openSkiBoard:Object.freeze({version:'open-ski-leaderboard-board-v1',season:2,rulesetVersion:'open-ski-v1',maxRecords:75}),
     initialsMountain:Object.freeze({version:'initials-mountain-board-v1'}),
     localDeath:Object.freeze({
       version:'local-deaths-v1',
@@ -925,7 +934,7 @@ const APP_CONFIG=Object.freeze({
   storage:Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',courseDeck:'ep_course_deck_flags_v2',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',
-    arcadeQueue:'ep_arcade_submit_queue_s2_v2',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_s1_archive_v1',season2PreviewBoard:'ep_arcade_leaderboard_s2_v1',seasonView:'ep_arcade_season_view_v1',initialsMountain:'ep_initials_mountain_v7e',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
+    arcadeQueue:'ep_arcade_submit_queue_s2_v2',openSkiQueue:'ep_open_ski_submit_queue_v1',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_s1_archive_v1',season2PreviewBoard:'ep_arcade_leaderboard_s2_v1',openSkiBoard:'ep_open_ski_leaderboard_v1',seasonView:'ep_arcade_season_view_v1',initialsMountain:'ep_initials_mountain_v7e',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
     telemetryConsent:'ep_telemetry_consent_v1',telemetryClient:'ep_telemetry_client_v1',telemetryQueue:'ep_phase12c1_public_queue_v1',yetiBatch:'ep_hot_charge_batch_v12c1',publicFeedbackQueue:'ep_public_feedback_queue_v1',playtestQueue:'ep_playtest_upload_queue_v1',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a','ep_best_run_submit_v5c2','ep_best_run_board_v5c3','ep_best_diag','ep_memorial_diag','ep_reconcile_diag','ep_performance_diag','ep_shared_diag','ep_unique_diag_v6f','ep_bestcheck_reload_v5c4','ep_bestcheck_queue_probe_v5c4','ep_memorialcheck_cache_probe_v5d4','ep_reconcilecheck_probe_v5e4','ep_arcade_diag_v7e']),
     diagnostics:Object.freeze({auth:'ep_auth_diag',arcade:'ep_arcade_diag_v8e',feedbackReports:'ep_feedback_reports_v9a'})
@@ -996,7 +1005,7 @@ const APP_CONFIG=Object.freeze({
   }),
   network:Object.freeze({requestTimeoutMs:6500,authTimeoutMs:6000,refreshSkewMs:60000,
     retryBaseMs:900,retryMaxMs:6000,maxAutomaticRetries:3}),
-  leaderboard:Object.freeze({visibleRows:10,scoreFetchRecords:75,recentFetchRecords:75,refreshMs:300000,activeSeason:2,rulesetVersion:'pursuit-v2',season1Label:'SEASON 1',season2Label:'SEASON 2'}),
+  leaderboard:Object.freeze({visibleRows:10,scoreFetchRecords:75,recentFetchRecords:75,refreshMs:300000,activeSeason:2,rulesetVersion:'pursuit-v2',openSkiRulesetVersion:'open-ski-v1',season1Label:'SEASON 1',season2Label:'SEASON 2',openSkiLabel:'OPEN SKI'}),
   localDeaths:Object.freeze({maxRecords:50,renderVisible:false}),
   memorials:Object.freeze({
     loadedRecords:50,labelRange:28.125,labelFullRange:14.625,groupX:24,groupDepth:3,
@@ -1061,10 +1070,15 @@ const API_KEY_OVERRIDE_KEY=APP_CONFIG.storage.apiKeyOverride;
 const AUTH_VERIFY_KEY=APP_CONFIG.storage.authVerify;
 const ARCADE_RUN_PATH=APP_CONFIG.firebase.paths.leaderboardRuns; // frozen Season 1 archive
 const SEASON2_RUN_PATH=APP_CONFIG.firebase.paths.season2LeaderboardRuns;
+const OPEN_SKI_RUN_PATH=APP_CONFIG.firebase.paths.openSkiLeaderboardRuns;
 const ACTIVE_SEASON=APP_CONFIG.leaderboard.activeSeason;
 const ACTIVE_RULESET_VERSION=APP_CONFIG.leaderboard.rulesetVersion;
+const OPEN_SKI_RULESET_VERSION=APP_CONFIG.leaderboard.openSkiRulesetVersion;
 const SEASON2_PREVIEW_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.season2PreviewBoard.version;
 const SEASON2_PREVIEW_BOARD_KEY=APP_CONFIG.storage.season2PreviewBoard;
+const OPEN_SKI_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiBoard.version;
+const OPEN_SKI_BOARD_KEY=APP_CONFIG.storage.openSkiBoard;
+const OPEN_SKI_BOARD_MAX=APP_CONFIG.schemas.openSkiBoard.maxRecords;
 const SEASON_VIEW_KEY=APP_CONFIG.storage.seasonView;
 const INITIALS_BEST_PATH=APP_CONFIG.firebase.paths.initialsBests;
 const TELEMETRY_RUN_PATH=APP_CONFIG.firebase.paths.telemetryRuns;
@@ -1075,10 +1089,14 @@ const ARCADE_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeRun.version;
 const ARCADE_RUN_FIELDS=APP_CONFIG.schemas.arcadeRun.fields;
 const SEASON2_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.season2Run.version;
 const SEASON2_RUN_FIELDS=APP_CONFIG.schemas.season2Run.fields;
+const OPEN_SKI_RUN_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiRun.version;
+const OPEN_SKI_RUN_FIELDS=APP_CONFIG.schemas.openSkiRun.fields;
 const ARCADE_RUN_ID_RE=new RegExp(APP_CONFIG.schemas.arcadeRun.runIdPattern);
 const ARCADE_UID_RE=new RegExp(APP_CONFIG.schemas.arcadeRun.uidPattern);
 const ARCADE_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeQueue.version;
 const ARCADE_QUEUE_KEY=APP_CONFIG.storage.arcadeQueue;
+const OPEN_SKI_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiQueue.version;
+const OPEN_SKI_QUEUE_KEY=APP_CONFIG.storage.openSkiQueue;
 const ARCADE_INITIALS_KEY=APP_CONFIG.storage.arcadeInitials;
 const ARCADE_BOARD_SCHEMA_VERSION=APP_CONFIG.schemas.arcadeBoard.version;
 const ARCADE_BOARD_KEY=APP_CONFIG.storage.arcadeBoard; // Season 1 read cache
@@ -1122,7 +1140,7 @@ const Configuration=Object.freeze({
   values:APP_CONFIG,
   audit:()=>Object.freeze({
     buildVersion:BUILD_VERSION,buildProfile:BUILD_PROFILE,testOnly:APP_CONFIG.build.testOnly===true,sourceBaseline:APP_CONFIG.build.sourceBaseline,worldVersion:WORLD_VERSION,databaseUrl:FIREBASE_DB_URL,
-    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
+    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,openSkiRunPath:OPEN_SKI_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
     runRecordSchemaVersion:RUN_RECORD_SCHEMA_VERSION,arcadeRunSchemaVersion:ARCADE_RUN_SCHEMA_VERSION,arcadeQueueSchemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,
     localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
     localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,telemetrySummarySchema:TELEMETRY_SUMMARY_SCHEMA_VERSION,telemetryQueueSchema:TELEMETRY_QUEUE_SCHEMA_VERSION,
@@ -1133,14 +1151,14 @@ const Configuration=Object.freeze({
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
     maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
     memorialCacheEntries:PERFORMANCE_CONFIG.memorialCacheEntries,transientCaps:Object.assign({},PERFORMANCE_CONFIG.transientCaps),
-    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,playtests,season2LeaderboardRuns,telemetryRuns',
+    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,openSkiLeaderboardRuns,playtests,season2LeaderboardRuns,telemetryRuns',
     frozen:Object.isFrozen(APP_CONFIG),launchMode:RunContext.status().launchMode,developerTools:RunContext.status().launchDevtools
   })
 });
 /* ==================== CENTRALIZED RUN CONTEXT ====================
    Every completed run receives one immutable policy snapshot. Persistent systems
    consult this module rather than inferring eligibility from UI state. */
-const RUN_MODE=Object.freeze({NORMAL:'normal',PLAYTEST:'playtest'});
+const RUN_MODE=Object.freeze({NORMAL:'normal',OPEN_SKI:'open-ski',PLAYTEST:'playtest'});
 const RunContext=(()=>{
   const query=APP_CONFIG.runtime.query;
   function queryFlag(name){
@@ -1157,18 +1175,20 @@ const RunContext=(()=>{
   let serial=0,active=null;
   function policy(mode,devtools,runSerial){
     const playtest=mode===RUN_MODE.PLAYTEST;
+    const openSki=mode===RUN_MODE.OPEN_SKI;
     const capabilities=APP_CONFIG.build.capabilities||{};
     const allows=name=>capabilities[name]===true;
     return Object.freeze({
       id:'ctx_'+mode+'_'+String(runSerial||0),mode,runSerial:runSerial||0,startedAt:Date.now(),
-      telemetryLevel:playtest?'detailed':'summary',developerTools:!!devtools,
+      telemetryLevel:playtest?'detailed':openSki?'none':'summary',developerTools:!!devtools,
+      allowYeti:!openSki,
       allowLeaderboard:!playtest&&!localOnly&&allows('leaderboardRead'),
-      allowPersonalRecords:!playtest&&!localOnly&&allows('arcadeWrite'),
+      allowPersonalRecords:!playtest&&!openSki&&!localOnly&&allows('arcadeWrite'),
       allowDeathMarkers:!playtest&&!localOnly&&allows('mountainRead'),
-      allowMountainWrites:!playtest&&!localOnly&&allows('arcadeWrite'),
-      allowLocalRunHistory:!playtest&&!localOnly,
-      allowProgression:!playtest&&!localOnly,
-      allowTelemetryUploads:!playtest&&(!localOnly||telemetryOnlyValidation)&&allows('telemetryUpload'),
+      allowMountainWrites:!playtest&&!openSki&&!localOnly&&allows('arcadeWrite'),
+      allowLocalRunHistory:!playtest&&!openSki&&!localOnly,
+      allowProgression:!playtest&&!openSki&&!localOnly,
+      allowTelemetryUploads:!playtest&&!openSki&&(!localOnly||telemetryOnlyValidation)&&allows('telemetryUpload'),
       allowPublicFeedback:!playtest&&!localOnly&&allows('publicFeedbackCapture'),
       allowPublicFeedbackUploads:!playtest&&!localOnly&&allows('publicFeedbackUpload'),
       allowDiagnosticReports:playtest,
@@ -1176,13 +1196,16 @@ const RunContext=(()=>{
     });
   }
   const launch=policy(launchMode,launchDevtools,0);
-  function begin(){active=policy(launchMode,launchDevtools,++serial);return active;}
+  function begin(modeOverride){const mode=modeOverride===RUN_MODE.OPEN_SKI?RUN_MODE.OPEN_SKI:launchMode;active=policy(mode,mode===RUN_MODE.PLAYTEST&&launchDevtools,++serial);syncModeClass();return active;}
   function current(){return active||launch;}
   function permits(capability,context=current()){return !!(context&&context[capability]);}
   function isPlaytest(context=current()){return !!context&&context.mode===RUN_MODE.PLAYTEST;}
+  function isOpenSki(context=current()){return !!context&&context.mode===RUN_MODE.OPEN_SKI;}
+  function syncModeClass(){if(typeof stage!=='undefined'&&stage)stage.classList.toggle('open-ski-mode',isOpenSki());return current();}
   function applyPresentation(){
     if(typeof stage==='undefined'||!stage)return current();
     stage.classList.toggle('playtest-mode',launchMode===RUN_MODE.PLAYTEST);
+    syncModeClass();
     stage.classList.toggle('devtools-mode',launchDevtools);
     stage.classList.toggle('experiment-local',localOnly);
     stage.classList.toggle('production-ui',APP_CONFIG.build.playerFacing===true&&launchMode===RUN_MODE.NORMAL);
@@ -1195,7 +1218,7 @@ const RunContext=(()=>{
     return current();
   }
   function selfTest(){
-    const normal=policy(RUN_MODE.NORMAL,false,1),playtest=policy(RUN_MODE.PLAYTEST,false,2),dev=policy(RUN_MODE.PLAYTEST,true,3);
+    const normal=policy(RUN_MODE.NORMAL,false,1),openSki=policy(RUN_MODE.OPEN_SKI,false,2),playtest=policy(RUN_MODE.PLAYTEST,false,3),dev=policy(RUN_MODE.PLAYTEST,true,4);
     const caps=APP_CONFIG.build.capabilities||{};
     const normalExpected=normal.allowLeaderboard===(!localOnly&&caps.leaderboardRead===true)&&
       normal.allowPersonalRecords===(!localOnly&&caps.arcadeWrite===true)&&
@@ -1205,12 +1228,13 @@ const RunContext=(()=>{
       normal.allowTelemetryUploads===(!localOnly&&caps.telemetryUpload===true)&&
       normal.allowPublicFeedback===(!localOnly&&caps.publicFeedbackCapture===true)&&
       normal.allowPublicFeedbackUploads===(!localOnly&&caps.publicFeedbackUpload===true)&&
-      !normal.allowDiagnosticReports&&!normal.allowPlaytestUploads;
+      normal.allowYeti&&!normal.allowDiagnosticReports&&!normal.allowPlaytestUploads;
+    const openSkiIsolated=openSki.allowLeaderboard===(!localOnly&&caps.leaderboardRead===true)&&openSki.allowDeathMarkers===(!localOnly&&caps.mountainRead===true)&&!openSki.allowYeti&&!openSki.allowPersonalRecords&&!openSki.allowMountainWrites&&!openSki.allowLocalRunHistory&&!openSki.allowProgression&&!openSki.allowTelemetryUploads&&!openSki.allowDiagnosticReports;
     const isolated=!playtest.allowLeaderboard&&!playtest.allowPersonalRecords&&!playtest.allowDeathMarkers&&!playtest.allowMountainWrites&&!playtest.allowLocalRunHistory&&!playtest.allowProgression&&!playtest.allowTelemetryUploads&&!playtest.allowPublicFeedback&&!playtest.allowPublicFeedbackUploads&&playtest.allowDiagnosticReports&&playtest.allowPlaytestUploads===(!localOnly&&caps.playtestUpload===true);
-    return Object.freeze({passed:normalExpected&&isolated&&dev.developerTools&&!playtest.developerTools,normal,playtest,devtools:dev,localOnly,telemetryOnlyValidation});
+    return Object.freeze({passed:normalExpected&&openSkiIsolated&&isolated&&dev.developerTools&&!playtest.developerTools,normal,openSki,playtest,devtools:dev,localOnly,telemetryOnlyValidation});
   }
   function status(){return Object.freeze({launchMode,launchDevtools,localOnly,telemetryOnlyValidation,active:current(),serial});}
-  return Object.freeze({modes:RUN_MODE,begin,current,permits,isPlaytest,applyPresentation,selfTest,status});
+  return Object.freeze({modes:RUN_MODE,begin,current,permits,isPlaytest,isOpenSki,syncModeClass,applyPresentation,selfTest,status});
 })();
 const C={
   thetaMax:62*D2R, turnRate:240*D2R, returnRate:170*D2R,
@@ -3857,6 +3881,32 @@ const Season2Runs=(()=>{
   return Object.freeze({version:SEASON2_RUN_SCHEMA_VERSION,fields:SEASON2_RUN_FIELDS,path:SEASON2_RUN_PATH,season:ACTIVE_SEASON,rulesetVersion:ACTIVE_RULESET_VERSION,
     build,valid,compare,strengthCompare,better,arcadeRecord,leaderboardPath,exactSame,deriveInitialsBests});
 })();
+/* ================= MODULE: OPEN SKI RUN SCHEMA =================
+   Open Ski shares the Season 2 course and scoring record, but its immutable
+   rows live under a separate Firebase path and carry an explicit no-Yeti ruleset. */
+const OpenSkiRuns=(()=>{
+  function build(initials,run,uid){
+    run=run&&typeof run==='object'?run:{};
+    return Object.assign(ArcadeRuns.build(initials,run,uid),{
+      season:ACTIVE_SEASON,rulesetVersion:OPEN_SKI_RULESET_VERSION,
+      courseVersion:String(run.courseVersion||APP_CONFIG.course.version),
+      courseSeedId:Math.floor(+(run.courseSeedId||CourseDeck.current().id)||0)
+    });
+  }
+  function valid(e,clock){
+    if(!e||typeof e!=='object'||Array.isArray(e))return false;
+    const keys=Object.keys(e).sort(),expected=OPEN_SKI_RUN_FIELDS.slice().sort();
+    if(keys.length!==expected.length||keys.some((k,i)=>k!==expected[i]))return false;
+    const base={};for(const field of ARCADE_RUN_FIELDS)base[field]=e[field];
+    return ArcadeRuns.valid(base,clock)&&e.season===ACTIVE_SEASON&&
+      e.rulesetVersion===OPEN_SKI_RULESET_VERSION&&e.courseVersion===APP_CONFIG.course.version&&
+      Number.isInteger(e.courseSeedId)&&e.courseSeedId>=1&&e.courseSeedId<=APP_CONFIG.course.seeds.length;
+  }
+  const compare=(a,b)=>ArcadeRuns.compare(a,b);
+  function leaderboardPath(runId){return ArcadeRunIdentity.valid(runId)?OPEN_SKI_RUN_PATH+'/'+runId:'';}
+  function exactSame(a,b){if(!valid(a,Math.max(Date.now(),+(a&&a.timestamp)||0))||!valid(b,Math.max(Date.now(),+(b&&b.timestamp)||0)))return false;return OPEN_SKI_RUN_FIELDS.every(k=>a[k]===b[k]);}
+  return Object.freeze({version:OPEN_SKI_RUN_SCHEMA_VERSION,fields:OPEN_SKI_RUN_FIELDS,path:OPEN_SKI_RUN_PATH,season:ACTIVE_SEASON,rulesetVersion:OPEN_SKI_RULESET_VERSION,build,valid,compare,leaderboardPath,exactSame});
+})();
 /* ================= MODULE: ARCADE SUBMISSION FOUNDATION =================
    v8e retains this durable envelope and its network operations to the real submit button.
    Every accepted run keeps its original runId across retries and partial writes. */
@@ -3940,7 +3990,7 @@ const ArcadeFoundation=(()=>{
   return Object.freeze({queueKey:ARCADE_QUEUE_KEY,queueVersion:ARCADE_QUEUE_SCHEMA_VERSION,maxPending:MAX_PENDING,maxCompleted:MAX_COMPLETED,normalizeEnvelope,normalizeQueue,inspectStored,loadQueue,saveQueue,reserve,complete,
     createLeaderboardRun,updateInitialsBest,probeReads,selfTest});
 })();
-let arcadeLeaderboardAccepted=()=>false,initialsMountainAccepted=()=>false,initialsMountainBoardChanged=()=>false;
+let arcadeLeaderboardAccepted=()=>false,openSkiLeaderboardAccepted=()=>false,initialsMountainAccepted=()=>false,initialsMountainBoardChanged=()=>false;
 /* ================= MODULE: ACTIVE ARCADE SUBMISSION =================
    v8e retains the append-only write cutover. Each accepted leaderboard write is
    immediately overlaid into the visible arcade board while initials_bests remains
@@ -4046,6 +4096,83 @@ const ArcadeSubmission=(()=>{
   }
   if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);}
   return Object.freeze({phases:PHASES,qualifies,submit,drain,status,records,initials,remember,identityChanged,selfTest});
+})();
+/* ================= MODULE: OPEN SKI SUBMISSION =================
+   This one-part durable queue writes only the Open Ski leaderboard. It never
+   touches initials_bests, so an Open Ski death cannot add or replace a body. */
+const OpenSkiSubmission=(()=>{
+  const MAX_PENDING=APP_CONFIG.schemas.openSkiQueue.maxPending,MAX_COMPLETED=APP_CONFIG.schemas.openSkiQueue.maxCompleted;
+  const PHASES=Object.freeze({IDLE:'idle',QUEUED:'queued',SUBMITTING:'submitting',ACCEPTED:'accepted',OFFLINE:'offline',FAILED:'failed',DUPLICATE:'duplicate'});
+  const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
+  const copy=o=>JSON.parse(JSON.stringify(o));
+  function normalize(raw){
+    raw=raw&&typeof raw==='object'?raw:{};const seen=new Set(),items=[];
+    for(const candidate of Array.isArray(raw.items)?raw.items:[]){
+      if(!candidate||candidate.schemaVersion!==OPEN_SKI_QUEUE_SCHEMA_VERSION||candidate.runId!==candidate.payload?.runId||!OpenSkiRuns.valid(candidate.payload,Math.max(Date.now(),+candidate.payload?.timestamp||0))||seen.has(candidate.runId))continue;
+      seen.add(candidate.runId);items.push({schemaVersion:OPEN_SKI_QUEUE_SCHEMA_VERSION,runId:candidate.runId,payload:copy(candidate.payload),createdAt:Number.isFinite(+candidate.createdAt)?+candidate.createdAt:Date.now(),attempts:Math.max(0,Math.floor(+candidate.attempts||0)),lastError:String(candidate.lastError||'')});if(items.length>=MAX_PENDING)break;
+    }
+    const completed=[];for(const id of Array.isArray(raw.completed)?raw.completed:[]){if(ArcadeRunIdentity.valid(id)&&!completed.includes(id))completed.push(id);if(completed.length>=MAX_COMPLETED)break;}
+    return{schemaVersion:OPEN_SKI_QUEUE_SCHEMA_VERSION,items,completed,updatedAt:Number.isFinite(+raw.updatedAt)?+raw.updatedAt:Date.now()};
+  }
+  function load(){const read=Persistence.inspectJSON(OPEN_SKI_QUEUE_KEY);if(!read.ok)DataRecovery.note('open-ski-queue-corrupt',1,read.error);return normalize(read.ok&&read.exists?read.value:null);}
+  function save(){queue=normalize(queue);Persistence.setJSON(OPEN_SKI_QUEUE_KEY,queue);return queue;}
+  let queue=load(),drainPromise=null,retryTimer=0;
+  let last=Object.freeze({phase:queue.items.length?(online()?PHASES.QUEUED:PHASES.OFFLINE):PHASES.IDLE,detail:'',runId:'',initials:'',score:0,error:'',updatedAt:Date.now()});
+  function setState(phase,detail,payload,error){last=Object.freeze({phase,detail:String(detail||''),runId:String(payload&&payload.runId||''),initials:String(payload&&payload.initials||''),score:Math.max(0,Math.floor(+(payload&&payload.score)||0)),error:String(error||''),updatedAt:Date.now()});if(detail)lbStatus(detail);return last;}
+  function reserve(initials,run,uid,state){
+    state=normalize(state);const payload=OpenSkiRuns.build(initials,run,uid);
+    if(!OpenSkiRuns.valid(payload))return{ok:false,reason:'invalid',state,payload:null};
+    if(state.completed.includes(payload.runId))return{ok:true,reason:'already-completed',duplicate:true,state,payload};
+    if(state.items.some(e=>e.runId===payload.runId))return{ok:true,reason:'already-pending',duplicate:true,state,payload};
+    if(state.items.length>=MAX_PENDING)return{ok:false,reason:'queue-full',state,payload};
+    state.items.push({schemaVersion:OPEN_SKI_QUEUE_SCHEMA_VERSION,runId:payload.runId,payload:copy(payload),createdAt:Date.now(),attempts:0,lastError:''});state.updatedAt=Date.now();
+    return{ok:true,reason:'reserved',duplicate:false,state,payload};
+  }
+  function hasRun(runId){return queue.completed.includes(runId)||queue.items.some(e=>e.runId===runId);}
+  function qualifies(run,context=lastFinishedRunContext||RunContext.current()){return RunContext.isOpenSki(context)&&RunContext.permits('allowLeaderboard',context)&&!!FIREBASE_DB_URL&&ArcadeRunIdentity.valid(run&&run.runId)&&Math.floor(+(run&&run.score)||0)>0&&!hasRun(run.runId);}
+  function initials(){return ArcadeSubmission.initials();}
+  function submit(initialsValue,run,context=lastFinishedRunContext||RunContext.current()){
+    if(!RunContext.isOpenSki(context)||!RunContext.permits('allowLeaderboard',context)){setState(PHASES.FAILED,'ONLY OPEN SKI RUNS CAN ENTER THIS BOARD',run,'run context denied');return false;}
+    const clean=ArcadeSubmission.remember(initialsValue);if(INITIALS_BAD.test(clean)||!run||!ArcadeRunIdentity.valid(run.runId))return false;
+    const uid=String(Identity.status().uid||Identity.uid()||'');const reserved=reserve(clean,run,uid,queue);
+    if(!reserved.ok){setState(PHASES.FAILED,reserved.reason==='queue-full'?'OPEN SKI QUEUE FULL — CONNECT AND RETRY':'OPEN SKI RUN COULD NOT BE QUEUED',reserved.payload,reserved.reason);return false;}
+    queue=reserved.state;save();
+    if(reserved.duplicate){setState(PHASES.DUPLICATE,reserved.reason==='already-completed'?'OPEN SKI RUN ALREADY SUBMITTED':'OPEN SKI RUN ALREADY QUEUED',reserved.payload,'');return true;}
+    setState(online()?PHASES.QUEUED:PHASES.OFFLINE,online()?'OPEN SKI RUN QUEUED — SUBMITTING…':'OPEN SKI RUN QUEUED OFFLINE',reserved.payload,'');drain();return true;
+  }
+  async function authFetch(path,options){let raw=FIREBASE_DB_URL+path+'.json',url=await Identity.url(raw),response=await ServiceNetwork.fetchTimed(url,options,'arcadeWrite');if(response.status!==401)return response;await Identity.forceRefresh();url=await Identity.url(raw);return ServiceNetwork.fetchTimed(url,options,'arcadeWrite');}
+  async function authenticatedUid(){if(!online())return'';await Identity.ensure(false);const auth=Identity.status();return auth.authenticated&&auth.tokenReady&&ARCADE_UID_RE.test(String(auth.uid||''))?String(auth.uid):'';}
+  async function create(payload){
+    const path=OpenSkiRuns.leaderboardPath(payload&&payload.runId);if(!path||!OpenSkiRuns.valid(payload))return{ok:false,result:'invalid',status:0};
+    let response;try{response=await authFetch(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(e){return{ok:false,result:'network',status:0,error:String((e&&e.message)||e)};}
+    if(response.ok)return{ok:true,result:'created',status:response.status};
+    if(response.status===403){try{const check=await authFetch(path,{cache:'no-store'}),stored=await check.json();if(check.ok&&OpenSkiRuns.exactSame(stored,payload))return{ok:true,result:'already-created',status:check.status};}catch(e){}}
+    return{ok:false,result:'rejected',status:response.status};
+  }
+  function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}}
+  function retain(env,detail,error){save();setState(online()?PHASES.FAILED:PHASES.OFFLINE,detail,env&&env.payload,error);if(RetryPolicy.canRetry(env.attempts)){clearRetry();retryTimer=setTimeout(()=>{retryTimer=0;drain();},RetryPolicy.delay(Math.max(0,env.attempts-1)));}return last.phase;}
+  async function processOne(env){
+    if(!online())return retain(env,'OPEN SKI RUN QUEUED OFFLINE','offline');
+    const uid=await authenticatedUid();if(!uid)return retain(env,'OPEN SKI RUN QUEUED — AUTHENTICATION OFFLINE','authentication offline');
+    if(env.payload.uid!==uid){env.payload=Object.assign({},env.payload,{uid});if(!OpenSkiRuns.valid(env.payload,Math.max(Date.now(),+env.payload.timestamp||0)))return retain(env,'OPEN SKI RUN UID COULD NOT BE REBOUND','identity mismatch');}
+    env.attempts++;env.lastError='';save();setState(PHASES.SUBMITTING,'SUBMITTING OPEN SKI RUN…',env.payload,'');
+    const result=await create(env.payload);if(!result.ok){env.lastError=result.result+(result.status?' '+result.status:'');return retain(env,'OPEN SKI RUN RETAINED — WRITE WILL RETRY',env.lastError);}
+    openSkiLeaderboardAccepted(env.payload);queue.items=queue.items.filter(item=>item.runId!==env.runId);queue.completed.unshift(env.runId);queue.completed=Array.from(new Set(queue.completed)).slice(0,MAX_COMPLETED);queue.updatedAt=Date.now();save();clearRetry();setState(PHASES.ACCEPTED,'OPEN SKI RUN SAVED',env.payload,'');return PHASES.ACCEPTED;
+  }
+  function drain(){
+    if(!ServiceCapabilities.allows('arcadeWrite'))return Promise.resolve('unavailable');if(drainPromise)return drainPromise;if(!queue.items.length)return Promise.resolve('empty');clearRetry();
+    drainPromise=(async()=>{while(queue.items.length){const result=await processOne(queue.items[0]);if(result!==PHASES.ACCEPTED)break;}return queue.items.length?'pending':'complete';})().catch(e=>{const env=queue.items[0];if(env)retain(env,'OPEN SKI RUN RETAINED — WILL RETRY',(e&&e.message)||String(e));return'error';}).finally(()=>{drainPromise=null;});return drainPromise;
+  }
+  function identityChanged(){if(queue.items.length)setTimeout(()=>drain(),0);return true;}
+  function status(){return Object.freeze(Object.assign({},last,{pending:queue.items.length,completedRemembered:queue.completed.length,busy:!!drainPromise,online:online()}));}
+  function records(){return queue.items.map(copy);}
+  function selfTest(){
+    const run=ArcadeRunIdentity.attach({score:250,distance:125,cleanFlags:2,attemptedFlags:3,bestCombo:2,collisions:1,deathX:360,deathDepth:125,deathTheta:0,deathCause:'tree',worldVersion:WORLD_VERSION,timestamp:Date.now(),courseVersion:APP_CONFIG.course.version,courseSeedId:1});
+    const first=reserve('SKI',run,'open_ski_test',null),second=reserve('SKI',run,'open_ski_test',first.state),path=first.payload&&OpenSkiRuns.leaderboardPath(first.payload.runId);
+    return Object.freeze({passed:first.ok&&OpenSkiRuns.valid(first.payload)&&second.duplicate&&second.state.items.length===1&&path===OPEN_SKI_RUN_PATH+'/'+run.runId,path,duplicate:second.duplicate});
+  }
+  if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',()=>drain());window.addEventListener('offline',()=>{if(queue.items.length)setState(PHASES.OFFLINE,'OPEN SKI RUN QUEUED OFFLINE',queue.items[0].payload,'offline');});}
+  return Object.freeze({phases:PHASES,qualifies,submit,drain,status,records,initials,identityChanged,selfTest});
 })();
 /* ================= MODULE: TRADITIONAL ARCADE LEADERBOARD =================
    v8e reads immutable leaderboard_runs records. Records are keyed and deduplicated
@@ -4206,24 +4333,71 @@ const Season2PreviewBoard=(()=>{
   return Object.freeze({on,refresh,fetchBoard,ingestAccepted,add,top,all,rankOf,clear,stats,selfTest});
 })();
 arcadeLeaderboardAccepted=payload=>Season2PreviewBoard.ingestAccepted(payload);
+/* ================= MODULE: OPEN SKI LEADERBOARD =================
+   A separate current board for the no-Yeti mode. It shares presentation and
+   ranking rules with Season 2 without feeding the memorial mountain. */
+const OpenSkiBoard=(()=>{
+  const FETCH_LIMIT=Math.max(10,Math.floor(+OPEN_SKI_BOARD_MAX||75));
+  let cache={schemaVersion:OPEN_SKI_BOARD_SCHEMA_VERSION,season:ACTIVE_SEASON,rulesetVersion:OPEN_SKI_RULESET_VERSION,records:[],top:[],updatedAt:0,lastRefreshResult:'cache'};
+  let lastRefresh=0,refreshPromise=null,refreshSeq=0,appliedSeq=0;
+  const on=()=>ServiceCapabilities.allows('leaderboardRead')&&!!FIREBASE_DB_URL&&typeof fetch==='function';
+  function exact(raw,runId){if(!raw||typeof raw!=='object'||Array.isArray(raw)||raw.runId!==runId)return null;return OpenSkiRuns.valid(raw,Math.max(Date.now(),+raw.timestamp||0))?Object.freeze(Object.assign({},raw)):null;}
+  function normalizeRows(source,origin){
+    source=Array.isArray(source)?source:[];const byRun=new Map();let invalid=0,duplicates=0;
+    for(const raw of source){const runId=String(raw&&raw.runId||''),item=exact(raw,runId);if(!item){invalid++;continue;}if(byRun.has(runId)){duplicates++;continue;}byRun.set(runId,item);}
+    if(invalid)DataRecovery.note((origin||'open-ski-board')+'-invalid-records',invalid);if(duplicates)DataRecovery.note((origin||'open-ski-board')+'-duplicate-runids',duplicates);
+    return Array.from(byRun.values()).sort(OpenSkiRuns.compare).slice(0,FETCH_LIMIT);
+  }
+  function normalizePayload(payload){
+    if(payload===null)return{ok:true,rows:[],empty:true};if(!payload||typeof payload!=='object'||Array.isArray(payload))return{ok:false,rows:[],empty:false};
+    const rows=[];for(const [runId,raw] of Object.entries(payload)){const item=exact(raw,runId);if(item)rows.push(item);else DataRecovery.note('open-ski-board-firebase-invalid-record');}
+    return{ok:true,rows:normalizeRows(rows,'open-ski-board-firebase'),empty:Object.keys(payload).length===0};
+  }
+  function sync(){cache.records=normalizeRows(cache.records,'open-ski-board-runtime');cache.top=cache.records.slice(0,LB_SIZE);return cache.top;}
+  function save(){Persistence.setJSON(OPEN_SKI_BOARD_KEY,{schemaVersion:OPEN_SKI_BOARD_SCHEMA_VERSION,season:ACTIVE_SEASON,rulesetVersion:OPEN_SKI_RULESET_VERSION,records:cache.records,updatedAt:cache.updatedAt});}
+  {
+    const read=Persistence.inspectJSON(OPEN_SKI_BOARD_KEY),raw=read.value;
+    if(!read.ok){DataRecovery.note('open-ski-board-cache-corrupt',1,read.error);Persistence.remove(OPEN_SKI_BOARD_KEY);}
+    else if(read.exists&&raw&&typeof raw==='object'&&!Array.isArray(raw)&&raw.schemaVersion===OPEN_SKI_BOARD_SCHEMA_VERSION&&Array.isArray(raw.records)){cache.records=normalizeRows(raw.records,'open-ski-board-cache');cache.updatedAt=Math.max(0,+raw.updatedAt||0);sync();}
+    else if(read.exists){DataRecovery.note('open-ski-board-cache-invalid');Persistence.remove(OPEN_SKI_BOARD_KEY);}
+    save();
+  }
+  async function fetchBoard(){
+    const raw=FIREBASE_DB_URL+OPEN_SKI_RUN_PATH+'.json?orderBy=%22score%22&limitToLast='+FETCH_LIMIT;
+    try{const url=await Identity.url(raw),response=await ServiceNetwork.fetchTimed(url,{cache:'no-store'},'leaderboardRead');if(!response.ok)return{ok:false,status:response.status,rows:[],error:'HTTP '+response.status};const payload=await response.json(),normalized=normalizePayload(payload);return normalized.ok?{ok:true,status:response.status,rows:normalized.rows,empty:normalized.empty,error:''}:{ok:false,status:response.status,rows:[],error:'invalid response shape'};}catch(e){return{ok:false,status:0,rows:[],error:String((e&&e.message)||e)};}
+  }
+  async function refresh(force){
+    if(!on())return'unavailable';if(!force&&Date.now()-lastRefresh<LB_REFRESH)return'throttled';if(refreshPromise&&!force)return refreshPromise;lastRefresh=Date.now();const seq=++refreshSeq;
+    refreshPromise=(async()=>{const result=await fetchBoard();if(seq<appliedSeq)return'stale';if(!result.ok){cache.lastRefreshResult='failed';renderBoard();return'failed';}appliedSeq=seq;cache.records=result.rows;cache.updatedAt=Date.now();cache.lastRefreshResult='score';sync();save();renderBoard();return'score';})().finally(()=>{refreshPromise=null;});return refreshPromise;
+  }
+  function ingestAccepted(payload){const item=exact(payload,String(payload&&payload.runId||''));if(!item)return false;cache.records=cache.records.filter(e=>e.runId!==item.runId).concat(item);cache.updatedAt=Date.now();cache.lastRefreshResult='accepted-overlay';sync();save();renderBoard();setTimeout(()=>refresh(true),0);return true;}
+  function add(initials,run,context){const ok=OpenSkiSubmission.submit(initials,run,context);return{ok,queued:ok,rank:rankOf(run&&run.runId),reason:ok?'queued':'rejected'};}
+  function top(){return cache.top.slice();}function all(){return cache.records.slice();}function rankOf(runId){const i=cache.top.findIndex(e=>e.runId===String(runId||''));return i<0?0:i+1;}
+  function stats(){return Object.freeze({mode:RunContext.modes.OPEN_SKI,rulesetVersion:OPEN_SKI_RULESET_VERSION,source:OPEN_SKI_RUN_PATH,records:cache.records.length,top:cache.top.length,updatedAt:cache.updatedAt,lastRefreshResult:cache.lastRefreshResult,networkReads:on(),networkWrites:ServiceCapabilities.allows('arcadeWrite')&&APP_CONFIG.build.networkWrites===true});}
+  function selfTest(){const now=Date.now(),mk=(id,initials,score)=>OpenSkiRuns.build(initials,{runId:id,score,distance:score,cleanFlags:1,attemptedFlags:1,bestCombo:1,collisions:0,deathX:360,deathDepth:score,deathTheta:0,deathCause:'tree',worldVersion:WORLD_VERSION,timestamp:now-score,courseVersion:APP_CONFIG.course.version,courseSeedId:1},'open-ski-board-test');const a=mk('r_os000001_111111111111111111111111','AAA',100),b=mk('r_os000002_222222222222222222222222','BBB',200),rows=normalizeRows([a,b,a],'open-ski-board-self');return Object.freeze({passed:rows.length===2&&rows[0].initials==='BBB'&&OpenSkiRuns.leaderboardPath(a.runId)===OPEN_SKI_RUN_PATH+'/'+a.runId,rows:rows.map(e=>e.initials+':'+e.score)});}
+  if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('online',()=>refresh(true));
+  return Object.freeze({on,refresh,fetchBoard,ingestAccepted,add,top,all,rankOf,stats,selfTest});
+})();
+openSkiLeaderboardAccepted=payload=>OpenSkiBoard.ingestAccepted(payload);
 /* ================= MODULE: SEASONAL LEADERBOARD CONTROLLER =================
    Season 2 is the default competitive view. Season 1 is the frozen live leaderboard
    read through the legacy path and presented as an In Memoriam archive. */
 const SeasonalLeaderboard=(()=>{
-  const SEASON2=2,SEASON1=1;
+  const SEASON2=2,SEASON1=1,OPEN_SKI='open-ski';
   let view=SEASON2;
   try{view=String(store.getItem(SEASON_VIEW_KEY)||'2')==='1'?SEASON1:SEASON2;}catch(e){}
   // Every fresh page load defaults to Season 2 as the shipping design requires.
   view=SEASON2;
-  function set(next){view=+next===SEASON1?SEASON1:SEASON2;try{store.setItem(SEASON_VIEW_KEY,String(view));}catch(e){}renderBoard();InitialsMountain.syncTopTen();return view;}
+  function set(next){view=next===OPEN_SKI?OPEN_SKI:+next===SEASON1?SEASON1:SEASON2;try{store.setItem(SEASON_VIEW_KEY,String(view));}catch(e){}renderBoard();InitialsMountain.syncTopTen();return view;}
   function toggle(){return set(view===SEASON2?SEASON1:SEASON2);}
   function current(){return view;}
   function currentTop(){return Season2PreviewBoard.top();}
-  function visibleTop(){return view===SEASON1?ArcadeLeaderboard.top():Season2PreviewBoard.top();}
+  function visibleTop(){return view===SEASON1?ArcadeLeaderboard.top():view===OPEN_SKI?OpenSkiBoard.top():Season2PreviewBoard.top();}
   function archive(){return view===SEASON1;}
-  function refresh(force){return Promise.all([Season2PreviewBoard.refresh(force),ArcadeLeaderboard.refresh(force)]);}
-  function stats(){return Object.freeze({view,defaultSeason:SEASON2,season1Path:ARCADE_RUN_PATH,season2Path:SEASON2_RUN_PATH,season1ReadOnly:true,season2PreviewLocalOnly:false,season2:Season2PreviewBoard.stats()});}
-  return Object.freeze({set,toggle,current,currentTop,visibleTop,archive,refresh,stats});
+  function openSki(){return view===OPEN_SKI;}
+  function refresh(force){return Promise.all([Season2PreviewBoard.refresh(force),ArcadeLeaderboard.refresh(force),OpenSkiBoard.refresh(force)]);}
+  function stats(){return Object.freeze({view,defaultSeason:SEASON2,season1Path:ARCADE_RUN_PATH,season2Path:SEASON2_RUN_PATH,openSkiPath:OPEN_SKI_RUN_PATH,season1ReadOnly:true,season2PreviewLocalOnly:false,season2:Season2PreviewBoard.stats(),openSki:OpenSkiBoard.stats()});}
+  return Object.freeze({set,toggle,current,currentTop,visibleTop,archive,openSki,refresh,stats});
 })();
 /* ====================== MODULE: SHARED MEMORIAL DATA ======================
    Read-only bridge between the initials-governed mountain population and the
@@ -4611,22 +4785,23 @@ const InitialsMountain=(()=>{
 initialsMountainAccepted=payload=>InitialsMountain.ingestAccepted(payload);
 initialsMountainBoardChanged=()=>InitialsMountain.syncTopTen();
 
-identityOwnerChanged=(nextUid,previousUid)=>{ArcadeSubmission.identityChanged(nextUid,previousUid);TelemetryTransport.identityChanged(nextUid,previousUid);if(RunContext.permits('allowPlaytestUploads'))PlaytestUpload.drain('identity-changed');};
+identityOwnerChanged=(nextUid,previousUid)=>{ArcadeSubmission.identityChanged(nextUid,previousUid);OpenSkiSubmission.identityChanged(nextUid,previousUid);TelemetryTransport.identityChanged(nextUid,previousUid);if(RunContext.permits('allowPlaytestUploads'))PlaytestUpload.drain('identity-changed');};
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList'),overlay=$('ovLeaderboard');if(!list||!overlay)return;
-  const archive=SeasonalLeaderboard.archive(),top=SeasonalLeaderboard.visibleTop(),lastRunId=String(lastFinishedRun&&lastFinishedRun.runId||'');
+  const archive=SeasonalLeaderboard.archive(),openSki=SeasonalLeaderboard.openSki(),top=SeasonalLeaderboard.visibleTop(),lastRunId=String(lastFinishedRun&&lastFinishedRun.runId||'');
   overlay.classList.toggle('season-archive',archive);
-  $('lbSeasonLabel').textContent=archive?'SEASON 1':'SEASON 2';
-  $('lbSeasonSubtitle').textContent=archive?'ARCHIVED LEADERBOARD':'CURRENT DESCENT · PURSUIT V2';
+  overlay.classList.toggle('open-ski-board',openSki);
+  $('lbSeasonLabel').textContent=archive?'SEASON 1':openSki?'OPEN SKI':'SEASON 2';
+  $('lbSeasonSubtitle').textContent=archive?'ARCHIVED LEADERBOARD':openSki?'NO YETI · SAME MOUNTAIN':'CURRENT DESCENT · PURSUIT V2';
   $('lbMemorialCopy').setAttribute('aria-hidden',archive?'false':'true');
-  $('lbArchiveToggle').textContent=archive?'BACK TO SEASON 2':'VIEW SEASON 1 · IN MEMORIAM';
-  $('lbArchiveToggle').setAttribute('aria-pressed',archive?'true':'false');
-  const maySubmit=!archive&&!!lastFinishedRun&&ArcadeSubmission.qualifies(lastFinishedRun);
+  const archiveToggle=$('lbArchiveToggle');archiveToggle.textContent=archive?'BACK TO SEASON 2':'VIEW SEASON 1 · IN MEMORIAM';
+  archiveToggle.setAttribute('aria-pressed',archive?'true':'false');archiveToggle.hidden=openSki||!ServiceCapabilities.allows('leaderboardRead');archiveToggle.setAttribute('aria-hidden',archiveToggle.hidden?'true':'false');
+  const maySubmit=!archive&&!!lastFinishedRun&&(openSki?OpenSkiSubmission.qualifies(lastFinishedRun,lastFinishedRunContext):ArcadeSubmission.qualifies(lastFinishedRun));
   $('lbEntry').style.display=maySubmit?'flex':'none';
-  if(maySubmit){$('lbInit').value=ArcadeSubmission.initials();$('lbGo').textContent='SUBMIT TO SEASON 2';}
+  if(maySubmit){$('lbInit').value=openSki?OpenSkiSubmission.initials():ArcadeSubmission.initials();$('lbGo').textContent=openSki?'SUBMIT TO OPEN SKI':'SUBMIT TO SEASON 2';}
   if(!top.length){
-    list.innerHTML=archive?'<div class="lbEmpty">SEASON 1 ARCHIVE UNAVAILABLE<small>Connect to load the preserved original leaderboard.</small></div>':'<div class="lbEmpty">SEASON 2 STARTS FRESH<small>Complete a run to join the current descent.</small></div>';
+    list.innerHTML=archive?'<div class="lbEmpty">SEASON 1 ARCHIVE UNAVAILABLE<small>Connect to load the preserved original leaderboard.</small></div>':openSki?'<div class="lbEmpty">OPEN SKI STARTS FRESH<small>Complete a no-Yeti run to join this board.</small></div>':'<div class="lbEmpty">SEASON 2 STARTS FRESH<small>Complete a run to join the current descent.</small></div>';
   }else{
     list.innerHTML=top.map((e,i)=>{
       const mine=!archive&&lastRunId&&e.runId===lastRunId;
@@ -4637,6 +4812,9 @@ function renderBoard(){
   if(archive){
     summary.textContent='FINAL STANDINGS · THE ORIGINAL DESCENT';summary.style.display='block';
     const stats=ArcadeLeaderboard.stats();lbStatus(stats.lastRefreshResult==='failed'?'OFFLINE · SHOWING CACHED SEASON 1':'READ ONLY · ORIGINAL PURSUIT RULES');
+  }else if(openSki){
+    summary.style.display='block';const run=lastFinishedRun;summary.textContent=run?fmtNum(run.score)+' pts  •  '+fmtNum(run.distance)+' m  •  OPEN SKI':'CURRENT STANDINGS · OPEN SKI';
+    const stats=OpenSkiBoard.stats();if(APP_CONFIG.build.releaseState==='candidate')lbStatus('RELEASE CANDIDATE · ONLINE SERVICES DISABLED');else if(stats.lastRefreshResult==='failed')lbStatus(stats.top?'OFFLINE · SHOWING CACHED OPEN SKI':'OPEN SKI LEADERBOARD OFFLINE');else lbStatus('OPEN SKI · NO YETI');
   }else{
     summary.style.display='block';
     const run=lastFinishedRun;summary.textContent=run?fmtNum(run.score)+' pts  •  '+fmtNum(run.distance)+' m  •  SEASON 2':'CURRENT STANDINGS · SEASON 2';
@@ -6875,10 +7053,11 @@ function finalizePlayerDeath(){
   if(RunContext.permits('allowDiagnosticReports',runContext))FeedbackBaseline.finish(run,compactOutcome,batchOutcome);
   RunTraceIdentity.finish();
   $('lbWrap').style.display='block';
-  $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m  •  SEASON 2';
-  SeasonalLeaderboard.set(2);
+  const openSki=RunContext.isOpenSki(runContext);
+  $('lbRunSummary').textContent=fmtNum(score)+' pts  •  '+fmtNum(dist)+' m  •  '+(openSki?'OPEN SKI':'SEASON 2');
+  SeasonalLeaderboard.set(openSki?RunContext.modes.OPEN_SKI:2);
   renderBoard();
-  if(Season2PreviewBoard.on()||ArcadeLeaderboard.on())SeasonalLeaderboard.refresh();
+  if(openSki?OpenSkiBoard.on():(Season2PreviewBoard.on()||ArcadeLeaderboard.on()))SeasonalLeaderboard.refresh();
   if(InitialsMountain.on())InitialsMountain.refresh();
   const anyRecord=newScore||newDistance;
   if(anyRecord){tone(520,780,0.3,'triangle',0.25);tone(660,990,0.4,'triangle',0.2);tone(780,1170,0.55,'triangle',0.18);vib([40,40,80]);}
@@ -7737,9 +7916,11 @@ function updateFrame(dt){
   if(S.run.mode!=='play')return;
   updateHazardFrame(frame);
   if(S.run.mode!=='play')return;
-  updateYetiFrame(frame);
-  if(S.run.mode!=='play')return;
-  YetiStateMachine.assertStable(S.yeti);
+  if(RunContext.permits('allowYeti',S.runContext||RunContext.current())){
+    updateYetiFrame(frame);
+    if(S.run.mode!=='play')return;
+    YetiStateMachine.assertStable(S.yeti);
+  }else S.yeti.on=false;
   updateTransientEffectsFrame(frame);
 }
 function updateTransientEffectsFrame(frame){
@@ -9412,7 +9593,7 @@ function kb(){
   else if(anchor===null){S.player.active=false;S.player.steer=0;}
 }
 function setIntroStartDisabled(disabled){
-  for(const id of ['introStart','introHowStart']){const node=$(id);if(node)node.disabled=!!disabled;}
+  for(const id of ['introStart','introOpenSki','introHowStart']){const node=$(id);if(node)node.disabled=!!disabled;}
 }
 function introStartAllowed(mode=S.run.mode,pending=introStartPending){return mode==='intro'&&!pending&&overlayVisible(el.intro);}
 function finishRunStart(){
@@ -9422,16 +9603,17 @@ function finishRunStart(){
   setIntroView('menu');S.run.mode='play';introStartPending=false;setIntroStartDisabled(false);
   return true;
 }
-function beginRun(source='api'){
+function beginRun(source='api',modeOverride=null){
   source=String(source||'api');
-  const fromIntro=source==='intro'&&introStartAllowed();
+  const fromIntro=(source==='intro'||source==='intro-open-ski')&&introStartAllowed();
   const fromLeaderboard=source==='leaderboard'&&S.run.mode==='dead'&&overlayVisible(el.leaderboard);
   const fromApi=source==='api'&&((S.run.mode==='intro'&&overlayVisible(el.intro))||S.run.mode==='dead');
   if(!(fromIntro||fromLeaderboard||fromApi))return false;
   if(S.run.mode==='play'||S.run.mode==='dying'||S.run.mode==='starting')return false;
   if(RunContext.isPlaytest()&&!FeedbackBaseline.testerReady())return FeedbackBaseline.promptTester();
   Audio.ac();if(fromIntro)introAudioRequested=true;
-  CourseDeck.next();Generation.fresh();S.runContext=RunContext.begin();const traceIdentity=RunTraceIdentity.begin(S.runContext);if(lastDeathReal)S.player.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext,traceIdentity);YetiDiagnosticBatch.begin(S.runContext,traceIdentity);PublicFeedback.beginRun(S.runContext,traceIdentity);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun(traceIdentity);YetiAttackTelemetry.begin();
+  const requestedMode=source==='intro-open-ski'||modeOverride===RunContext.modes.OPEN_SKI?RunContext.modes.OPEN_SKI:fromLeaderboard&&lastFinishedRunContext?lastFinishedRunContext.mode:null;
+  CourseDeck.next();Generation.fresh();S.runContext=RunContext.begin(requestedMode);const traceIdentity=RunTraceIdentity.begin(S.runContext);if(lastDeathReal)S.player.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext,traceIdentity);YetiDiagnosticBatch.begin(S.runContext,traceIdentity);PublicFeedback.beginRun(S.runContext,traceIdentity);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun(traceIdentity);YetiAttackTelemetry.begin();
   $('btnRow').style.display='flex';el.tune.classList.remove('show');$('bTune').classList.remove('active');
   setOverlayVisible(el.results,false);setOverlayVisible(el.leaderboard,false);
   if(fromIntro){
@@ -9445,7 +9627,7 @@ function beginRun(source='api'){
 function showLeaderboard(){
   if(S.run.mode!=='dead'||!overlayVisible(el.results))return false;
   setOverlayVisible(el.results,false);setOverlayVisible(el.leaderboard,true);if(RunContext.permits('allowDiagnosticReports',lastFinishedRunContext||RunContext.current()))FeedbackBaseline.markLeaderboardViewed();
-  renderBoard();SeasonalLeaderboard.refresh();InitialsMountain.refresh();if(RunContext.permits('allowLeaderboard')&&RunContext.permits('allowMountainWrites'))ArcadeSubmission.drain();
+  renderBoard();SeasonalLeaderboard.refresh();InitialsMountain.refresh();if(RunContext.isOpenSki(lastFinishedRunContext))OpenSkiSubmission.drain();else if(RunContext.permits('allowLeaderboard')&&RunContext.permits('allowMountainWrites'))ArcadeSubmission.drain();
   return true;
 }
 function showResults(){
@@ -9524,6 +9706,7 @@ function bindInput(){
   },{passive:false});
   window.addEventListener('keydown',e=>{keys[e.key]=true;kb();});window.addEventListener('keyup',e=>{keys[e.key]=false;kb();});
   $('introStart').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Input.beginRun('intro');});
+  $('introOpenSki').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Input.beginRun('intro-open-ski');});
   $('introHow').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showIntroHow();focusIntroControl('introHowStart');});
   $('introHowStart').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Input.beginRun('intro');});
   $('introBack').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showIntroMenu();focusIntroControl('introHow');});
@@ -9534,9 +9717,9 @@ function bindInput(){
   $('lbWrap').addEventListener('pointerdown',e=>{e.stopPropagation();});
   $('lbArchiveToggle').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();SeasonalLeaderboard.toggle();SeasonalLeaderboard.refresh();});
   $('lbGo').addEventListener('click',function(){
-    const run=lastFinishedRun,result=Season2PreviewBoard.add($('lbInit').value,run);
-    if(result.ok){$('lbEntry').style.display='none';renderBoard();lbStatus('RUN QUEUED · SUBMITTING TO SEASON 2');}
-    else{$('lbInit').value='';$('lbInit').placeholder='NOPE';lbStatus('RUN COULD NOT BE QUEUED FOR SEASON 2');}});
+    const run=lastFinishedRun,openSki=RunContext.isOpenSki(lastFinishedRunContext),result=openSki?OpenSkiBoard.add($('lbInit').value,run,lastFinishedRunContext):Season2PreviewBoard.add($('lbInit').value,run);
+    if(result.ok){$('lbEntry').style.display='none';renderBoard();lbStatus(openSki?'OPEN SKI RUN QUEUED · SUBMITTING':'RUN QUEUED · SUBMITTING TO SEASON 2');}
+    else{$('lbInit').value='';$('lbInit').placeholder='NOPE';lbStatus(openSki?'OPEN SKI RUN COULD NOT BE QUEUED':'RUN COULD NOT BE QUEUED FOR SEASON 2');}});
   $('lbInit').addEventListener('input',function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
   $('bTune').addEventListener('click',e=>{e.stopPropagation();pup();const on=el.tune.classList.toggle('show');e.currentTarget.classList.toggle('active',on);});
   $('bDebug').addEventListener('click',e=>{e.stopPropagation();if(!PUBLIC_BUILD&&RunContext.current().developerTools){debugOn=!debugOn;e.currentTarget.classList.toggle('active',debugOn);}});
@@ -9601,24 +9784,24 @@ function diagnosticRequested(){return authDiagRequested()||arcadeCheckRequested(
 const IntroReleaseValidation=(()=>{
   function status(){
     const splash=IntroSplash.status(),menu=IntroMenu.status(),life=IntroLifecycle.status(),input=Input.introStatus();
-    const panel=$('introHowPreview'),start=$('introStart'),how=$('introHow'),howStart=$('introHowStart'),back=$('introBack'),poster=$('introPoster');
+    const panel=$('introHowPreview'),start=$('introStart'),openSki=$('introOpenSki'),how=$('introHow'),howStart=$('introHowStart'),back=$('introBack'),poster=$('introPoster');
     const target=n=>{if(!n)return 0;const r=n.getBoundingClientRect();return Math.min(r.width,r.height);};
     const bounds=n=>{if(!n)return null;const r=n.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height};};
     const alignedControl=(a,b)=>!!a&&!!b&&Math.abs(a.left-b.left)<=1.5&&Math.abs(a.width-b.width)<=1.5&&Math.abs(a.height-b.height)<=1.5;
     const verticalGap=(a,b)=>!!a&&!!b?b.top-(a.top+a.height):Infinity;
-    const startBounds=bounds(start),howBounds=bounds(how),howStartBounds=bounds(howStart),backBounds=bounds(back);
+    const startBounds=bounds(start),openSkiBounds=bounds(openSki),howBounds=bounds(how),howStartBounds=bounds(howStart),backBounds=bounds(back);
     // Compare control shape, horizontal alignment, and within-panel spacing. Absolute Y differs
     // while the hidden instructions panel carries its intentional transition transform.
-    const controlsAligned=alignedControl(startBounds,howStartBounds)&&alignedControl(howBounds,backBounds)&&Math.abs(verticalGap(startBounds,howBounds)-verticalGap(howStartBounds,backBounds))<=1.5;
+    const controlsAligned=alignedControl(startBounds,howStartBounds)&&alignedControl(openSkiBounds,startBounds)&&alignedControl(howBounds,backBounds)&&Math.abs(verticalGap(startBounds,openSkiBounds)-verticalGap(openSkiBounds,howBounds))<=1.5;
     const instructionsFit=!!panel&&panel.scrollHeight<=panel.clientHeight+2;
-    const touchTargets=[start,how,howStart,back].every(n=>target(n)>=44);
+    const touchTargets=[start,openSki,how,howStart,back].every(n=>target(n)>=44);
     const posterPassive=!!poster&&getComputedStyle(poster).pointerEvents==='none'&&!poster.onclick;
     const copy=[...document.querySelectorAll('#introHowPreview .howItem b')].map(n=>n.textContent.trim()).join('|');
     const copyExact=copy==='CARVE|PASS THE FLAGS|AVOID DISASTER|OUTRUN THE YETI'&&menu.mantra==='';
     const noLegacyCopy=!($('ovIntro')&&$('ovIntro').innerText||'').includes('TAP TO SKI');
     const startGuard=introStartAllowed('intro',false)&&!introStartAllowed('starting',false)&&!introStartAllowed('intro',true);
     const lifecycle=splash.predecodedBeforeReveal&&life.safeAreaAware&&life.controlsInside&&life.readyClass&&!life.loadingClass;
-    const controls=menu.startPresent&&menu.howPresent&&menu.howStartPresent&&menu.backPresent&&menu.instructionCount===4&&copyExact&&touchTargets&&instructionsFit&&controlsAligned;
+    const controls=menu.startPresent&&menu.openSkiPresent&&menu.howPresent&&menu.howStartPresent&&menu.backPresent&&menu.instructionCount===4&&copyExact&&touchTargets&&instructionsFit&&controlsAligned;
     const safety=posterPassive&&noLegacyCopy&&startGuard&&typeof input.focusSerial==='number';
     return Object.freeze({passed:splash.embedded&&splash.naturalWidth===720&&splash.naturalHeight===1080&&lifecycle&&controls&&safety,splash,menu,life,input,instructionsFit,touchTargets,controlsAligned,posterPassive,copyExact,noLegacyCopy,startGuard,lifecycle,controls,safety});
   }
@@ -9630,14 +9813,14 @@ const IntroReleaseValidation=(()=>{
 })();
 const ArcadeReleaseValidation=(()=>{
   function selfTest(){
-    const audit=Configuration.audit(),foundation=ArcadeFoundation.selfTest(),submission=ArcadeSubmission.selfTest(),board=ArcadeLeaderboard.selfTest(),mountain=InitialsMountain.selfTest(),population=MountainPopulation.selfTest(),integration=LeaderboardMountainIntegration.selfTest(),local=LocalHistoryValidation.selfTest(),intro=IntroReleaseValidation.selfTest();
+    const audit=Configuration.audit(),foundation=ArcadeFoundation.selfTest(),submission=ArcadeSubmission.selfTest(),openSkiSubmission=OpenSkiSubmission.selfTest(),openSkiBoard=OpenSkiBoard.selfTest(),board=ArcadeLeaderboard.selfTest(),mountain=InitialsMountain.selfTest(),population=MountainPopulation.selfTest(),integration=LeaderboardMountainIntegration.selfTest(),local=LocalHistoryValidation.selfTest(),intro=IntroReleaseValidation.selfTest();
     const boardStats=ArcadeLeaderboard.stats(),mountainStats=InitialsMountain.stats();
     const bounded=boardStats.fetchLimit===75&&boardStats.visibleRows===10&&mountainStats.scoreFetchLimit===75&&mountainStats.recentFetchLimit===75&&audit.memorialLimit===50;
     const throttle=boardStats.refreshThrottleMs===300000&&mountainStats.refreshThrottleMs===300000;
     const capacity=foundation.capacity&&board.capped&&population.cap50;
     const filtering=board.malformed&&population.worldMismatch===1&&population.passed;
     const activeOnly=audit.activePathsOnly&&audit.frozen;
-    return Object.freeze({passed:foundation.passed&&submission.passed&&board.passed&&mountain.passed&&population.passed&&integration.passed&&local.passed&&intro.passed&&bounded&&throttle&&capacity&&filtering&&activeOnly,foundation,submission,board,mountain,population,integration,local,intro,bounded,throttle,capacity,filtering,activeOnly});
+    return Object.freeze({passed:foundation.passed&&submission.passed&&openSkiSubmission.passed&&openSkiBoard.passed&&board.passed&&mountain.passed&&population.passed&&integration.passed&&local.passed&&intro.passed&&bounded&&throttle&&capacity&&filtering&&activeOnly,foundation,submission,openSkiSubmission,openSkiBoard,board,mountain,population,integration,local,intro,bounded,throttle,capacity,filtering,activeOnly});
   }
   return Object.freeze({selfTest});
 })();
@@ -9737,6 +9920,7 @@ const ServiceBoot=(()=>{
       const arcadeDiagnostics=arcadeCheckRequested()&&ServiceCapabilities.allows('arcadeWrite')&&ServiceCapabilities.allows('leaderboardRead')&&ServiceCapabilities.allows('mountainRead');
       if(mark('arcade-diagnostics',arcadeDiagnostics))await ArcadeFoundationCheck.run();
       if(!diagnosticRequested()&&mark('arcade-submit-drain',RunContext.permits('allowLeaderboard')&&RunContext.permits('allowMountainWrites')))ArcadeSubmission.drain();
+      if(!diagnosticRequested()&&mark('open-ski-submit-drain',ServiceCapabilities.allows('arcadeWrite')&&OpenSkiSubmission.status().pending>0))OpenSkiSubmission.drain();
       if(!diagnosticRequested()&&mark('telemetry-drain',RunContext.permits('allowTelemetryUploads')))TelemetryTransport.drain('auth-ready');
       if(!diagnosticRequested()&&mark('feedback-drain',RunContext.permits('allowPublicFeedbackUploads')))FeedbackTransport.drain('auth-ready');
       if(!diagnosticRequested()&&mark('playtest-drain',RunContext.permits('allowPlaytestUploads')&&PlaytestUpload.pending().length>0))PlaytestUpload.drain('auth-ready');
@@ -9831,15 +10015,15 @@ const IntroLifecycle=Object.freeze({
     const img=$('introPoster'),boot=$('introBoot'),intro=$('ovIntro'),sr=stage.getBoundingClientRect();
     const rect=id=>{const n=$(id);if(!n)return null;const r=n.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
     const inside=r=>!!r&&r.left>=sr.left-1&&r.right<=sr.right+1&&r.top>=sr.top-1&&r.bottom<=sr.bottom+1;
-    const start=rect('introStart'),how=rect('introHow');
+    const start=rect('introStart'),openSki=rect('introOpenSki'),how=rect('introHow');
     return Object.freeze({
       ready:introReady,reason:introReadyReason,readyAt:introReadyAt,loadingClass:stage.classList.contains('intro-loading'),
       readyClass:stage.classList.contains('intro-ready'),bootVisible:!!(boot&&!boot.hidden&&getComputedStyle(boot).visibility!=='hidden'&&parseFloat(getComputedStyle(boot).opacity)>.01),
       posterDecoded:!!(img&&img.complete&&img.naturalWidth===720&&img.naturalHeight===1080),
       view:introView,startPending:introStartPending,exitMs:INTRO_EXIT_MS,viewMs:INTRO_VIEW_MS,
       audioRequested:introAudioRequested,audioState:AC?AC.state:'uninitialized',reducedMotion:INTRO_EXIT_MS===0,
-      safeAreaAware:true,controlsInside:inside(start)&&inside(how),introVisible:!!(intro&&!intro.classList.contains('hide')),
-      stage:{width:sr.width,height:sr.height},start,how
+      safeAreaAware:true,controlsInside:inside(start)&&inside(openSki)&&inside(how),introVisible:!!(intro&&!intro.classList.contains('hide')),
+      stage:{width:sr.width,height:sr.height},start,openSki,how
     });
   },
   selfTest:()=>{const s=IntroLifecycle.status();return Object.freeze({passed:s.ready&&s.readyClass&&!s.loadingClass&&!s.bootVisible&&s.posterDecoded&&s.safeAreaAware&&s.controlsInside&&s.exitMs>=0&&s.viewMs>=0,status:s});}
@@ -9847,10 +10031,10 @@ const IntroLifecycle=Object.freeze({
 const IntroMenu=Object.freeze({
   version:'v8e',showMenu:showIntroMenu,showHow:showIntroHow,
   status:()=>{
-    const start=$('introStart'),how=$('introHow'),howStart=$('introHowStart'),back=$('introBack'),menu=$('introMenu'),panel=$('introHowPreview');
+    const start=$('introStart'),openSki=$('introOpenSki'),how=$('introHow'),howStart=$('introHowStart'),back=$('introBack'),menu=$('introMenu'),panel=$('introHowPreview');
     const items=[...document.querySelectorAll('#introHowPreview .howItem')];
     return Object.freeze({
-      view:introView,startPresent:!!start,howPresent:!!how,howStartPresent:!!howStart,backPresent:!!back,
+      view:introView,startPresent:!!start,openSkiPresent:!!openSki,howPresent:!!how,howStartPresent:!!howStart,backPresent:!!back,
       menuVisible:introView==='menu'&&!!menu,instructionsVisible:introView==='instructions'&&!!panel,instructionCount:items.length,
       mantra:($('introHowPreview')&&$('introHowPreview').querySelector('.howMantra')||{}).textContent||'',
       explicitStart:true,instructionsDirectStart:true,tapAnywhereStart:false,fullScreenInstructions:true,
@@ -9859,7 +10043,7 @@ const IntroMenu=Object.freeze({
   },
   selfTest:()=>{
     const original=introView,a=IntroMenu.status();showIntroHow();const b=IntroMenu.status();showIntroMenu();const c=IntroMenu.status();setIntroView(original);
-    return Object.freeze({passed:a.startPresent&&a.howPresent&&a.howStartPresent&&a.backPresent&&a.menuVisible&&!a.instructionsVisible&&b.instructionsVisible&&!b.menuVisible&&b.instructionCount===4&&b.mantra===''&&c.menuVisible&&!c.instructionsVisible&&a.explicitStart&&a.instructionsDirectStart&&!a.tapAnywhereStart&&a.fullScreenInstructions&&a.animatedViews,menu:a,instructions:b,restored:c});
+    return Object.freeze({passed:a.startPresent&&a.openSkiPresent&&a.howPresent&&a.howStartPresent&&a.backPresent&&a.menuVisible&&!a.instructionsVisible&&b.instructionsVisible&&!b.menuVisible&&b.instructionCount===4&&b.mantra===''&&c.menuVisible&&!c.instructionsVisible&&a.explicitStart&&a.instructionsDirectStart&&!a.tapAnywhereStart&&a.fullScreenInstructions&&a.animatedViews,menu:a,instructions:b,restored:c});
   }
 });
 const IntroSplash=Object.freeze({
@@ -9878,11 +10062,11 @@ const Modules=Object.freeze({
   configuration:Configuration,buildProfile:BuildProfile,randomStreams:RandomStreams,persistence:Persistence,dataRecovery:DataRecovery,
   serviceCapabilities:ServiceCapabilities,serviceBoot:ServiceBoot,serviceErrors:ServiceErrors,queueStore:QueueStore,telemetryContract:TelemetryContract,telemetryCompactCodec:TelemetryCompactCodec,
   identity:Identity,runRecord:RunRecord,introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,
-  arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,season2Runs:Season2Runs,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,
+  arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,season2Runs:Season2Runs,openSkiRuns:OpenSkiRuns,arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,openSkiSubmission:OpenSkiSubmission,
   arcadeLeaderboard:ArcadeLeaderboard,initialsMountain:InitialsMountain,arcadeFoundationCheck:ArcadeFoundationCheck,
   mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,
   performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,
-  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
+  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -9907,17 +10091,35 @@ window.__EP={
   stateOwnership:StateOwnership,collections:OwnedCollections,yetiStateMachine:YetiStateMachine,frameContext:FrameContext,
   frameSubsystems:Object.freeze({
     stepHazards:dt=>{const frame=FrameContext.begin(Math.max(0,+dt||0));updateHazardFrame(frame);return Object.freeze({boulders:S.hazards.boulders.length,frame:FrameContext.status()});},
-    stepPursuit:dt=>{dt=Math.max(0,+dt||0);const frame=FrameContext.begin(dt);S.run.time+=dt;updatePlayerFrame(frame);if(S.run.mode==='play'){updateYetiFrame(frame);YetiStateMachine.assertStable(S.yeti);}return Object.freeze({mode:S.run.mode,depth:S.player.depth,downhillSpeed:playerDownhillVelocity(frame),gap:S.yeti.on?S.player.depth-S.yeti.d:null,match:S.yeti.diagMatch,frame:FrameContext.status()});}
+    stepPursuit:dt=>{dt=Math.max(0,+dt||0);const frame=FrameContext.begin(dt);S.run.time+=dt;updatePlayerFrame(frame);if(S.run.mode==='play'&&RunContext.permits('allowYeti',S.runContext||RunContext.current())){updateYetiFrame(frame);YetiStateMachine.assertStable(S.yeti);}else S.yeti.on=false;return Object.freeze({mode:S.run.mode,depth:S.player.depth,downhillSpeed:playerDownhillVelocity(frame),gap:S.yeti.on?S.player.depth-S.yeti.d:null,match:S.yeti.diagMatch,frame:FrameContext.status()});}
   }),
   invariantActions:Object.freeze({fullMomentumNpcImpact}),
   arrays:()=>({gates:S.course.gates,obs:S.world.obstacles,npcs:S.npcs,edgeT:S.world.edgeTrees,balls:S.hazards.boulders,localDeaths,smears:S.effects.smears,spray:S.effects.spray,sluff:S.effects.sluff,floaters:S.effects.floaters,parts:S.effects.particles,snow:S.effects.snow,rings:S.effects.rings,carveSegs:S.course.carveSegments}),
-  lb:ArcadeLeaderboard,identity:Identity,runRecord:RunRecord,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,season2Runs:Season2Runs,
-  arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,arcadeLeaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,
+  lb:ArcadeLeaderboard,identity:Identity,runRecord:RunRecord,arcadeRunIdentity:ArcadeRunIdentity,arcadeRuns:ArcadeRuns,season2Runs:Season2Runs,openSkiRuns:OpenSkiRuns,
+  arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,openSkiSubmission:OpenSkiSubmission,arcadeLeaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,
   initialsMountain:InitialsMountain,arcadeReleaseValidation:ArcadeReleaseValidation,localHistoryValidation:LocalHistoryValidation,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
   leaderboardMountainIntegration:LeaderboardMountainIntegration,performanceStability:PerformanceStability,playtestReport:PlaytestReport,playtestUpload:PlaytestUpload,
   sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,yetiDiagnosticBatch:YetiDiagnosticBatch,yetiAttackArbiter:YetiAttackArbiter,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,telemetryEventPriority:TelemetryEventPriority,phase6aCorrectness2a:Object.freeze({playerDownhillVelocity,passiveCatchStatus:YetiAttackArbiter.passiveCatchStatus}),phase6aCorrectness2b:Object.freeze({telemetryEventPriority:TelemetryEventPriority,queuedFollowUpStatus:YetiAttackArbiter.queuedFollowUpStatus,queueFollowUp:YetiAttackArbiter.queueFollowUp,finishQueuedFollowUp:YetiAttackArbiter.finishQueuedFollowUp}),phase6aTutorial2c:Object.freeze({FlagTutorial,config:APP_CONFIG.flagTutorial,status:FlagTutorial.status,selfTest:FlagTutorial.selfTest}),phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,softMiss,wrongSide,faultFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),phase12a2:Object.freeze({YetiBoulderThrow,spawnYetiThrownBoulder,spawnYetiThrownBoulders,drawYetiBoulderThrow,config:APP_CONFIG.yetiBoulderThrow}),phase12a2a:Object.freeze({YetiPresence,updateYetiVisual,drawYetiLayer,config:APP_CONFIG.yetiPresence}),phase12a2b:Object.freeze({YetiPhysicality,lungeTelegraphDuration,applyYetiSlamImpact,drawCommittedYetiAim,config:APP_CONFIG.yetiPhysicality}),phase12a2c:Object.freeze({YetiBoulderThrow,visibleForThrow:YetiBoulderThrow.visibleForThrow,silhouetteSnapshot:YetiBoulderThrow.silhouetteSnapshot,config:APP_CONFIG.yetiBoulderThrow}),phase12a2e:Object.freeze({hiddenOpening:true,YetiPresence,config:APP_CONFIG.yetiPresence}),phase12a2h:Object.freeze({hotStreakScore:YetiBoulderThrow.hotStreakScore,deferLunge:YetiBoulderThrow.deferLunge,accelerateHotStreakAttack:YetiBoulderThrow.accelerateHotStreakAttack,slamIndicator:false,config:APP_CONFIG.yetiBoulderThrow,physicality:APP_CONFIG.yetiPhysicality}),phase12a3c2:Object.freeze({YetiAttackArbiter,YetiBoulderThrow,config:APP_CONFIG.yetiAttackArbiter,status:YetiAttackArbiter.status,selfTest:YetiAttackArbiter.selfTest}),phase12c0:Object.freeze({YetiBoulderThrow,depthWindupMultiplier:YetiBoulderThrow.depthWindupMultiplier,config:APP_CONFIG.yetiBoulderThrow}),phase12c1:Object.freeze({YetiCharge,drawYetiChargeTell,config:APP_CONFIG.yetiCharge,status:YetiCharge.status,selfTest:YetiCharge.selfTest,relativeSweptDistance,collisionSelfTest:chargeCollisionSelfTest}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
   difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg,pacing:PerfBudget.snapshot()}),
   setQuality:n=>PerfBudget.setLevel(n),setSteer:v=>{S.player.active=v!==0;S.player.steer=clamp(v,-1,1);},resetDevTuning
+};
+window.advanceTime=ms=>{
+  const steps=Math.max(1,Math.min(3600,Math.round(Math.max(0,+ms||0)/(1000/60))));
+  for(let i=0;i<steps;i++)Simulation.update(1/60);
+  Rendering.render();return steps;
+};
+window.render_game_to_text=()=>{
+  const context=S.runContext||RunContext.current(),playerDepth=+S.player.depth||0;
+  const nearby=(items,project)=>items.filter(item=>Math.abs((+item.d||0)-playerDepth)<80).slice(0,16).map(project);
+  return JSON.stringify({
+    coordinateSystem:'logical 720px wide; x increases right; depth increases downhill',
+    screen:S.run.mode,runMode:context.mode,yetiAllowed:RunContext.permits('allowYeti',context),
+    player:{x:Math.round(S.player.x),depth:Math.round(playerDepth),speed:Math.round(S.player.speed*10)/10,steer:Math.round(S.player.steer*100)/100},
+    score:{points:Math.max(0,Math.floor(playerDepth*2+S.score.scoreFlag+S.score.scoreCombo-S.score.scorePenalty)),cleanFlags:S.score.cleanFlags,attemptedFlags:S.score.flagsAttempted,combo:S.player.combo},
+    yeti:{on:!!S.yeti.on,x:Math.round(+S.yeti.x||0),depth:Math.round(+S.yeti.d||0),state:String(S.yeti.state||'OFF')},
+    nearby:{gates:nearby(S.course.gates,g=>({x:Math.round(g.x),depth:Math.round(g.d),side:g.side,done:!!g.done})),obstacles:nearby(S.world.obstacles,o=>({x:Math.round(o.x),depth:Math.round(o.d),type:o.type})),boulders:nearby(S.hazards.boulders,b=>({x:Math.round(b.x),depth:Math.round(b.d),kind:b.kind||'avalanche'}))},
+    memorials:{shared:SharedMemorials.records().length,local:localDeaths.length},leaderboardView:SeasonalLeaderboard.current()
+  });
 };
 </script>
 </body>
