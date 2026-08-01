@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111b">
+  <title>Endless Powder · Mountain Report</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="snow-grain" aria-hidden="true"></div>
+  <header class="hero">
+    <div class="ridge ridge-back" aria-hidden="true"></div>
+    <div class="ridge ridge-front" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="brand">ENDLESS POWDER</p>
+      <p class="eyebrow">COMMUNITY ANALYTICS</p>
+      <h1>Mountain Report</h1>
+      <p class="hero-copy">What recorded runs reveal about speed, survival, flags, and the pursuit.</p>
+      <div class="hero-meta">
+        <span class="status-pill" id="dataStatus">LOADING DATA</span>
+        <span id="sourceWindow">—</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="state-panel" id="loadingState" aria-live="polite">
+      <span class="loader" aria-hidden="true"></span>
+      <h2>Reading the mountain</h2>
+      <p>Loading the privacy-safe community summary.</p>
+    </section>
+
+    <section class="state-panel" id="emptyState" hidden>
+      <p class="state-mark">◇</p>
+      <h2>Awaiting the first export</h2>
+      <p>The dashboard is ready, but its public summary has not been generated from a private Firebase backup yet.</p>
+      <code>node tools/build-community-summary.mjs --input firebase-export.json</code>
+      <p class="state-small">Raw Firebase data stays private. Only the generated aggregate belongs on the public site.</p>
+    </section>
+
+    <section class="state-panel error" id="errorState" hidden>
+      <p class="state-mark">!</p>
+      <h2>Report unavailable</h2>
+      <p id="errorMessage">The summary could not be loaded.</p>
+      <button class="retry-button" id="retryLoad" type="button">TRY AGAIN</button>
+    </section>
+
+    <div id="dashboard" hidden>
+      <nav class="view-switch" aria-label="Analytics mode">
+        <button class="view-button active" type="button" data-view-button="pursuit" aria-pressed="true">
+          <span>PURSUIT</span>
+          <small>RECORDED RUNS</small>
+        </button>
+        <button class="view-button" type="button" data-view-button="open-ski" aria-pressed="false">
+          <span>OPEN SKI</span>
+          <small>SUBMITTED RUNS</small>
+        </button>
+      </nav>
+
+      <section data-view-panel="pursuit">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">THE PURSUIT</p>
+            <h2>Recorded descents</h2>
+          </div>
+          <p>Completed normal runs with anonymous gameplay data enabled.<span class="coverage-line" id="pursuitBuildCoverage"></span></p>
+        </div>
+
+        <div class="metric-grid metric-grid-primary">
+          <article class="metric-card feature">
+            <p>RECORDED RUNS</p>
+            <strong id="runsRecorded">—</strong>
+            <small id="playersRecorded">— anonymous players</small>
+          </article>
+          <article class="metric-card">
+            <p>MEDIAN DESCENT</p>
+            <strong><span id="medianDistance">—</span><em>m</em></strong>
+            <small id="p90Distance">— at the 90th percentile</small>
+          </article>
+          <article class="metric-card">
+            <p>TOTAL POWDER</p>
+            <strong><span id="totalDistance">—</span><em>m</em></strong>
+            <small id="longestDistance">— longest recorded run</small>
+          </article>
+          <article class="metric-card gold">
+            <p>FLAG ACCURACY</p>
+            <strong><span id="flagAccuracy">—</span><em>%</em></strong>
+            <small id="flagCount">— clean passes</small>
+          </article>
+        </div>
+
+        <div class="report-grid two-one">
+          <article class="report-card survival-card">
+            <header>
+              <div><p class="eyebrow">SURVIVAL</p><h3>How deep players go</h3></div>
+              <span class="card-note">SHARE OF RUNS</span>
+            </header>
+            <div class="bar-stack" id="survivalBars"></div>
+          </article>
+
+          <article class="report-card distance-card">
+            <header><div><p class="eyebrow">DISTANCE</p><h3>The middle of the mountain</h3></div></header>
+            <div class="quartile-mark">
+              <span style="--x:25%"><i>P25</i></span>
+              <span class="median" style="--x:50%"><i>MEDIAN</i></span>
+              <span style="--x:75%"><i>P75</i></span>
+              <span class="peak" style="--x:100%"><i>MAX</i></span>
+            </div>
+            <div class="stat-pair">
+              <div><small>AVERAGE</small><strong id="averageDistance">—</strong><em>m</em></div>
+              <div><small>90TH PERCENTILE</small><strong id="distanceP90">—</strong><em>m</em></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="report-grid equal">
+          <article class="report-card flag-card">
+            <header><div><p class="eyebrow">FLAGS</p><h3>Clean lines build speed</h3></div></header>
+            <div class="gauge-row">
+              <div class="ring-gauge" id="flagGauge" role="img" aria-label="Flag accuracy">
+                <div><strong id="flagGaugeValue">—</strong><span>%</span></div>
+              </div>
+              <div class="gauge-copy">
+                <p><strong id="cleanFlags">—</strong> clean</p>
+                <p><strong id="attemptedFlags">—</strong> attempted</p>
+                <p><strong id="bestCombo">—</strong> best combo</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="report-card death-card">
+            <header><div><p class="eyebrow">LAST MOMENTS</p><h3>What ends a run</h3></div></header>
+            <div class="death-layout">
+              <div class="death-donut" id="deathDonut" role="img" aria-label="Death cause distribution"><span></span></div>
+              <div class="death-legend" id="deathLegend"></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="report-card yeti-card">
+          <header>
+            <div><p class="eyebrow">THE YETI</p><h3>Pressure and counterplay</h3></div>
+            <span class="card-note" id="attackCoverage">LUNGE TELEMETRY</span>
+          </header>
+          <div class="yeti-grid">
+            <div class="yeti-stat"><small>COMMITTED LUNGES</small><strong id="committedLunges">—</strong><span id="lungesPerRun">— per run</span></div>
+            <div class="yeti-stat accent"><small>LUNGE DODGE RATE</small><strong><span id="lungeDodgeRate">—</span>%</strong><span id="lungeOutcomes">— resolved attacks</span></div>
+            <div class="yeti-stat"><small>PASSIVE CATCHES</small><strong id="passiveCatches">—</strong><span id="passiveWhiffs">— passive whiffs</span></div>
+            <div class="yeti-stat"><small>FOLLOW-UP LUNGES</small><strong id="followUpLunges">—</strong><span id="telegraphCount">— telegraphs</span></div>
+          </div>
+          <div class="threat-band" id="threatBand" aria-label="Time in each Yeti threat state"></div>
+          <p class="availability-note" id="attackAvailabilityNote"></p>
+        </article>
+
+        <article class="report-card trend-card">
+          <header>
+            <div><p class="eyebrow">OVER TIME</p><h3>Median descent by month</h3></div>
+            <span class="card-note">MINIMUM GROUP APPLIED</span>
+          </header>
+          <canvas id="trendChart" width="960" height="300" role="img" aria-label="Median descent by month"></canvas>
+          <div class="trend-legend" id="trendLegend"></div>
+          <p class="empty-chart" id="trendEmpty" hidden>Not enough months meet the privacy threshold yet.</p>
+        </article>
+
+        <div class="report-grid equal">
+          <article class="report-card performance-card">
+            <header><div><p class="eyebrow">PERFORMANCE</p><h3>How the mountain runs</h3></div></header>
+            <div class="stat-pair triple">
+              <div><small>AVERAGE FPS</small><strong id="averageFps">—</strong></div>
+              <div><small>MEDIAN LOW</small><strong id="minimumFps">—</strong></div>
+              <div><small>RUNS BELOW 30</small><strong id="lowFpsRate">—</strong><em>%</em></div>
+            </div>
+          </article>
+
+          <article class="report-card device-card">
+            <header><div><p class="eyebrow">PLAY STYLE</p><h3>Broad device mix</h3></div></header>
+            <div class="mini-bars" id="deviceBreakdown"></div>
+            <p class="availability-note">Small categories are combined into “other.”</p>
+          </article>
+        </div>
+      </section>
+
+      <section data-view-panel="open-ski" hidden>
+        <div class="section-heading open-heading">
+          <div>
+            <p class="eyebrow">OPEN SKI</p>
+            <h2>No Yeti. Same mountain.</h2>
+          </div>
+          <p>These figures cover submitted Open Ski leaderboard runs, not every Open Ski attempt.</p>
+        </div>
+
+        <div class="open-hero-card">
+          <div class="open-mark" aria-hidden="true">↘</div>
+          <div><small>SUBMITTED OPEN SKI RUNS</small><strong id="openSubmittedRuns">—</strong><span id="openSubmitters">— anonymous submitters</span></div>
+          <div><small>LONGEST DESCENT</small><strong><span id="openLongest">—</span> m</strong><span id="openMedian">— m median</span></div>
+          <div><small>TOP SCORE</small><strong id="openTopScore">—</strong><span id="openFlagAccuracy">—% flag accuracy</span></div>
+        </div>
+
+        <div class="report-grid equal">
+          <article class="report-card comparison-card">
+            <header><div><p class="eyebrow">SUBMITTED RUNS</p><h3>Pursuit vs. Open Ski</h3></div></header>
+            <div id="modeComparison"></div>
+            <p class="availability-note">Leaderboard submissions are self-selected and should not be compared to all recorded Pursuit telemetry as if coverage were equal.</p>
+          </article>
+
+          <article class="report-card death-card">
+            <header><div><p class="eyebrow">ENVIRONMENT</p><h3>How Open Ski runs end</h3></div></header>
+            <div class="death-layout">
+              <div class="death-donut" id="openDeathDonut" role="img" aria-label="Open Ski death cause distribution"><span></span></div>
+              <div class="death-legend" id="openDeathLegend"></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="report-card telemetry-boundary">
+          <div class="boundary-icon" aria-hidden="true">○</div>
+          <div>
+            <p class="eyebrow">DATA BOUNDARY</p>
+            <h3>Open Ski does not enter Pursuit telemetry</h3>
+            <p>It has its own leaderboard and contributes no Yeti, pursuit-pressure, or all-run telemetry records. That keeps the Pursuit dataset clean.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="methodology">
+        <details>
+          <summary>ABOUT THIS DATA</summary>
+          <div>
+            <p id="coverageCopy"></p>
+            <ul id="privacyNotes"></ul>
+            <p>Raw Firebase records are processed outside this page. The public dashboard receives aggregates only.</p>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>ENDLESS POWDER</span>
+    <span>THE MOUNTAIN REMEMBERS</span>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
