@@ -15,8 +15,21 @@
     CRITICAL: "#ef776e"
   };
   const $ = (id) => document.getElementById(id);
-  const state = { phase: "loading", view: "pursuit", demo: false, data: null, error: "" };
+  const LIVE_REFRESH_MS = 5 * 60 * 1000;
+  const state = {
+    phase: "loading",
+    view: "pursuit",
+    demo: false,
+    data: null,
+    baseline: null,
+    live: null,
+    livePhase: "loading",
+    liveCheckedAt: 0,
+    liveRefreshing: false,
+    error: ""
+  };
   let lastChartData = [];
+  let liveRefreshTimer = 0;
 
   const number = (value) =>
     value === null || value === undefined || value === ""
@@ -35,6 +48,7 @@
   const percent = (value) => (number(value) === null ? "—" : fmt(value, 1).replace(".0", ""));
   const safe = (value, fallback = {}) =>
     value && typeof value === "object" ? value : fallback;
+  const clone = (value) => JSON.parse(JSON.stringify(value));
 
   function setText(id, value) {
     const node = $(id);
@@ -248,6 +262,114 @@
     );
   }
 
+  function liveMonthLabel(rows) {
+    if (!Array.isArray(rows) || !rows.length) return "AWAITING FIRST RUN";
+    return rows.map((row) => {
+      const [year, month] = String(row.month || "").split("-");
+      const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+      const label = Number.isFinite(date.getTime())
+        ? date.toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" }).toUpperCase()
+        : String(row.month || "");
+      return `${label} · ${fmt(row.runs)}`;
+    }).join(" / ");
+  }
+
+  function renderLiveMix(attacks) {
+    const node = $("liveAttackMix");
+    node.replaceChildren();
+    const byRange = safe(attacks.byRange);
+    const byPerformance = safe(attacks.byPerformance);
+    const rows = [
+      ["SHORT", number(byRange.SHORT) || 0],
+      ["MID", number(byRange.MID) || 0],
+      ["LONG", number(byRange.LONG) || 0],
+      ["STRUGGLING", number(byPerformance.STRUGGLING) || 0],
+      ["STABLE", number(byPerformance.STABLE) || 0],
+      ["FAST", number(byPerformance.FAST) || 0],
+      ["HOT", number(byPerformance.HOT) || 0]
+    ];
+    const maximum = Math.max(0, ...rows.map(([, value]) => value));
+    if (!maximum) {
+      const empty = document.createElement("p");
+      empty.className = "live-mix-empty";
+      empty.textContent = "No committed live attacks yet.";
+      node.appendChild(empty);
+      return;
+    }
+    for (const [label, value] of rows) {
+      const row = document.createElement("div");
+      row.className = "live-mix-row";
+      const title = document.createElement("label");
+      title.textContent = label;
+      const track = document.createElement("div");
+      track.className = "bar-track";
+      const bar = document.createElement("div");
+      bar.className = "bar-fill";
+      bar.style.setProperty("--width", `${Math.max(0, Math.min(100, (value / maximum) * 100))}%`);
+      track.appendChild(bar);
+      const count = document.createElement("strong");
+      count.textContent = fmt(value);
+      row.append(title, track, count);
+      node.appendChild(row);
+    }
+  }
+
+  function renderLive(live) {
+    state.live = live;
+    state.liveCheckedAt = number(live && live.checkedAt) || Date.now();
+    const pursuit = safe(live && live.pursuit);
+    const status = $("liveFeedStatus");
+    const topBadge = $("dataStatus");
+    topBadge.classList.toggle("demo", state.demo);
+    topBadge.textContent = state.demo
+      ? "DEMO · BASELINE + LIVE"
+      : pursuit.ok === true ? "BASELINE + LIVE" : "PACKAGED BASELINE";
+    const window = safe(state.data && state.data.sourceWindow);
+    const baselineWindow = window.firstDay && window.lastDay
+      ? `${dateLabel(window.firstDay)} — ${dateLabel(window.lastDay)}`
+      : "NO RECORDED WINDOW";
+    const checked = new Date(state.liveCheckedAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }).toUpperCase();
+    setText("sourceWindow", `${baselineWindow} · LIVE CHECKED ${checked}`);
+    status.classList.toggle("ready", pursuit.ok === true);
+    status.classList.toggle("offline", pursuit.ok !== true);
+    if (pursuit.ok !== true) {
+      state.livePhase = "offline";
+      status.textContent = "LIVE FEED OFFLINE";
+      setText("liveFeedCopy", "The packaged A3 baseline remains available. The live feed will retry automatically when this page is open.");
+      for (const id of ["liveRunCount", "liveMonths", "liveMedianDistance", "liveFlagAccuracy", "liveFlagCount", "liveAverageFps", "liveFpsCoverage", "liveLunges", "liveLungeDodges", "liveCharges", "liveChargeDodges", "liveBoulders", "liveBoulderReleases"])
+        setText(id, "—");
+      renderLiveMix({});
+      setText("liveFeedPrivacy", "Live Pursuit data could not be reached; no private telemetry path was requested. Packaged aggregate cards remain valid.");
+      return;
+    }
+    const data = safe(pursuit.data);
+    const runs = number(data.accepted) || 0;
+    const attacks = safe(data.attacks);
+    state.livePhase = runs ? "ready" : "empty";
+    status.textContent = runs ? `LIVE · ${fmt(runs)} ${runs === 1 ? "RUN" : "RUNS"}` : "CONNECTED · AWAITING RUN";
+    setText(
+      "liveFeedCopy",
+      runs
+        ? "These exact figures include only identifier-free Pursuit runs submitted after the A4.3 deployment. They are shown beside, not blended into, the packaged historical baseline."
+        : "The A4.3 public feed is connected. It will populate after the first post-deployment Pursuit run completes."
+    );
+    setText("liveRunCount", fmt(runs));
+    setText("liveMonths", liveMonthLabel(data.sourceMonths));
+    setText("liveMedianDistance", number(safe(data.distance).median) === null ? "—" : fmt(data.distance.median));
+    setText("liveFlagAccuracy", number(safe(data.flags).accuracy) === null ? "—" : percent(data.flags.accuracy));
+    setText("liveFlagCount", runs ? `${fmt(data.flags.clean)} clean / ${fmt(data.flags.attempted)} attempted` : "No live flags yet");
+    setText("liveAverageFps", number(safe(data.performance).averageFps) === null ? "—" : fmt(data.performance.averageFps, 1));
+    setText("liveFpsCoverage", runs ? `${fmt(data.performance.measuredRuns)} of ${fmt(runs)} measured runs` : "No live performance samples");
+    setText("liveLunges", fmt(attacks.committedLunges));
+    setText("liveLungeDodges", number(attacks.lungeDodgeRate) === null ? "no resolved outcomes" : `${percent(attacks.lungeDodgeRate)}% dodged`);
+    setText("liveCharges", fmt(attacks.chargeCommits));
+    setText("liveChargeDodges", number(attacks.chargeDodgeRate) === null ? "no resolved outcomes" : `${percent(attacks.chargeDodgeRate)}% dodged`);
+    setText("liveBoulders", fmt(safe(attacks.byKind).boulders));
+    setText("liveBoulderReleases", `${fmt(attacks.boulderThrowReleases)} boulders released`);
+    renderLiveMix(attacks);
+    setText("liveFeedPrivacy", `${fmt(data.invalid)} rejected rows. Pursuit live records contain no player identifiers, report IDs, exact timestamps, traces, comments, or device/session identity.`);
+  }
+
   function renderPursuit(summary) {
     const pursuit = safe(summary.pursuit);
     const overview = safe(pursuit.overview);
@@ -323,8 +445,14 @@
     const open = safe(boards.openSki);
     const pursuit = safe(boards.pursuit);
     const hasOpenRuns = (number(open.submittedRuns) || 0) > 0;
+    const liveOpenSki = state.live && state.live.openSki && state.live.openSki.ok === true;
     setText("openSubmittedRuns", fmt(open.submittedRuns));
-    setText("openSubmitters", hasOpenRuns ? `${fmt(open.approximateSubmitters)} approximate anonymous submitters` : "No Open Ski submissions in this export");
+    setText(
+      "openSubmitters",
+      hasOpenRuns
+        ? `${fmt(open.approximateSubmitters)} approximate anonymous submitters${liveOpenSki ? " · live public board" : ""}`
+        : liveOpenSki ? "No Open Ski submissions on the live public board" : "No Open Ski submissions in the packaged baseline"
+    );
     setText("openLongest", hasOpenRuns ? fmt(safe(open.distance).max) : "—");
     setText("openMedian", hasOpenRuns ? `${fmt(safe(open.distance).median)} m median` : "No median yet");
     setText("openTopScore", hasOpenRuns ? fmt(safe(open.score).max) : "—");
@@ -343,9 +471,21 @@
     const telemetry = safe(coverage.pursuitTelemetry);
     const pursuit = safe(coverage.pursuitLeaderboard);
     const open = safe(coverage.openSkiLeaderboard);
+    const livePursuit = state.live && state.live.pursuit && state.live.pursuit.ok
+      ? number(state.live.pursuit.data.accepted) || 0
+      : null;
+    const liveOpen = state.live && state.live.openSki && state.live.openSki.ok
+      ? number(state.live.openSki.data.submittedRuns) || 0
+      : null;
+    const liveCopy = livePursuit === null
+      ? " The live Pursuit feed is temporarily unavailable; the packaged baseline remains visible."
+      : ` The separate live panel contains ${fmt(livePursuit)} post-A4.3 Pursuit runs; those exact live-only values are not blended into historical percentiles.`;
+    const openCopy = liveOpen === null
+      ? ` The Open Ski section is using its packaged ${fmt(open.accepted)}-submission fallback.`
+      : ` Open Ski uses the current public board with ${fmt(liveOpen)} submissions.`;
     setText(
       "coverageCopy",
-      `${fmt(telemetry.accepted)} Pursuit telemetry summaries, ${fmt(pursuit.accepted)} Pursuit leaderboard submissions, and ${fmt(open.accepted)} Open Ski submissions were accepted by the aggregate processor.`
+      `Packaged baseline: ${fmt(telemetry.accepted)} Pursuit telemetry summaries and ${fmt(pursuit.accepted)} Pursuit leaderboard submissions.${liveCopy}${openCopy}`
     );
     const list = $("privacyNotes");
     list.replaceChildren();
@@ -354,6 +494,9 @@
       item.textContent = note;
       list.appendChild(item);
     }
+    const liveNote = document.createElement("li");
+    liveNote.textContent = "The page makes two public, read-only Firebase requests per refresh: the identifier-free Pursuit analytics feed and the Open Ski leaderboard. It never requests the private telemetry branch.";
+    list.appendChild(liveNote);
   }
 
   function selectView(view, updateUrl = true, scroll = true) {
@@ -394,6 +537,54 @@
     selectView(requested === "open-ski" ? "open-ski" : "pursuit", false, false);
   }
 
+  function summaryWithLiveOpenSki(baseline, live) {
+    const summary = clone(baseline);
+    if (live && live.openSki && live.openSki.ok === true) {
+      summary.leaderboards.openSki = clone(live.openSki.data);
+      summary.coverage.openSkiLeaderboard = clone(live.openSki.data.coverage);
+    }
+    return summary;
+  }
+
+  async function loadLiveSnapshot() {
+    if (!window.AnalyticsLiveData) throw new Error("Live analytics module did not load.");
+    if (!state.demo) return window.AnalyticsLiveData.load();
+    const response = await fetch("./fixtures/live-feed-a4-4.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`Live demo request returned ${response.status}.`);
+    const fixture = await response.json();
+    return window.AnalyticsLiveData.fromTrees(fixture.publicAnalyticsRuns, fixture.openSkiRuns);
+  }
+
+  function offlineLive(error) {
+    const empty = window.AnalyticsLiveData
+      ? window.AnalyticsLiveData.fromTrees(null, null)
+      : { checkedAt: Date.now(), pursuit: { data: {} }, openSki: { data: {} } };
+    const message = String(error && error.message ? error.message : error || "Live feed unavailable.");
+    return {
+      ...empty,
+      pursuit: { ...empty.pursuit, ok: false, error: message },
+      openSki: { ...empty.openSki, ok: false, error: message },
+      requests: state.demo ? 0 : 2
+    };
+  }
+
+  async function refreshLive() {
+    if (state.liveRefreshing || !state.baseline) return state.live;
+    state.liveRefreshing = true;
+    try {
+      const live = await loadLiveSnapshot().catch(offlineLive);
+      state.live = live;
+      const view = state.view;
+      render(summaryWithLiveOpenSki(state.baseline, live));
+      selectView(view, false, false);
+      renderLive(live);
+      renderMethodology(state.data);
+      return live;
+    } finally {
+      state.liveRefreshing = false;
+    }
+  }
+
   async function load() {
     state.phase = "loading";
     state.error = "";
@@ -404,9 +595,18 @@
       ? "./fixtures/community-summary-demo.json"
       : "./data/community-summary-v1.json";
     try {
-      const response = await fetch(source, { cache: "no-store" });
+      const [response, live] = await Promise.all([
+        fetch(source, { cache: "no-store" }),
+        loadLiveSnapshot().catch(offlineLive)
+      ]);
       if (!response.ok) throw new Error(`Summary request returned ${response.status}.`);
-      render(await response.json());
+      state.baseline = await response.json();
+      state.live = live;
+      render(summaryWithLiveOpenSki(state.baseline, live));
+      renderLive(live);
+      renderMethodology(state.data);
+      clearInterval(liveRefreshTimer);
+      if (!state.demo) liveRefreshTimer = setInterval(refreshLive, LIVE_REFRESH_MS);
     } catch (error) {
       state.phase = "error";
       state.error = String(error && error.message ? error.message : error);
@@ -424,6 +624,10 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => state.phase === "ready" && state.view === "pursuit" && drawTrend(lastChartData), 80);
   });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && !state.demo && Date.now() - state.liveCheckedAt >= LIVE_REFRESH_MS)
+      refreshLive();
+  });
   window.advanceTime = () => state.phase;
   window.render_game_to_text = () =>
     JSON.stringify({
@@ -431,7 +635,27 @@
       phase: state.phase,
       view: state.view,
       demo: state.demo,
+      source: "packaged-baseline-plus-live-feed",
       sourceWindow: state.data && state.data.sourceWindow,
+      live: state.live
+        ? {
+            phase: state.livePhase,
+            checkedAt: state.liveCheckedAt,
+            requestsPerRefresh: state.live.requests,
+            pursuitConnected: state.live.pursuit.ok,
+            pursuitAccepted: state.live.pursuit.data.accepted,
+            pursuitInvalid: state.live.pursuit.data.invalid,
+            openSkiConnected: state.live.openSki.ok,
+            openSkiAccepted: state.live.openSki.data.submittedRuns,
+            attacks: state.live.pursuit.ok ? {
+              committedLunges: state.live.pursuit.data.attacks.committedLunges,
+              chargeCommits: state.live.pursuit.data.attacks.chargeCommits,
+              boulderThrowReleases: state.live.pursuit.data.attacks.boulderThrowReleases,
+              byRange: state.live.pursuit.data.attacks.byRange,
+              byPerformance: state.live.pursuit.data.attacks.byPerformance
+            } : null
+          }
+        : null,
       pursuit: state.data && state.data.pursuit
         ? {
             recordedRuns: state.data.pursuit.overview.recordedRuns,
@@ -456,6 +680,6 @@
         : null,
       error: state.error
     });
-  window.AnalyticsDashboard = Object.freeze({ load, selectView, state: () => ({ ...state, data: undefined }) });
+  window.AnalyticsDashboard = Object.freeze({ load, refreshLive, selectView, state: () => ({ ...state, data: undefined, baseline: undefined }) });
   load();
 })();

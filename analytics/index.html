@@ -137,6 +137,35 @@
           <p class="availability-note" id="cohortAvailabilityNote"></p>
         </article>
 
+        <article class="report-card live-feed-card" id="liveFeedCard">
+          <header>
+            <div><p class="eyebrow">LIVE SINCE A4.3</p><h3>Fresh runs from Firebase</h3></div>
+            <span class="card-note live-status" id="liveFeedStatus">CONNECTING</span>
+          </header>
+          <p class="availability-note live-feed-copy" id="liveFeedCopy">Checking the identifier-free public feed.</p>
+          <div class="live-summary-grid">
+            <div><small>LIVE PURSUIT RUNS</small><strong id="liveRunCount">—</strong><span id="liveMonths">—</span></div>
+            <div><small>MEDIAN DESCENT</small><strong><span id="liveMedianDistance">—</span><em>m</em></strong><span>live-feed runs only</span></div>
+            <div><small>FLAG ACCURACY</small><strong><span id="liveFlagAccuracy">—</span><em>%</em></strong><span id="liveFlagCount">—</span></div>
+            <div><small>AVERAGE FPS</small><strong id="liveAverageFps">—</strong><span id="liveFpsCoverage">—</span></div>
+          </div>
+          <div class="live-yeti-grid">
+            <section>
+              <p class="eyebrow">LIVE YETI ACTIVITY</p>
+              <div class="live-attack-stats">
+                <div><small>LUNGES</small><strong id="liveLunges">—</strong><span id="liveLungeDodges">—</span></div>
+                <div><small>CHARGES</small><strong id="liveCharges">—</strong><span id="liveChargeDodges">—</span></div>
+                <div><small>BOULDER THROWS</small><strong id="liveBoulders">—</strong><span id="liveBoulderReleases">—</span></div>
+              </div>
+            </section>
+            <section>
+              <p class="eyebrow">ATTACK MIX</p>
+              <div class="live-mix" id="liveAttackMix"></div>
+            </section>
+          </div>
+          <p class="availability-note" id="liveFeedPrivacy">No player identifiers or exact run times are downloaded in the Pursuit live feed.</p>
+        </article>
+
         <div class="report-grid two-one">
           <article class="report-card survival-card">
             <header>
@@ -288,6 +317,7 @@
     <span>THE MOUNTAIN REMEMBERS</span>
   </footer>
 
+  <script src="./live-data.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
