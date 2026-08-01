@@ -35,6 +35,10 @@ button{font:inherit}
 .ridge-back{background:#b6d1df;opacity:.17;transform:translateY(-30px) scale(1.08)}
 .ridge-front{background:#07111b;opacity:.96}
 .hero-inner{position:relative;z-index:2;width:min(1160px,calc(100% - 40px));margin:0 auto;padding:78px 0 130px}
+.back-to-game{position:absolute;top:max(20px,env(safe-area-inset-top));right:0;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:44px;padding:0 15px;border:1px solid rgba(245,247,241,.30);border-radius:999px;background:rgba(7,17,27,.58);
+  color:var(--snow);font-size:10px;font-weight:900;letter-spacing:.14em;text-decoration:none;backdrop-filter:blur(12px)}
+.back-to-game:active{transform:scale(.98);filter:brightness(.92)}.back-to-game:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .brand{margin:0 0 30px;color:var(--snow);font-weight:900;letter-spacing:.34em;font-size:12px}
 .eyebrow{margin:0 0 8px;color:var(--blue);font-size:11px;font-weight:900;letter-spacing:.24em}
 h1,h2,h3,p{margin-top:0}
