@@ -19,15 +19,16 @@
   /* Gameplay steering owns the entire visible playfield, including the lower safe-area region.
      The class is enabled only during an active run so instruction-panel scrolling remains intact. */
   #stage.gameplay-input{touch-action:none;overscroll-behavior:none}
-  /* Desktop browsers use a centered phone-shaped playfield. Touch devices retain the full viewport. */
-  @media (min-width:700px) and (min-aspect-ratio:4/3){
+  /* Fine-pointer desktop browsers keep the portrait playfield at every window shape.
+     Touch devices retain the full viewport. */
+  @media (hover:hover) and (pointer:fine){
     #wrap{display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
     #stage{
       position:relative;inset:auto;flex:0 0 auto;
-      width:min(500px,calc((100vh - 32px)*.461538));
-      height:min(calc(100vh - 32px),1083.33px);
-      width:min(500px,calc((100dvh - 32px)*.461538));
-      height:min(calc(100dvh - 32px),1083.33px);
+      width:min(500px,calc(100vw - 32px),calc((100vh - 32px)*.461538));
+      height:min(calc(100vh - 32px),calc((100vw - 32px)/.461538),1083.33px);
+      width:min(500px,calc(100vw - 32px),calc((100dvh - 32px)*.461538));
+      height:min(calc(100dvh - 32px),calc((100vw - 32px)/.461538),1083.33px);
       border-radius:14px;
       box-shadow:0 0 0 1px rgba(255,255,255,.10),0 22px 70px rgba(0,0,0,.55);
     }
@@ -881,7 +882,7 @@ function removeSwapAt(list,index){
    submissions, and initials_bests remains the all-time mountain source.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_analytics_a5_2b_live.html","normalizedArtifactSha256":"7363b756c50f37dd378ea71ebf4bf30f5ed21ed781dc5eed340684b3c3e0241c","sourceSha256":"c50731daec07dc560441b6baee635bda9cc247609e70776cf8e684cfd63f9b7b","profileSha256":"c358771b107c54bf52c0fda8fbbb8f949141f43e23dbe099683405db61bfef49","tuningSha256":"252b560bc14f4fb247700e6a12b7944184317aa715ffca6412b346bac417da8a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
+  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_analytics_a5_2b_live.html","normalizedArtifactSha256":"b0b3305a2de90278b793ddf069d27920bd2e557fb933b4c7b93426b9ffe05ccb","sourceSha256":"375979649d57486af365d6c132f87dff8d4abd026f67690b8aed4c1f500a4900","profileSha256":"c358771b107c54bf52c0fda8fbbb8f949141f43e23dbe099683405db61bfef49","tuningSha256":"252b560bc14f4fb247700e6a12b7944184317aa715ffca6412b346bac417da8a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
   experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 6C PRODUCTION CANDIDATE'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   course:Object.freeze({
