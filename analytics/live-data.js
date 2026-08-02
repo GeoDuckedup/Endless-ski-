@@ -24,6 +24,7 @@
     "D0_249", "D250_499", "D500_999", "D1000_1999", "D2000_3999", "D4000_PLUS"
   ]);
   const LANE_BANDS = Object.freeze(["FAR_LEFT", "LEFT", "CENTER", "RIGHT", "FAR_RIGHT"]);
+  const RECENT_MONTH_COUNT = 2;
 
   const object = value => value && typeof value === "object" && !Array.isArray(value)
     ? value
@@ -457,6 +458,37 @@
     });
   }
 
+  function monthKey(date) {
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function recentMonthKeys(now = Date.now()) {
+    const parsed = new Date(now);
+    const date = Number.isFinite(parsed.getTime()) ? parsed : new Date();
+    return Object.freeze(Array.from({ length: RECENT_MONTH_COUNT }, (_, index) =>
+      monthKey(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - index, 1)))
+    ).sort());
+  }
+
+  function filterMonthlyTree(tree, months) {
+    const source = object(tree);
+    const allowed = new Set(Array.isArray(months) ? months : []);
+    return Object.fromEntries(Object.entries(source).filter(([month]) => allowed.has(month)));
+  }
+
+  function scopedMonthlyFeed(tree, aggregate, now, ok = true, error = "") {
+    const source = ok ? tree : null;
+    const recentMonths = recentMonthKeys(now);
+    const all = aggregate(source);
+    const recent = aggregate(filterMonthlyTree(source, recentMonths));
+    return Object.freeze({
+      ok,
+      data: all,
+      scopes: Object.freeze({ recent, all }),
+      error
+    });
+  }
+
   async function requestJson(url, fetchImpl) {
     const controller = typeof AbortController === "function" ? new AbortController() : null;
     const timer = controller ? setTimeout(() => controller.abort(), 6500) : 0;
@@ -474,18 +506,19 @@
     }
   }
 
-  function fromTrees(publicTree, openSkiAnalyticsTree, openSkiLeaderboardTree) {
+  function fromTrees(publicTree, openSkiAnalyticsTree, openSkiLeaderboardTree, now = Date.now()) {
     return Object.freeze({
-      schema: "endless-powder-live-analytics-v2",
-      checkedAt: Date.now(),
-      pursuit: { ok: true, data: aggregatePublic(publicTree), error: "" },
-      openSkiAnalytics: { ok: true, data: aggregateOpenSkiAnalytics(openSkiAnalyticsTree), error: "" },
+      schema: "endless-powder-live-analytics-v3",
+      checkedAt: Number.isFinite(Number(now)) ? Number(now) : Date.now(),
+      timeWindows: Object.freeze({ recentMonths: recentMonthKeys(now) }),
+      pursuit: scopedMonthlyFeed(publicTree, aggregatePublic, now),
+      openSkiAnalytics: scopedMonthlyFeed(openSkiAnalyticsTree, aggregateOpenSkiAnalytics, now),
       openSkiLeaderboard: { ok: true, data: aggregateOpenSki(openSkiLeaderboardTree), error: "" },
       requests: 0
     });
   }
 
-  async function load(fetchImpl = fetch) {
+  async function load(fetchImpl = fetch, now = Date.now()) {
     const urls = {
       pursuit: `${DATABASE}${PATHS.pursuit}`,
       openSkiAnalytics: `${DATABASE}${PATHS.openSkiAnalytics}`,
@@ -497,14 +530,15 @@
       requestJson(urls.openSkiLeaderboard, fetchImpl)
     ]);
     return Object.freeze({
-      schema: "endless-powder-live-analytics-v2",
-      checkedAt: Date.now(),
+      schema: "endless-powder-live-analytics-v3",
+      checkedAt: Number.isFinite(Number(now)) ? Number(now) : Date.now(),
+      timeWindows: Object.freeze({ recentMonths: recentMonthKeys(now) }),
       pursuit: settled[0].status === "fulfilled"
-        ? { ok: true, data: aggregatePublic(settled[0].value), error: "" }
-        : { ok: false, data: aggregatePublic(null), error: String(settled[0].reason?.message || settled[0].reason) },
+        ? scopedMonthlyFeed(settled[0].value, aggregatePublic, now)
+        : scopedMonthlyFeed(null, aggregatePublic, now, false, String(settled[0].reason?.message || settled[0].reason)),
       openSkiAnalytics: settled[1].status === "fulfilled"
-        ? { ok: true, data: aggregateOpenSkiAnalytics(settled[1].value), error: "" }
-        : { ok: false, data: aggregateOpenSkiAnalytics(null), error: String(settled[1].reason?.message || settled[1].reason) },
+        ? scopedMonthlyFeed(settled[1].value, aggregateOpenSkiAnalytics, now)
+        : scopedMonthlyFeed(null, aggregateOpenSkiAnalytics, now, false, String(settled[1].reason?.message || settled[1].reason)),
       openSkiLeaderboard: settled[2].status === "fulfilled"
         ? { ok: true, data: aggregateOpenSki(settled[2].value), error: "" }
         : { ok: false, data: aggregateOpenSki(null), error: String(settled[2].reason?.message || settled[2].reason) },
@@ -519,6 +553,9 @@
     openSkiPublicSchema: OPEN_SKI_PUBLIC_SCHEMA,
     depthBands: DEPTH_BANDS,
     laneBands: LANE_BANDS,
+    recentMonthCount: RECENT_MONTH_COUNT,
+    recentMonthKeys,
+    filterMonthlyTree,
     aggregatePublic,
     aggregateOpenSkiAnalytics,
     aggregateOpenSki,

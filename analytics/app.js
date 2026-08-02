@@ -27,12 +27,15 @@
   const OPEN_LANE_LABELS = {
     FAR_LEFT: "Far left", LEFT: "Left", CENTER: "Center", RIGHT: "Right", FAR_RIGHT: "Far right"
   };
+  const TIME_SCOPES = new Set(["recent", "all"]);
+  const MONTH_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const $ = (id) => document.getElementById(id);
   const LIVE_REFRESH_MS = 5 * 60 * 1000;
   const state = {
     phase: "loading",
     view: "home",
     module: null,
+    timeScope: "recent",
     demo: false,
     data: null,
     baseline: null,
@@ -64,6 +67,52 @@
   const safe = (value, fallback = {}) =>
     value && typeof value === "object" ? value : fallback;
   const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  function timeScopeFromUrl() {
+    return new URLSearchParams(location.search).get("period") === "all" ? "all" : "recent";
+  }
+
+  function scopedFeedData(feed) {
+    const source = safe(feed);
+    const scoped = safe(source.scopes)[state.timeScope];
+    return safe(scoped, safe(source.data));
+  }
+
+  function monthRangeLabel(months) {
+    const keys = [...new Set((Array.isArray(months) ? months : [])
+      .map(value => typeof value === "string" ? value : value && value.month)
+      .filter(value => /^\d{4}-(0[1-9]|1[0-2])$/.test(String(value || ""))))].sort();
+    if (!keys.length) return state.timeScope === "all" ? "ALL RECORDED" : "RECENT";
+    const parsed = keys.map(key => {
+      const [year, month] = key.split("-").map(Number);
+      return { year, month, label: MONTH_NAMES[month - 1] };
+    });
+    const first = parsed[0];
+    const last = parsed.at(-1);
+    if (first.year === last.year)
+      return first.month === last.month ? `${first.label} ${first.year}` : `${first.label}–${last.label} ${first.year}`;
+    return `${first.label} ${first.year}–${last.label} ${last.year}`;
+  }
+
+  function selectedWindowLabel() {
+    if (state.timeScope === "recent")
+      return monthRangeLabel(safe(state.live && state.live.timeWindows, { recentMonths: [] }).recentMonths);
+    const pursuit = scopedFeedData(state.live && state.live.pursuit);
+    const openSki = scopedFeedData(state.live && state.live.openSkiAnalytics);
+    return monthRangeLabel([
+      ...(Array.isArray(pursuit.sourceMonths) ? pursuit.sourceMonths : []),
+      ...(Array.isArray(openSki.sourceMonths) ? openSki.sourceMonths : [])
+    ]);
+  }
+
+  function renderTimeScopeUi() {
+    document.querySelectorAll("[data-time-scope]").forEach((button) => {
+      const active = button.dataset.timeScope === state.timeScope;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    setText("dataWindow", selectedWindowLabel());
+  }
 
   function setText(id, value) {
     const node = $(id);
@@ -329,6 +378,7 @@
     topBadge.textContent = state.demo
       ? "DEMO DATA"
       : connectedFeeds === 3 ? "LIVE" : connectedFeeds > 0 ? "PARTIAL" : "OFFLINE";
+    renderTimeScopeUi();
     status.classList.toggle("ready", pursuit.ok === true);
     status.classList.toggle("offline", pursuit.ok !== true);
     if (pursuit.ok !== true) {
@@ -339,7 +389,7 @@
       renderLiveMix({}, true);
       return;
     }
-    const data = safe(pursuit.data);
+    const data = scopedFeedData(pursuit);
     const runs = number(data.accepted) || 0;
     const attacks = safe(data.attacks);
     state.livePhase = runs ? "ready" : "empty";
@@ -462,7 +512,7 @@
     const open = leaderboardOnline ? safe(leaderboard.data) : {};
     const automatic = safe(state.live && state.live.openSkiAnalytics);
     const automaticOnline = automatic.ok === true;
-    const automaticData = safe(automatic.data);
+    const automaticData = scopedFeedData(automatic);
     const overview = safe(automaticData.overview);
     const flags = safe(automaticData.flags);
     const speed = safe(automaticData.speed);
@@ -524,7 +574,7 @@
 
   function renderSnapshots() {
     const pursuitLive = safe(state.live && state.live.pursuit);
-    const pursuit = safe(pursuitLive.data);
+    const pursuit = scopedFeedData(pursuitLive);
     const pursuitReady = pursuitLive.ok === true && (number(pursuit.accepted) || 0) > 0;
     const pursuitConnected = pursuitLive.ok === true;
     const pursuitAttacks = safe(pursuit.attacks);
@@ -559,7 +609,7 @@
     setText("pursuitFlagModuleLiveMedian", pursuitReady ? fmt(safe(pursuit.distance).median) : "—");
 
     const openLive = safe(state.live && state.live.openSkiAnalytics);
-    const open = safe(openLive.data);
+    const open = scopedFeedData(openLive);
     const openReady = openLive.ok === true && (number(open.accepted) || 0) > 0;
     const openConnected = openLive.ok === true;
     setText("homeOpenStatus", openReady ? "LIVE" : openConnected ? "AWAITING RUNS" : "OFFLINE");
@@ -668,13 +718,42 @@
     return summary;
   }
 
+  function renderSelectedTimeScope() {
+    renderTimeScopeUi();
+    if (state.phase !== "ready" || !state.baseline || !state.live) return;
+    const view = state.view;
+    const module = state.module;
+    render(summaryWithLiveOpenSki(state.baseline, state.live));
+    navigate(view, module, { updateUrl: false, scroll: false });
+    renderLive(state.live);
+    renderSnapshots();
+  }
+
+  function setTimeScope(next, updateUrl = true) {
+    const normalized = TIME_SCOPES.has(next) ? next : "recent";
+    const changed = normalized !== state.timeScope;
+    state.timeScope = normalized;
+    if (updateUrl && changed) {
+      const url = new URL(location.href);
+      if (normalized === "recent") url.searchParams.delete("period");
+      else url.searchParams.set("period", "all");
+      history.pushState({ view: state.view, module: state.module, period: normalized }, "", url);
+    }
+    renderSelectedTimeScope();
+  }
+
   async function loadLiveSnapshot() {
     if (!window.AnalyticsLiveData) throw new Error("Live analytics module did not load.");
     if (!state.demo) return window.AnalyticsLiveData.load();
     const response = await fetch("./fixtures/live-feed-a4-4.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`Live demo request returned ${response.status}.`);
     const fixture = await response.json();
-    return window.AnalyticsLiveData.fromTrees(fixture.publicAnalyticsRuns, fixture.openSkiAnalyticsRuns, fixture.openSkiRuns);
+    return window.AnalyticsLiveData.fromTrees(
+      fixture.publicAnalyticsRuns,
+      fixture.openSkiAnalyticsRuns,
+      fixture.openSkiRuns,
+      Date.UTC(2026, 7, 2)
+    );
   }
 
   function offlineLive(error) {
@@ -715,6 +794,7 @@
     showOnly("loadingState");
     const params = new URLSearchParams(location.search);
     state.demo = params.get("demo") === "1";
+    state.timeScope = timeScopeFromUrl();
     const source = state.demo
       ? "./fixtures/community-summary-demo.json"
       : "./data/community-summary-v1.json";
@@ -754,6 +834,9 @@
   document.querySelectorAll("[data-report-back]").forEach((button) =>
     button.addEventListener("click", () => navigate(state.view))
   );
+  document.querySelectorAll("[data-time-scope]").forEach((button) =>
+    button.addEventListener("click", () => setTimeScope(button.dataset.timeScope))
+  );
   $("retryLoad").addEventListener("click", load);
   let resizeTimer = 0;
   addEventListener("resize", () => {
@@ -765,18 +848,27 @@
       refreshLive();
   });
   addEventListener("popstate", () => {
+    const nextScope = timeScopeFromUrl();
+    if (nextScope !== state.timeScope) {
+      state.timeScope = nextScope;
+      renderSelectedTimeScope();
+    }
     const destination = navigationFromUrl();
     navigate(destination.view, destination.module, { updateUrl: false, scroll: false });
   });
   window.advanceTime = () => state.phase;
-  window.render_game_to_text = () =>
-    JSON.stringify({
+  window.render_game_to_text = () => {
+    const pursuitLiveData = scopedFeedData(state.live && state.live.pursuit);
+    const openSkiLiveData = scopedFeedData(state.live && state.live.openSkiAnalytics);
+    return JSON.stringify({
       screen: "analytics",
       phase: state.phase,
       view: state.view,
       module: state.module,
+      period: state.timeScope,
+      periodLabel: selectedWindowLabel(),
       demo: state.demo,
-      source: "historical-archive-plus-live-only-current",
+      source: "historical-archive-plus-scoped-live-current",
       sourceWindow: state.data && state.data.sourceWindow,
       live: state.live
         ? {
@@ -784,18 +876,18 @@
             checkedAt: state.liveCheckedAt,
             requestsPerRefresh: state.live.requests,
             pursuitConnected: state.live.pursuit.ok,
-            pursuitAccepted: state.live.pursuit.data.accepted,
-            pursuitInvalid: state.live.pursuit.data.invalid,
+            pursuitAccepted: pursuitLiveData.accepted,
+            pursuitInvalid: pursuitLiveData.invalid,
             openSkiAnalyticsConnected: state.live.openSkiAnalytics.ok,
-            openSkiAnalyticsAccepted: state.live.openSkiAnalytics.data.accepted,
+            openSkiAnalyticsAccepted: openSkiLiveData.accepted,
             openSkiLeaderboardConnected: state.live.openSkiLeaderboard.ok,
             openSkiLeaderboardAccepted: state.live.openSkiLeaderboard.data.submittedRuns,
             attacks: state.live.pursuit.ok ? {
-              committedLunges: state.live.pursuit.data.attacks.committedLunges,
-              chargeCommits: state.live.pursuit.data.attacks.chargeCommits,
-              boulderThrowReleases: state.live.pursuit.data.attacks.boulderThrowReleases,
-              byRange: state.live.pursuit.data.attacks.byRange,
-              byPerformance: state.live.pursuit.data.attacks.byPerformance
+              committedLunges: safe(pursuitLiveData.attacks).committedLunges,
+              chargeCommits: safe(pursuitLiveData.attacks).chargeCommits,
+              boulderThrowReleases: safe(pursuitLiveData.attacks).boulderThrowReleases,
+              byRange: safe(pursuitLiveData.attacks).byRange,
+              byPerformance: safe(pursuitLiveData.attacks).byPerformance
             } : null
           }
         : null,
@@ -812,7 +904,7 @@
         ? {
             submittedRuns: safe(state.data.leaderboards.openSki).submittedRuns,
             medianDistance: safe(safe(state.data.leaderboards.openSki).distance).median,
-            automaticRecordedRuns: state.live && state.live.openSkiAnalytics ? state.live.openSkiAnalytics.data.accepted : 0,
+            automaticRecordedRuns: state.live && state.live.openSkiAnalytics ? openSkiLiveData.accepted : 0,
             automaticPhase: state.openSkiLivePhase,
             telemetryIncluded: false,
             pursuitTelemetryIncluded: false
@@ -826,6 +918,7 @@
         : null,
       error: state.error
     });
-  window.AnalyticsDashboard = Object.freeze({ load, refreshLive, selectView, navigate, state: () => ({ ...state, data: undefined, baseline: undefined }) });
+  };
+  window.AnalyticsDashboard = Object.freeze({ load, refreshLive, selectView, navigate, setTimeScope, state: () => ({ ...state, data: undefined, baseline: undefined }) });
   load();
 })();

@@ -19,7 +19,14 @@
       <p class="brand">ENDLESS POWDER</p>
       <p class="eyebrow">COMMUNITY ANALYTICS</p>
       <h1>Mountain Report</h1>
-      <div class="hero-meta"><span class="status-pill" id="dataStatus">LOADING</span></div>
+      <div class="hero-meta">
+        <span class="status-pill" id="dataStatus">LOADING</span>
+        <span class="period-label" id="dataWindow">RECENT</span>
+        <div class="time-scope" role="group" aria-label="Analytics time period">
+          <button class="active" type="button" data-time-scope="recent" aria-pressed="true">RECENT</button>
+          <button type="button" data-time-scope="all" aria-pressed="false">ALL TIME</button>
+        </div>
+      </div>
     </div>
   </header>
 

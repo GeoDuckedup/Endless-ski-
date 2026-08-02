@@ -45,6 +45,11 @@ h1,h2,h3,p{margin-top:0}
 h1{max-width:750px;margin-bottom:12px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(54px,10vw,104px);font-weight:600;letter-spacing:-.055em;line-height:.92;text-wrap:balance}
 .hero-copy{max-width:600px;color:#d3e1e9;font-size:clamp(16px,2vw,20px)}
 .hero-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;color:#b9c9d3;font-size:12px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+.period-label{color:#b9c9d3;font-size:10px;font-weight:900;letter-spacing:.14em}
+.time-scope{display:inline-flex;padding:3px;border:1px solid rgba(190,223,244,.2);border-radius:99px;background:rgba(7,17,27,.64)}
+.time-scope button{min-height:34px;padding:0 12px;border:0;border-radius:99px;background:transparent;color:#8095a3;font-size:9px;font-weight:950;letter-spacing:.12em;cursor:pointer}
+.time-scope button.active{background:var(--snow);color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.time-scope button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .status-pill{display:inline-flex;align-items:center;min-height:30px;padding:6px 12px;border:1px solid rgba(136,213,247,.38);border-radius:99px;background:rgba(10,25,37,.7);color:var(--blue)}
 .status-pill.demo{border-color:rgba(244,199,93,.5);color:var(--gold)}
 .status-pill.partial{border-color:rgba(244,199,93,.5);color:var(--gold)}
