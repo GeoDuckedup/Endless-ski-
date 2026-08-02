@@ -4,17 +4,26 @@
   const DATABASE = "https://endless-powder-default-rtdb.firebaseio.com";
   const PATHS = Object.freeze({
     pursuit: "/endless_powder/public_analytics_runs.json",
-    openSki: "/endless_powder/modes/open_ski/leaderboard_runs.json"
+    openSkiAnalytics: "/endless_powder/public_open_ski_analytics_runs.json",
+    openSkiLeaderboard: "/endless_powder/modes/open_ski/leaderboard_runs.json"
   });
   const PUBLIC_SCHEMA = "public-analytics-run-v1";
+  const OPEN_SKI_PUBLIC_SCHEMA = "public-open-ski-run-v1";
   const PROHIBITED = new Set([
-    "uid", "initials", "timestamp", "reportId", "session", "client", "trace",
-    "samples", "events", "errors", "comments", "feedback", "courseSeed"
+    "uid", "initials", "timestamp", "reportId", "runId", "traceRunId",
+    "session", "client", "inputType", "deviceClass", "browserFamily", "trace",
+    "samples", "events", "errors", "comments", "feedback", "courseSeed",
+    "deathX", "deathDepth", "deathTheta"
   ]);
   const PERFORMANCE = Object.freeze(["STRUGGLING", "STABLE", "FAST", "HOT"]);
   const RANGES = Object.freeze(["SHORT", "MID", "LONG"]);
   const KINDS = Object.freeze(["lunges", "charges", "boulders"]);
   const DEATHS = Object.freeze(["caught", "tree", "boulder", "edge"]);
+  const OPEN_SKI_DEATHS = Object.freeze(["tree", "boulder", "edge"]);
+  const DEPTH_BANDS = Object.freeze([
+    "D0_249", "D250_499", "D500_999", "D1000_1999", "D2000_3999", "D4000_PLUS"
+  ]);
+  const LANE_BANDS = Object.freeze(["FAR_LEFT", "LEFT", "CENTER", "RIGHT", "FAR_RIGHT"]);
 
   const object = value => value && typeof value === "object" && !Array.isArray(value)
     ? value
@@ -46,6 +55,108 @@
       if (PROHIBITED.has(key) || containsProhibited(child)) return true;
     }
     return false;
+  }
+
+  function exactKeys(value, keys) {
+    const source = object(value);
+    const actual = Object.keys(source).sort();
+    const expected = keys.slice().sort();
+    return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+  }
+
+  function nonnegativeInteger(value) {
+    return finite(value) !== null && Number.isInteger(Number(value)) && Number(value) >= 0;
+  }
+
+  function blankZoneMatrix() {
+    return Object.fromEntries(DEPTH_BANDS.map(depth => [
+      depth,
+      Object.fromEntries(LANE_BANDS.map(lane => [lane, 0]))
+    ]));
+  }
+
+  function validHistogram(histogram) {
+    return exactKeys(histogram, DEPTH_BANDS) &&
+      DEPTH_BANDS.every(key => nonnegativeInteger(object(histogram)[key]));
+  }
+
+  function validZoneMatrix(matrix) {
+    return exactKeys(matrix, DEPTH_BANDS) && DEPTH_BANDS.every(depth =>
+      exactKeys(object(matrix)[depth], LANE_BANDS) &&
+      LANE_BANDS.every(lane => nonnegativeInteger(object(object(matrix)[depth])[lane]))
+    );
+  }
+
+  function histogramTotal(histogram) {
+    return sum(DEPTH_BANDS.map(key => object(histogram)[key]));
+  }
+
+  function matrixTotal(matrix) {
+    return sum(DEPTH_BANDS.flatMap(depth =>
+      LANE_BANDS.map(lane => object(object(matrix)[depth])[lane])
+    ));
+  }
+
+  function validOpenSkiAnalyticsRow(value) {
+    const row = object(value);
+    const build = object(row.build);
+    const course = object(row.course);
+    const run = object(row.run);
+    const steering = object(row.steering);
+    const flags = object(row.flags);
+    const spatial = object(row.spatial);
+    const death = object(spatial.death);
+    const performance = object(row.performance);
+    const clean = finite(flags.clean);
+    const attempted = finite(flags.attempted);
+    const bestCombo = finite(flags.bestCombo);
+    const collisions = finite(run.collisions);
+    return row.schema === OPEN_SKI_PUBLIC_SCHEMA &&
+      !containsProhibited(row) &&
+      exactKeys(row, ["schema", "build", "course", "run", "steering", "flags", "spatial", "performance"]) &&
+      exactKeys(build, ["version", "worldVersion", "analyticsVersion"]) &&
+      Object.values(build).every(value => typeof value === "string" && value.length > 0) &&
+      exactKeys(course, ["version", "seedId"]) && typeof course.version === "string" &&
+      nonnegativeInteger(course.seedId) &&
+      exactKeys(run, ["distance", "score", "durationSec", "averageSpeed", "maximumSpeed", "collisions", "deathCause"]) &&
+      [run.distance, run.score, run.durationSec, run.averageSpeed, run.maximumSpeed].every(value => finite(value) !== null && Number(value) >= 0) &&
+      nonnegativeInteger(collisions) && OPEN_SKI_DEATHS.includes(run.deathCause) &&
+      exactKeys(steering, ["averageAbsoluteSteer", "hardCarveSec", "directionReversals"]) &&
+      finite(steering.averageAbsoluteSteer) !== null && Number(steering.averageAbsoluteSteer) >= 0 && Number(steering.averageAbsoluteSteer) <= 1 &&
+      finite(steering.hardCarveSec) !== null && Number(steering.hardCarveSec) >= 0 &&
+      nonnegativeInteger(steering.directionReversals) &&
+      exactKeys(flags, ["clean", "attempted", "bestCombo", "cleanByDepthBand", "missByDepthBand"]) &&
+      nonnegativeInteger(clean) && nonnegativeInteger(attempted) && nonnegativeInteger(bestCombo) &&
+      clean <= attempted && bestCombo <= clean &&
+      validHistogram(flags.cleanByDepthBand) && validHistogram(flags.missByDepthBand) &&
+      histogramTotal(flags.cleanByDepthBand) === clean &&
+      histogramTotal(flags.missByDepthBand) === attempted - clean &&
+      exactKeys(spatial, ["death", "collisionsByZone"]) &&
+      exactKeys(death, ["depthBand", "laneBand"]) &&
+      DEPTH_BANDS.includes(death.depthBand) && LANE_BANDS.includes(death.laneBand) &&
+      validZoneMatrix(spatial.collisionsByZone) && matrixTotal(spatial.collisionsByZone) === collisions &&
+      exactKeys(performance, ["averageFps", "minimumFps", "lowFpsFrames"]) &&
+      finite(performance.averageFps) !== null && Number(performance.averageFps) >= 0 &&
+      finite(performance.minimumFps) !== null && Number(performance.minimumFps) >= 0 &&
+      nonnegativeInteger(performance.lowFpsFrames);
+  }
+
+  function collectOpenSkiAnalyticsRows(tree) {
+    const rows = [];
+    let candidates = 0;
+    let invalid = 0;
+    for (const [month, records] of Object.entries(object(tree))) {
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) continue;
+      for (const row of Object.values(object(records))) {
+        candidates++;
+        if (!validOpenSkiAnalyticsRow(row)) {
+          invalid++;
+          continue;
+        }
+        rows.push({ month, row });
+      }
+    }
+    return { rows, candidates, invalid };
   }
 
   function validPublicRow(row) {
@@ -226,6 +337,96 @@
     };
   }
 
+  function aggregateOpenSkiAnalytics(tree) {
+    const collected = collectOpenSkiAnalyticsRows(tree);
+    const rows = collected.rows;
+    const distances = rows.map(({ row }) => nonnegative(row.run.distance));
+    const scores = rows.map(({ row }) => nonnegative(row.run.score));
+    const durations = rows.map(({ row }) => nonnegative(row.run.durationSec));
+    const averageSpeeds = rows.map(({ row }) => nonnegative(row.run.averageSpeed));
+    const maximumSpeeds = rows.map(({ row }) => nonnegative(row.run.maximumSpeed));
+    const clean = sum(rows.map(({ row }) => row.flags.clean));
+    const attempted = sum(rows.map(({ row }) => row.flags.attempted));
+    const collisions = sum(rows.map(({ row }) => row.run.collisions));
+    const deaths = Object.fromEntries(OPEN_SKI_DEATHS.map(cause => [cause, 0]));
+    const deathZones = blankZoneMatrix();
+    const collisionZones = blankZoneMatrix();
+    const cleanByDepth = Object.fromEntries(DEPTH_BANDS.map(depth => [depth, 0]));
+    const missByDepth = Object.fromEntries(DEPTH_BANDS.map(depth => [depth, 0]));
+    const months = {};
+    for (const { month, row } of rows) {
+      months[month] = (months[month] || 0) + 1;
+      deaths[row.run.deathCause]++;
+      deathZones[row.spatial.death.depthBand][row.spatial.death.laneBand]++;
+      for (const depth of DEPTH_BANDS) {
+        cleanByDepth[depth] += integer(row.flags.cleanByDepthBand[depth]);
+        missByDepth[depth] += integer(row.flags.missByDepthBand[depth]);
+        for (const lane of LANE_BANDS)
+          collisionZones[depth][lane] += integer(row.spatial.collisionsByZone[depth][lane]);
+      }
+    }
+    const fps = rows.map(({ row }) => finite(row.performance.averageFps)).filter(value => value !== null);
+    const minimumFps = rows.map(({ row }) => finite(row.performance.minimumFps)).filter(value => value !== null);
+    const steering = rows.map(({ row }) => row.steering);
+    return Object.freeze({
+      schema: "endless-powder-live-open-ski-v1",
+      status: rows.length ? "ready" : "empty",
+      candidates: collected.candidates,
+      accepted: rows.length,
+      invalid: collected.invalid,
+      sourceMonths: Object.entries(months).sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, runs]) => ({ month, runs })),
+      overview: {
+        recordedRuns: rows.length,
+        totalDistance: Math.round(sum(distances)),
+        totalDurationSec: round(sum(durations), 2),
+        totalCollisions: Math.round(collisions),
+        collisionsPerRun: rows.length ? round(collisions / rows.length, 2) : null
+      },
+      distance: stat(distances),
+      score: stat(scores),
+      speed: {
+        average: mean(averageSpeeds),
+        medianMaximum: percentile(maximumSpeeds, 0.5),
+        peak: maximumSpeeds.length ? Math.max(...maximumSpeeds) : null
+      },
+      flags: {
+        clean: Math.round(clean),
+        attempted: Math.round(attempted),
+        accuracy: attempted > 0 ? rate(clean, attempted) : null,
+        bestCombo: stat(rows.map(({ row }) => row.flags.bestCombo)),
+        byDepth: Object.fromEntries(DEPTH_BANDS.map(depth => {
+          const depthClean = cleanByDepth[depth];
+          const depthMiss = missByDepth[depth];
+          const depthAttempted = depthClean + depthMiss;
+          return [depth, {
+            clean: depthClean,
+            miss: depthMiss,
+            attempted: depthAttempted,
+            accuracy: depthAttempted ? rate(depthClean, depthAttempted) : null
+          }];
+        }))
+      },
+      steering: {
+        averageAbsoluteSteer: mean(steering.map(value => value.averageAbsoluteSteer)),
+        hardCarveSec: round(sum(steering.map(value => value.hardCarveSec)), 2),
+        directionReversals: Math.round(sum(steering.map(value => value.directionReversals))),
+        reversalsPerRun: rows.length ? round(sum(steering.map(value => value.directionReversals)) / rows.length, 2) : null
+      },
+      deaths: Object.fromEntries(OPEN_SKI_DEATHS.map(cause => [cause, {
+        count: deaths[cause],
+        rate: rate(deaths[cause], rows.length)
+      }])),
+      spatial: { deathZones, collisionZones },
+      performance: {
+        averageFps: mean(fps),
+        minimumFps: percentile(minimumFps, 0.5),
+        measuredRuns: fps.length,
+        lowFpsFrames: Math.round(sum(rows.map(({ row }) => row.performance.lowFpsFrames)))
+      }
+    });
+  }
+
   function aggregateOpenSki(tree) {
     const candidates = Object.values(object(tree));
     const runs = candidates.filter(validOpenSkiRun);
@@ -273,12 +474,13 @@
     }
   }
 
-  function fromTrees(publicTree, openSkiTree) {
+  function fromTrees(publicTree, openSkiAnalyticsTree, openSkiLeaderboardTree) {
     return Object.freeze({
-      schema: "endless-powder-live-analytics-v1",
+      schema: "endless-powder-live-analytics-v2",
       checkedAt: Date.now(),
       pursuit: { ok: true, data: aggregatePublic(publicTree), error: "" },
-      openSki: { ok: true, data: aggregateOpenSki(openSkiTree), error: "" },
+      openSkiAnalytics: { ok: true, data: aggregateOpenSkiAnalytics(openSkiAnalyticsTree), error: "" },
+      openSkiLeaderboard: { ok: true, data: aggregateOpenSki(openSkiLeaderboardTree), error: "" },
       requests: 0
     });
   }
@@ -286,22 +488,27 @@
   async function load(fetchImpl = fetch) {
     const urls = {
       pursuit: `${DATABASE}${PATHS.pursuit}`,
-      openSki: `${DATABASE}${PATHS.openSki}`
+      openSkiAnalytics: `${DATABASE}${PATHS.openSkiAnalytics}`,
+      openSkiLeaderboard: `${DATABASE}${PATHS.openSkiLeaderboard}`
     };
     const settled = await Promise.allSettled([
       requestJson(urls.pursuit, fetchImpl),
-      requestJson(urls.openSki, fetchImpl)
+      requestJson(urls.openSkiAnalytics, fetchImpl),
+      requestJson(urls.openSkiLeaderboard, fetchImpl)
     ]);
     return Object.freeze({
-      schema: "endless-powder-live-analytics-v1",
+      schema: "endless-powder-live-analytics-v2",
       checkedAt: Date.now(),
       pursuit: settled[0].status === "fulfilled"
         ? { ok: true, data: aggregatePublic(settled[0].value), error: "" }
         : { ok: false, data: aggregatePublic(null), error: String(settled[0].reason?.message || settled[0].reason) },
-      openSki: settled[1].status === "fulfilled"
-        ? { ok: true, data: aggregateOpenSki(settled[1].value), error: "" }
-        : { ok: false, data: aggregateOpenSki(null), error: String(settled[1].reason?.message || settled[1].reason) },
-      requests: 2
+      openSkiAnalytics: settled[1].status === "fulfilled"
+        ? { ok: true, data: aggregateOpenSkiAnalytics(settled[1].value), error: "" }
+        : { ok: false, data: aggregateOpenSkiAnalytics(null), error: String(settled[1].reason?.message || settled[1].reason) },
+      openSkiLeaderboard: settled[2].status === "fulfilled"
+        ? { ok: true, data: aggregateOpenSki(settled[2].value), error: "" }
+        : { ok: false, data: aggregateOpenSki(null), error: String(settled[2].reason?.message || settled[2].reason) },
+      requests: 3
     });
   }
 
@@ -309,7 +516,11 @@
     database: DATABASE,
     paths: PATHS,
     publicSchema: PUBLIC_SCHEMA,
+    openSkiPublicSchema: OPEN_SKI_PUBLIC_SCHEMA,
+    depthBands: DEPTH_BANDS,
+    laneBands: LANE_BANDS,
     aggregatePublic,
+    aggregateOpenSkiAnalytics,
     aggregateOpenSki,
     fromTrees,
     load

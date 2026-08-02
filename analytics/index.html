@@ -56,7 +56,7 @@
         </button>
         <button class="view-button" type="button" data-view-button="open-ski" aria-pressed="false">
           <span>OPEN SKI</span>
-          <small>SUBMITTED RUNS</small>
+          <small>RECORDED RUNS</small>
         </button>
       </nav>
 
@@ -263,21 +263,28 @@
             <p class="eyebrow">OPEN SKI</p>
             <h2>No Yeti. Same mountain.</h2>
           </div>
-          <p>These figures cover submitted Open Ski leaderboard runs, not every Open Ski attempt.</p>
+          <p>Automatic, anonymous run analytics—separate from the voluntary leaderboard.</p>
         </div>
 
-        <div class="open-hero-card">
-          <div class="open-mark" aria-hidden="true">↘</div>
-          <div><small>SUBMITTED OPEN SKI RUNS</small><strong id="openSubmittedRuns">—</strong><span id="openSubmitters">— anonymous submitters</span></div>
-          <div><small>LONGEST DESCENT</small><strong><span id="openLongest">—</span> m</strong><span id="openMedian">— m median</span></div>
-          <div><small>TOP SCORE</small><strong id="openTopScore">—</strong><span id="openFlagAccuracy">—% flag accuracy</span></div>
-        </div>
+        <article class="report-card open-live-card" id="openLiveCard">
+          <header>
+            <div><p class="eyebrow">LIVE OPEN SKI</p><h3>Every consenting finished run</h3></div>
+            <span class="card-note live-status" id="openLiveStatus">CONNECTING</span>
+          </header>
+          <p class="availability-note" id="openLiveCopy">Checking the automatic, identifier-free Open Ski feed.</p>
+          <div class="open-live-summary">
+            <div class="feature"><small>RECORDED RUNS</small><strong id="openRecordedRuns">—</strong><span id="openLiveMonths">—</span></div>
+            <div><small>MEDIAN DESCENT</small><strong><span id="openRecordedMedian">—</span><em>m</em></strong><span id="openRecordedLongest">—</span></div>
+            <div><small>FLAG ACCURACY</small><strong><span id="openRecordedFlags">—</span><em>%</em></strong><span id="openRecordedFlagCount">—</span></div>
+            <div><small>AVERAGE SPEED</small><strong><span id="openAverageSpeed">—</span><em>m/s</em></strong><span id="openPeakSpeed">—</span></div>
+          </div>
+        </article>
 
         <div class="report-grid equal">
-          <article class="report-card comparison-card">
-            <header><div><p class="eyebrow">SUBMITTED RUNS</p><h3>Pursuit vs. Open Ski</h3></div></header>
-            <div id="modeComparison"></div>
-            <p class="availability-note">Leaderboard submissions are self-selected and should not be compared to all recorded Pursuit telemetry as if coverage were equal.</p>
+          <article class="report-card open-depth-card">
+            <header><div><p class="eyebrow">FLAGS BY DEPTH</p><h3>Where clean lines hold up</h3></div><span class="card-note">CLEAN / ATTEMPTED</span></header>
+            <div class="bar-stack" id="openFlagDepthBars"></div>
+            <p class="availability-note">Accuracy is shown only where at least one flag was attempted.</p>
           </article>
 
           <article class="report-card death-card">
@@ -289,12 +296,63 @@
           </article>
         </div>
 
+        <article class="report-card heatmap-card">
+          <header>
+            <div><p class="eyebrow">MOUNTAIN HOT SPOTS</p><h3>Where runs end and collisions happen</h3></div>
+            <span class="card-note">COARSE ANONYMOUS ZONES</span>
+          </header>
+          <div class="heatmap-pair">
+            <section>
+              <div class="heatmap-title"><strong>RUN ENDINGS</strong><span id="openDeathHeatTotal">— recorded</span></div>
+              <div class="mountain-heatmap" id="openDeathHeatmap" role="img" aria-label="Open Ski run-ending heat map"></div>
+            </section>
+            <section>
+              <div class="heatmap-title"><strong>COLLISIONS</strong><span id="openCollisionHeatTotal">— recorded</span></div>
+              <div class="mountain-heatmap" id="openCollisionHeatmap" role="img" aria-label="Open Ski collision heat map"></div>
+            </section>
+          </div>
+          <div class="heatmap-key"><span>QUIET</span><i></i><i></i><i></i><i></i><i></i><span>BUSY</span></div>
+          <p class="availability-note">Rows are distance bands and columns run from far left to far right. Exact coordinates are never downloaded.</p>
+        </article>
+
+        <div class="report-grid equal">
+          <article class="report-card open-technique-card">
+            <header><div><p class="eyebrow">SKIING STYLE</p><h3>Movement without pursuit pressure</h3></div></header>
+            <div class="stat-pair triple">
+              <div><small>COLLISIONS / RUN</small><strong id="openCollisionsPerRun">—</strong></div>
+              <div><small>REVERSALS / RUN</small><strong id="openReversalsPerRun">—</strong></div>
+              <div><small>AVERAGE STEER</small><strong id="openAverageSteer">—</strong></div>
+            </div>
+          </article>
+          <article class="report-card performance-card">
+            <header><div><p class="eyebrow">PERFORMANCE</p><h3>How Open Ski runs</h3></div></header>
+            <div class="stat-pair triple">
+              <div><small>AVERAGE FPS</small><strong id="openAverageFps">—</strong></div>
+              <div><small>MEDIAN LOW</small><strong id="openMinimumFps">—</strong></div>
+              <div><small>LOW-FPS FRAMES</small><strong id="openLowFpsFrames">—</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="report-card open-leaderboard-card">
+          <header>
+            <div><p class="eyebrow">VOLUNTARY LEADERBOARD</p><h3>Submitted Open Ski runs</h3></div>
+            <span class="card-note" id="openLeaderboardStatus">CHECKING</span>
+          </header>
+          <div class="open-leaderboard-summary">
+            <div><small>SUBMISSIONS</small><strong id="openSubmittedRuns">—</strong><span id="openSubmitters">—</span></div>
+            <div><small>LONGEST DESCENT</small><strong><span id="openLongest">—</span><em>m</em></strong><span id="openMedian">—</span></div>
+            <div><small>TOP SCORE</small><strong id="openTopScore">—</strong><span id="openFlagAccuracy">—</span></div>
+          </div>
+          <p class="availability-note">This board includes only runs players chose to submit. It is not used to estimate total Open Ski activity.</p>
+        </article>
+
         <article class="report-card telemetry-boundary">
           <div class="boundary-icon" aria-hidden="true">○</div>
           <div>
             <p class="eyebrow">DATA BOUNDARY</p>
-            <h3>Open Ski does not enter Pursuit telemetry</h3>
-            <p>It has its own leaderboard and contributes no Yeti, pursuit-pressure, or all-run telemetry records. That keeps the Pursuit dataset clean.</p>
+            <h3>Open Ski stays out of Pursuit telemetry</h3>
+            <p>Its automatic feed contains only run, flag, steering, performance, and coarse mountain-zone aggregates. It contains no Yeti data, player identity, exact time, exact position, trace, or raw event stream.</p>
           </div>
         </article>
       </section>

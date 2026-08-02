@@ -14,6 +14,19 @@
     PREDATORY: "#ed9a58",
     CRITICAL: "#ef776e"
   };
+  const OPEN_DEPTH_BANDS = ["D0_249", "D250_499", "D500_999", "D1000_1999", "D2000_3999", "D4000_PLUS"];
+  const OPEN_LANE_BANDS = ["FAR_LEFT", "LEFT", "CENTER", "RIGHT", "FAR_RIGHT"];
+  const OPEN_DEPTH_LABELS = {
+    D0_249: "0–249 m",
+    D250_499: "250–499 m",
+    D500_999: "500–999 m",
+    D1000_1999: "1,000–1,999 m",
+    D2000_3999: "2,000–3,999 m",
+    D4000_PLUS: "4,000 m+"
+  };
+  const OPEN_LANE_LABELS = {
+    FAR_LEFT: "Far left", LEFT: "Left", CENTER: "Center", RIGHT: "Right", FAR_RIGHT: "Far right"
+  };
   const $ = (id) => document.getElementById(id);
   const LIVE_REFRESH_MS = 5 * 60 * 1000;
   const state = {
@@ -24,6 +37,7 @@
     baseline: null,
     live: null,
     livePhase: "loading",
+    openSkiLivePhase: "loading",
     liveCheckedAt: 0,
     liveRefreshing: false,
     error: ""
@@ -440,12 +454,101 @@
     return `<div class="comparison-row ${className}"><label>${label}</label><div class="bar-track"><div class="bar-fill" style="--width:${width}%"></div></div><strong>${available ? `${fmt(value)} m` : "—"}</strong></div>`;
   }
 
+  function renderMountainHeatmap(containerId, matrix) {
+    const node = $(containerId);
+    node.replaceChildren();
+    const source = safe(matrix);
+    const values = OPEN_DEPTH_BANDS.flatMap(depth =>
+      OPEN_LANE_BANDS.map(lane => number(safe(source[depth])[lane]) || 0)
+    );
+    const maximum = Math.max(0, ...values);
+    const corner = document.createElement("span");
+    corner.className = "heatmap-corner";
+    corner.textContent = "DEPTH";
+    node.appendChild(corner);
+    for (const lane of OPEN_LANE_BANDS) {
+      const label = document.createElement("span");
+      label.className = "heatmap-column";
+      label.textContent = lane === "FAR_LEFT" ? "FL" : lane === "FAR_RIGHT" ? "FR" : lane[0];
+      label.title = OPEN_LANE_LABELS[lane];
+      node.appendChild(label);
+    }
+    for (const depth of OPEN_DEPTH_BANDS) {
+      const rowLabel = document.createElement("span");
+      rowLabel.className = "heatmap-row";
+      rowLabel.textContent = OPEN_DEPTH_LABELS[depth];
+      node.appendChild(rowLabel);
+      for (const lane of OPEN_LANE_BANDS) {
+        const value = number(safe(source[depth])[lane]) || 0;
+        const cell = document.createElement("span");
+        const intensity = maximum ? value / maximum : 0;
+        cell.className = "heatmap-cell";
+        cell.style.setProperty("--heat", intensity.toFixed(3));
+        cell.textContent = value ? fmt(value) : "";
+        cell.title = `${OPEN_DEPTH_LABELS[depth]}, ${OPEN_LANE_LABELS[lane]}: ${fmt(value)}`;
+        cell.setAttribute("aria-label", cell.title);
+        node.appendChild(cell);
+      }
+    }
+    node.classList.toggle("empty", maximum === 0);
+  }
+
   function renderOpenSki(summary) {
     const boards = safe(summary.leaderboards);
     const open = safe(boards.openSki);
-    const pursuit = safe(boards.pursuit);
+    const automatic = safe(state.live && state.live.openSkiAnalytics);
+    const automaticData = safe(automatic.data);
+    const overview = safe(automaticData.overview);
+    const flags = safe(automaticData.flags);
+    const speed = safe(automaticData.speed);
+    const steering = safe(automaticData.steering);
+    const performance = safe(automaticData.performance);
+    const status = $("openLiveStatus");
+    const recordedRuns = automatic.ok === true ? number(automaticData.accepted) || 0 : 0;
+    state.openSkiLivePhase = automatic.ok !== true ? "offline" : recordedRuns ? "ready" : "empty";
+    status.classList.toggle("ready", automatic.ok === true);
+    status.classList.toggle("offline", automatic.ok !== true);
+    status.textContent = automatic.ok !== true
+      ? "LIVE FEED OFFLINE"
+      : recordedRuns ? `LIVE · ${fmt(recordedRuns)} ${recordedRuns === 1 ? "RUN" : "RUNS"}` : "CONNECTED · AWAITING RUN";
+    setText("openLiveCopy", automatic.ok !== true
+      ? "Automatic Open Ski analytics could not be reached. The voluntary leaderboard remains independent and the page will retry automatically."
+      : recordedRuns
+        ? `Anonymous Open Ski summaries are aggregated live and refreshed every five minutes. ${fmt(automaticData.invalid)} malformed or privacy-unsafe rows were rejected.`
+        : "The automatic Open Ski feed is connected and will populate after the first consenting Open Ski run finishes on the A5.2B game build.");
+    setText("openRecordedRuns", automatic.ok === true ? fmt(recordedRuns) : "—");
+    setText("openLiveMonths", automatic.ok === true ? liveMonthLabel(automaticData.sourceMonths) : "AUTOMATIC FEED UNAVAILABLE");
+    setText("openRecordedMedian", recordedRuns ? fmt(safe(automaticData.distance).median) : "—");
+    setText("openRecordedLongest", recordedRuns ? `${fmt(safe(automaticData.distance).max)} m longest` : "No recorded descents yet");
+    setText("openRecordedFlags", recordedRuns && number(flags.accuracy) !== null ? percent(flags.accuracy) : "—");
+    setText("openRecordedFlagCount", recordedRuns ? `${fmt(flags.clean)} clean / ${fmt(flags.attempted)} attempted` : "No recorded flags yet");
+    setText("openAverageSpeed", recordedRuns ? fmt(speed.average, 1) : "—");
+    setText("openPeakSpeed", recordedRuns ? `${fmt(speed.peak, 1)} m/s peak` : "No speed samples yet");
+    renderBars(
+      "openFlagDepthBars",
+      OPEN_DEPTH_BANDS.map(depth => {
+        const value = safe(safe(flags.byDepth)[depth]);
+        return { label: OPEN_DEPTH_LABELS[depth], value: value.accuracy, clean: value.clean, attempted: value.attempted };
+      }),
+      { max: 100, value: row => number(row.value) === null ? "<strong>—</strong>" : `<strong>${percent(row.value)}%</strong><span> · ${fmt(row.clean)}/${fmt(row.attempted)}</span>` }
+    );
+    donut("openDeathDonut", "openDeathLegend", automaticData.deaths);
+    renderMountainHeatmap("openDeathHeatmap", safe(automaticData.spatial).deathZones);
+    renderMountainHeatmap("openCollisionHeatmap", safe(automaticData.spatial).collisionZones);
+    setText("openDeathHeatTotal", recordedRuns ? `${fmt(recordedRuns)} recorded` : "No data yet");
+    setText("openCollisionHeatTotal", recordedRuns ? `${fmt(overview.totalCollisions)} recorded` : "No data yet");
+    setText("openCollisionsPerRun", recordedRuns ? fmt(overview.collisionsPerRun, 1) : "—");
+    setText("openReversalsPerRun", recordedRuns ? fmt(steering.reversalsPerRun, 1) : "—");
+    setText("openAverageSteer", recordedRuns ? fmt(steering.averageAbsoluteSteer, 2) : "—");
+    setText("openAverageFps", recordedRuns && number(performance.averageFps) !== null ? fmt(performance.averageFps, 1) : "—");
+    setText("openMinimumFps", recordedRuns && number(performance.minimumFps) !== null ? fmt(performance.minimumFps, 1) : "—");
+    setText("openLowFpsFrames", recordedRuns ? fmt(performance.lowFpsFrames) : "—");
+
     const hasOpenRuns = (number(open.submittedRuns) || 0) > 0;
-    const liveOpenSki = state.live && state.live.openSki && state.live.openSki.ok === true;
+    const liveOpenSki = state.live && state.live.openSkiLeaderboard && state.live.openSkiLeaderboard.ok === true;
+    const leaderboardStatus = $("openLeaderboardStatus");
+    leaderboardStatus.classList.toggle("offline", !liveOpenSki);
+    leaderboardStatus.textContent = liveOpenSki ? "LIVE PUBLIC BOARD" : "PACKAGED FALLBACK";
     setText("openSubmittedRuns", fmt(open.submittedRuns));
     setText(
       "openSubmitters",
@@ -457,13 +560,6 @@
     setText("openMedian", hasOpenRuns ? `${fmt(safe(open.distance).median)} m median` : "No median yet");
     setText("openTopScore", hasOpenRuns ? fmt(safe(open.score).max) : "—");
     setText("openFlagAccuracy", hasOpenRuns ? `${percent(safe(open.flags).accuracy)}% flag accuracy` : "No flag accuracy yet");
-    const pursuitDistance = number(safe(pursuit.distance).median) || 0;
-    const openDistance = hasOpenRuns ? number(safe(open.distance).median) : null;
-    const maximum = Math.max(1, pursuitDistance, openDistance);
-    $("modeComparison").innerHTML =
-      comparisonRow("Pursuit", pursuitDistance, maximum) +
-      comparisonRow("Open Ski", openDistance, maximum, "open");
-    donut("openDeathDonut", "openDeathLegend", open.deaths);
   }
 
   function renderMethodology(summary) {
@@ -474,15 +570,20 @@
     const livePursuit = state.live && state.live.pursuit && state.live.pursuit.ok
       ? number(state.live.pursuit.data.accepted) || 0
       : null;
-    const liveOpen = state.live && state.live.openSki && state.live.openSki.ok
-      ? number(state.live.openSki.data.submittedRuns) || 0
+    const liveOpen = state.live && state.live.openSkiLeaderboard && state.live.openSkiLeaderboard.ok
+      ? number(state.live.openSkiLeaderboard.data.submittedRuns) || 0
+      : null;
+    const liveOpenAutomatic = state.live && state.live.openSkiAnalytics && state.live.openSkiAnalytics.ok
+      ? number(state.live.openSkiAnalytics.data.accepted) || 0
       : null;
     const liveCopy = livePursuit === null
       ? " The live Pursuit feed is temporarily unavailable; the packaged baseline remains visible."
       : ` The separate live panel contains ${fmt(livePursuit)} post-A4.3 Pursuit runs; those exact live-only values are not blended into historical percentiles.`;
-    const openCopy = liveOpen === null
-      ? ` The Open Ski section is using its packaged ${fmt(open.accepted)}-submission fallback.`
-      : ` Open Ski uses the current public board with ${fmt(liveOpen)} submissions.`;
+    const openCopy = `${liveOpenAutomatic === null
+      ? " The automatic Open Ski feed is temporarily unavailable."
+      : ` The automatic Open Ski feed contains ${fmt(liveOpenAutomatic)} consenting finished runs.`}${liveOpen === null
+      ? ` The leaderboard is using its packaged ${fmt(open.accepted)}-submission fallback.`
+      : ` The separate live leaderboard has ${fmt(liveOpen)} voluntary submissions.`}`;
     setText(
       "coverageCopy",
       `Packaged baseline: ${fmt(telemetry.accepted)} Pursuit telemetry summaries and ${fmt(pursuit.accepted)} Pursuit leaderboard submissions.${liveCopy}${openCopy}`
@@ -495,7 +596,7 @@
       list.appendChild(item);
     }
     const liveNote = document.createElement("li");
-    liveNote.textContent = "The page makes two public, read-only Firebase requests per refresh: the identifier-free Pursuit analytics feed and the Open Ski leaderboard. It never requests the private telemetry branch.";
+    liveNote.textContent = "The page makes three public, read-only Firebase requests per refresh: Pursuit analytics, automatic Open Ski analytics, and the separate Open Ski leaderboard. It never requests a private telemetry branch.";
     list.appendChild(liveNote);
   }
 
@@ -539,9 +640,9 @@
 
   function summaryWithLiveOpenSki(baseline, live) {
     const summary = clone(baseline);
-    if (live && live.openSki && live.openSki.ok === true) {
-      summary.leaderboards.openSki = clone(live.openSki.data);
-      summary.coverage.openSkiLeaderboard = clone(live.openSki.data.coverage);
+    if (live && live.openSkiLeaderboard && live.openSkiLeaderboard.ok === true) {
+      summary.leaderboards.openSki = clone(live.openSkiLeaderboard.data);
+      summary.coverage.openSkiLeaderboard = clone(live.openSkiLeaderboard.data.coverage);
     }
     return summary;
   }
@@ -552,19 +653,20 @@
     const response = await fetch("./fixtures/live-feed-a4-4.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`Live demo request returned ${response.status}.`);
     const fixture = await response.json();
-    return window.AnalyticsLiveData.fromTrees(fixture.publicAnalyticsRuns, fixture.openSkiRuns);
+    return window.AnalyticsLiveData.fromTrees(fixture.publicAnalyticsRuns, fixture.openSkiAnalyticsRuns, fixture.openSkiRuns);
   }
 
   function offlineLive(error) {
     const empty = window.AnalyticsLiveData
       ? window.AnalyticsLiveData.fromTrees(null, null)
-      : { checkedAt: Date.now(), pursuit: { data: {} }, openSki: { data: {} } };
+      : { checkedAt: Date.now(), pursuit: { data: {} }, openSkiAnalytics: { data: {} }, openSkiLeaderboard: { data: {} } };
     const message = String(error && error.message ? error.message : error || "Live feed unavailable.");
     return {
       ...empty,
       pursuit: { ...empty.pursuit, ok: false, error: message },
-      openSki: { ...empty.openSki, ok: false, error: message },
-      requests: state.demo ? 0 : 2
+      openSkiAnalytics: { ...empty.openSkiAnalytics, ok: false, error: message },
+      openSkiLeaderboard: { ...empty.openSkiLeaderboard, ok: false, error: message },
+      requests: state.demo ? 0 : 3
     };
   }
 
@@ -645,8 +747,10 @@
             pursuitConnected: state.live.pursuit.ok,
             pursuitAccepted: state.live.pursuit.data.accepted,
             pursuitInvalid: state.live.pursuit.data.invalid,
-            openSkiConnected: state.live.openSki.ok,
-            openSkiAccepted: state.live.openSki.data.submittedRuns,
+            openSkiAnalyticsConnected: state.live.openSkiAnalytics.ok,
+            openSkiAnalyticsAccepted: state.live.openSkiAnalytics.data.accepted,
+            openSkiLeaderboardConnected: state.live.openSkiLeaderboard.ok,
+            openSkiLeaderboardAccepted: state.live.openSkiLeaderboard.data.submittedRuns,
             attacks: state.live.pursuit.ok ? {
               committedLunges: state.live.pursuit.data.attacks.committedLunges,
               chargeCommits: state.live.pursuit.data.attacks.chargeCommits,
@@ -669,7 +773,10 @@
         ? {
             submittedRuns: state.data.leaderboards.openSki.submittedRuns,
             medianDistance: state.data.leaderboards.openSki.distance.median,
-            telemetryIncluded: false
+            automaticRecordedRuns: state.live && state.live.openSkiAnalytics ? state.live.openSkiAnalytics.data.accepted : 0,
+            automaticPhase: state.openSkiLivePhase,
+            telemetryIncluded: false,
+            pursuitTelemetryIncluded: false
           }
         : null,
       cohorts: state.data && state.data.coverage
