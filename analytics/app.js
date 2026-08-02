@@ -85,13 +85,6 @@
     const badge = $("dataStatus");
     badge.classList.toggle("demo", state.demo);
     badge.textContent = state.demo ? "DEMO DATA" : summary.status === "ready" ? "REPORT READY" : "AWAITING RUNS";
-    const window = safe(summary.sourceWindow);
-    setText(
-      "sourceWindow",
-      window.firstDay && window.lastDay
-        ? `${dateLabel(window.firstDay)} — ${dateLabel(window.lastDay)}`
-        : "NO RECORDED WINDOW"
-    );
   }
 
   function renderBars(containerId, rows, options = {}) {
@@ -268,13 +261,6 @@
     setText("historicalCohortLunges", number(historicalMetrics.lungeDodgeRate) === null ? "—" : `${percent(historicalMetrics.lungeDodgeRate)}%`);
     setText("currentCohortFps", number(currentMetrics.averageFps) === null ? "—" : fmt(currentMetrics.averageFps, 1));
     setText("historicalCohortFps", number(historicalMetrics.averageFps) === null ? "—" : fmt(historicalMetrics.averageFps, 1));
-    const minimum = number(current.minimumRuns) || 3;
-    setText(
-      "cohortAvailabilityNote",
-      current.status === "ready"
-        ? "Current-release comparisons use only exact v12c.1 / telemetry-engine-v2.8 records; historical runs never enter the current column."
-        : `Current-release metrics unlock after ${fmt(minimum)} recorded runs. Overall cards remain available, but historical data never fills the current column.`
-    );
   }
 
   function liveMonthLabel(rows) {
@@ -339,22 +325,14 @@
     topBadge.textContent = state.demo
       ? "DEMO DATA"
       : pursuit.ok === true ? "LIVE DATA" : "ARCHIVE DATA";
-    const window = safe(state.data && state.data.sourceWindow);
-    const baselineWindow = window.firstDay && window.lastDay
-      ? `${dateLabel(window.firstDay)} — ${dateLabel(window.lastDay)}`
-      : "NO RECORDED WINDOW";
-    const checked = new Date(state.liveCheckedAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }).toUpperCase();
-    setText("sourceWindow", `${baselineWindow} · LIVE CHECKED ${checked}`);
     status.classList.toggle("ready", pursuit.ok === true);
     status.classList.toggle("offline", pursuit.ok !== true);
     if (pursuit.ok !== true) {
       state.livePhase = "offline";
       status.textContent = "LIVE FEED OFFLINE";
-      setText("liveFeedCopy", "The packaged A3 baseline remains available. The live feed will retry automatically when this page is open.");
       for (const id of ["liveRunCount", "liveMonths", "liveMedianDistance", "liveFlagAccuracy", "liveFlagCount", "liveAverageFps", "liveFpsCoverage", "liveLunges", "liveLungeDodges", "liveCharges", "liveChargeDodges", "liveBoulders", "liveBoulderReleases"])
         setText(id, "—");
       renderLiveMix({});
-      setText("liveFeedPrivacy", "Live Pursuit data could not be reached; no private telemetry path was requested. Packaged aggregate cards remain valid.");
       return;
     }
     const data = safe(pursuit.data);
@@ -362,12 +340,6 @@
     const attacks = safe(data.attacks);
     state.livePhase = runs ? "ready" : "empty";
     status.textContent = runs ? `LIVE · ${fmt(runs)} ${runs === 1 ? "RUN" : "RUNS"}` : "CONNECTED · AWAITING RUN";
-    setText(
-      "liveFeedCopy",
-      runs
-        ? "These exact figures include only identifier-free Pursuit runs submitted after the A4.3 deployment. They are shown beside, not blended into, the packaged historical baseline."
-        : "The A4.3 public feed is connected. It will populate after the first post-deployment Pursuit run completes."
-    );
     setText("liveRunCount", fmt(runs));
     setText("liveMonths", liveMonthLabel(data.sourceMonths));
     setText("liveMedianDistance", number(safe(data.distance).median) === null ? "—" : fmt(data.distance.median));
@@ -382,7 +354,6 @@
     setText("liveBoulders", fmt(safe(attacks.byKind).boulders));
     setText("liveBoulderReleases", `${fmt(attacks.boulderThrowReleases)} boulders released`);
     renderLiveMix(attacks);
-    setText("liveFeedPrivacy", `${fmt(data.invalid)} rejected rows. Pursuit live records contain no player identifiers, report IDs, exact timestamps, traces, comments, or device/session identity.`);
   }
 
   function renderPursuit(summary) {
@@ -392,14 +363,9 @@
     const flags = safe(pursuit.flags);
     const attacks = safe(pursuit.attacks);
     const performance = safe(pursuit.performance);
-    const telemetryCoverage = safe(safe(summary.coverage).pursuitTelemetry);
-    const buildCoverage = Array.isArray(telemetryCoverage.buildVersions)
-      ? telemetryCoverage.buildVersions.map((row) => `${row.label} · ${fmt(row.count)} runs`).join(" / ")
-      : "";
-    setText("pursuitBuildCoverage", buildCoverage ? `Telemetry builds: ${buildCoverage}` : "Telemetry build unavailable");
     renderCohorts(summary);
     setText("runsRecorded", fmt(overview.recordedRuns));
-    setText("playersRecorded", `${fmt(overview.approximatePlayers)} approximate anonymous players`);
+    setText("playersRecorded", `${fmt(overview.approximatePlayers)} players`);
     setText("medianDistance", fmt(distance.median));
     setText("p90Distance", `${fmt(distance.p90)} m at the 90th percentile`);
     setText("totalDistance", fmt(overview.totalDistance));
@@ -429,14 +395,6 @@
     setText("passiveWhiffs", `${fmt(attacks.passiveWhiffs)} passive whiffs`);
     setText("followUpLunges", fmt(attacks.followUpLunges));
     setText("telegraphCount", `${fmt(attacks.telegraphs)} telegraphs`);
-    const optional = safe(attacks.optionalMetricAvailability);
-    const missing = Object.values(optional).filter((entry) => !entry.available).length;
-    setText(
-      "attackAvailabilityNote",
-      missing
-        ? "Charge and thrown-boulder counters are not present in the current Firebase telemetry wire schema; this dashboard reports them as unavailable, never as zero."
-        : "Charge and thrown-boulder counters are available in this dataset."
-    );
     threatBand(pursuit.threatExposure);
     drawTrend(pursuit.monthly || []);
     setText("averageFps", fmt(safe(performance.averageFps).mean, 1));
@@ -512,11 +470,6 @@
     status.textContent = automatic.ok !== true
       ? "LIVE FEED OFFLINE"
       : recordedRuns ? `LIVE · ${fmt(recordedRuns)} ${recordedRuns === 1 ? "RUN" : "RUNS"}` : "CONNECTED · AWAITING RUN";
-    setText("openLiveCopy", automatic.ok !== true
-      ? "Automatic Open Ski analytics could not be reached. The voluntary leaderboard remains independent and the page will retry automatically."
-      : recordedRuns
-        ? `Anonymous Open Ski summaries are aggregated live and refreshed every five minutes. ${fmt(automaticData.invalid)} malformed or privacy-unsafe rows were rejected.`
-        : "The automatic Open Ski feed is connected and will populate after the first consenting Open Ski run finishes on the A5.2B game build.");
     setText("openRecordedRuns", automatic.ok === true ? fmt(recordedRuns) : "—");
     setText("openLiveMonths", automatic.ok === true ? liveMonthLabel(automaticData.sourceMonths) : "AUTOMATIC FEED UNAVAILABLE");
     setText("openRecordedMedian", recordedRuns ? fmt(safe(automaticData.distance).median) : "—");
@@ -554,8 +507,8 @@
     setText(
       "openSubmitters",
       hasOpenRuns
-        ? `${fmt(open.approximateSubmitters)} approximate anonymous submitters${liveOpenSki ? " · live public board" : ""}`
-        : liveOpenSki ? "No Open Ski submissions on the live public board" : "No Open Ski submissions in the packaged baseline"
+        ? `${fmt(open.approximateSubmitters)} players`
+        : "No submissions"
     );
     setText("openLongest", hasOpenRuns ? fmt(safe(open.distance).max) : "—");
     setText("openMedian", hasOpenRuns ? `${fmt(safe(open.distance).median)} m median` : "No median yet");
@@ -591,9 +544,6 @@
     setText("pursuitSnapshotAttackMix", pursuitReady
       ? `${fmt(pursuitKinds.lunges)} lunge · ${fmt(pursuitKinds.charges)} charge · ${fmt(pursuitKinds.boulders)} boulder`
       : "No current attack mix yet");
-    setText("pursuitOverviewCopy", pursuitReady
-      ? "Current community runs, with deeper Yeti and survival modules one tap away."
-      : pursuitConnected ? "The live feed is connected and waiting for current Pursuit runs." : "Live Pursuit is temporarily unavailable; the archive remains accessible.");
     setText("pursuitFlagModuleLiveAccuracy", pursuitReady && number(safe(pursuit.flags).accuracy) !== null ? percent(pursuit.flags.accuracy) : "—");
     setText("pursuitFlagModuleLiveCount", pursuitReady ? `${fmt(pursuit.flags.clean)} clean / ${fmt(pursuit.flags.attempted)} attempted` : "No current flags yet");
     setText("pursuitFlagModuleLiveMedian", pursuitReady ? fmt(safe(pursuit.distance).median) : "—");
@@ -606,44 +556,6 @@
     setText("homeOpenRuns", openReady ? fmt(open.accepted) : openConnected ? "0" : "—");
     setText("homeOpenMedian", openReady && number(safe(open.distance).median) !== null ? `${fmt(open.distance.median)} m` : "—");
     setText("homeOpenFlags", openReady && number(safe(open.flags).accuracy) !== null ? `${percent(open.flags.accuracy)}%` : "—");
-  }
-
-  function renderMethodology(summary) {
-    const coverage = safe(summary.coverage);
-    const telemetry = safe(coverage.pursuitTelemetry);
-    const pursuit = safe(coverage.pursuitLeaderboard);
-    const open = safe(coverage.openSkiLeaderboard);
-    const livePursuit = state.live && state.live.pursuit && state.live.pursuit.ok
-      ? number(state.live.pursuit.data.accepted) || 0
-      : null;
-    const liveOpen = state.live && state.live.openSkiLeaderboard && state.live.openSkiLeaderboard.ok
-      ? number(state.live.openSkiLeaderboard.data.submittedRuns) || 0
-      : null;
-    const liveOpenAutomatic = state.live && state.live.openSkiAnalytics && state.live.openSkiAnalytics.ok
-      ? number(state.live.openSkiAnalytics.data.accepted) || 0
-      : null;
-    const liveCopy = livePursuit === null
-      ? " The live Pursuit feed is temporarily unavailable; the packaged baseline remains visible."
-      : ` The separate live panel contains ${fmt(livePursuit)} post-A4.3 Pursuit runs; those exact live-only values are not blended into historical percentiles.`;
-    const openCopy = `${liveOpenAutomatic === null
-      ? " The automatic Open Ski feed is temporarily unavailable."
-      : ` The automatic Open Ski feed contains ${fmt(liveOpenAutomatic)} consenting finished runs.`}${liveOpen === null
-      ? ` The leaderboard is using its packaged ${fmt(open.accepted)}-submission fallback.`
-      : ` The separate live leaderboard has ${fmt(liveOpen)} voluntary submissions.`}`;
-    setText(
-      "coverageCopy",
-      `Packaged baseline: ${fmt(telemetry.accepted)} Pursuit telemetry summaries and ${fmt(pursuit.accepted)} Pursuit leaderboard submissions.${liveCopy}${openCopy}`
-    );
-    const list = $("privacyNotes");
-    list.replaceChildren();
-    for (const note of safe(summary.privacy).notes || []) {
-      const item = document.createElement("li");
-      item.textContent = note;
-      list.appendChild(item);
-    }
-    const liveNote = document.createElement("li");
-    liveNote.textContent = "The page makes three public, read-only Firebase requests per refresh: Pursuit analytics, automatic Open Ski analytics, and the separate Open Ski leaderboard. It never requests a private telemetry branch.";
-    list.appendChild(liveNote);
   }
 
   const MODULES = Object.freeze({
@@ -693,6 +605,7 @@
     const labels = LOCATION_LABELS[key] || LOCATION_LABELS.home;
     setText("reportKicker", labels[0]);
     setText("reportLocation", labels[1]);
+    $("reportToolbar").hidden = state.view === "home";
     document.querySelectorAll("[data-report-home]").forEach(button => button.hidden = state.view === "home");
     document.querySelectorAll("[data-report-back]").forEach(button => button.hidden = state.module === null);
     if (options.updateUrl !== false) {
@@ -729,7 +642,6 @@
     renderPursuit(summary);
     renderOpenSki(summary);
     renderSnapshots();
-    renderMethodology(summary);
     state.phase = "ready";
     showOnly("dashboard");
     const requested = navigationFromUrl();
@@ -780,7 +692,6 @@
       navigate(view, module, { updateUrl: false, scroll: false });
       renderLive(live);
       renderSnapshots();
-      renderMethodology(state.data);
       return live;
     } finally {
       state.liveRefreshing = false;
@@ -807,7 +718,6 @@
       render(summaryWithLiveOpenSki(state.baseline, live));
       renderLive(live);
       renderSnapshots();
-      renderMethodology(state.data);
       clearInterval(liveRefreshTimer);
       if (!state.demo) liveRefreshTimer = setInterval(refreshLive, LIVE_REFRESH_MS);
     } catch (error) {

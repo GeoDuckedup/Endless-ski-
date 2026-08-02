@@ -124,3 +124,31 @@ footer{display:flex;justify-content:space-between;gap:20px;width:min(1160px,calc
   .compact-hero h1{font-size:46px}.mode-entry-stats{gap:5px}.mode-entry-stats small{font-size:6px}.mode-entry-stats b{font-size:19px}.snapshot-card{min-height:134px}.snapshot-card strong{font-size:31px}.module-entry{grid-template-columns:auto 1fr auto;gap:12px}.module-entry em{display:none}.home-note-icon{display:none}
 }
 @media(prefers-reduced-motion:reduce){.report-screen{animation:none}.mode-entry:hover{transform:none}}
+
+/* Phase A5.3.1: concise copy pass */
+.compact-hero{min-height:285px}
+.compact-hero .hero-inner{padding:52px 0 80px}
+.compact-hero .ridge{height:155px}
+.compact-hero h1{margin-bottom:0}
+.compact-hero .hero-meta{margin-top:16px}
+.home-heading{margin-bottom:22px}
+.mode-entry{min-height:320px}
+.mode-entry-top{justify-content:flex-end}
+.mode-entry>strong{margin:30px 0 24px}
+.module-heading{margin:34px 0 14px}
+.module-entry{min-height:96px}
+.module-entry strong{margin-bottom:0}
+.module-screen-heading{margin-bottom:18px}
+.module-screen-heading h2{margin-bottom:0}
+footer{justify-content:center}
+
+@media(max-width:900px){
+  .mode-entry{min-height:290px}
+}
+@media(max-width:620px){
+  .compact-hero{min-height:260px}
+  .compact-hero .hero-inner{padding:48px 0 70px}
+  .compact-hero .ridge{height:130px}
+  .mode-entry{min-height:275px}
+  .module-entry{min-height:90px}
+}
