@@ -10,7 +10,8 @@
 </head>
 <body>
   <div class="snow-grain" aria-hidden="true"></div>
-  <header class="hero">
+
+  <header class="hero compact-hero">
     <div class="ridge ridge-back" aria-hidden="true"></div>
     <div class="ridge ridge-front" aria-hidden="true"></div>
     <div class="hero-inner">
@@ -18,11 +19,8 @@
       <p class="brand">ENDLESS POWDER</p>
       <p class="eyebrow">COMMUNITY ANALYTICS</p>
       <h1>Mountain Report</h1>
-      <p class="hero-copy">What recorded runs reveal about speed, survival, flags, and the pursuit.</p>
-      <div class="hero-meta">
-        <span class="status-pill" id="dataStatus">LOADING DATA</span>
-        <span id="sourceWindow">—</span>
-      </div>
+      <p class="hero-copy">A clean view of how the mountain is being skied.</p>
+      <div class="hero-meta"><span class="status-pill" id="dataStatus">LOADING</span></div>
     </div>
   </header>
 
@@ -30,351 +28,232 @@
     <section class="state-panel" id="loadingState" aria-live="polite">
       <span class="loader" aria-hidden="true"></span>
       <h2>Reading the mountain</h2>
-      <p>Loading the privacy-safe community summary.</p>
+      <p>Loading the community report.</p>
     </section>
 
     <section class="state-panel" id="emptyState" hidden>
       <p class="state-mark">◇</p>
-      <h2>Awaiting the first export</h2>
-      <p>The dashboard is ready, but its public summary has not been generated from a private Firebase backup yet.</p>
-      <code>node tools/build-community-summary.mjs --input firebase-export.json</code>
-      <p class="state-small">Raw Firebase data stays private. Only the generated aggregate belongs on the public site.</p>
+      <h2>Awaiting recorded runs</h2>
+      <p>The report is ready and will appear when community data is available.</p>
     </section>
 
     <section class="state-panel error" id="errorState" hidden>
       <p class="state-mark">!</p>
       <h2>Report unavailable</h2>
-      <p id="errorMessage">The summary could not be loaded.</p>
+      <p id="errorMessage">The report could not be loaded.</p>
       <button class="retry-button" id="retryLoad" type="button">TRY AGAIN</button>
     </section>
 
     <div id="dashboard" hidden>
-      <nav class="view-switch" aria-label="Analytics mode">
-        <button class="view-button active" type="button" data-view-button="pursuit" aria-pressed="true">
-          <span>PURSUIT</span>
-          <small>RECORDED RUNS</small>
-        </button>
-        <button class="view-button" type="button" data-view-button="open-ski" aria-pressed="false">
-          <span>OPEN SKI</span>
-          <small>RECORDED RUNS</small>
-        </button>
+      <nav class="report-toolbar" id="reportToolbar" aria-label="Report navigation">
+        <button class="toolbar-button" type="button" data-report-home hidden><span aria-hidden="true">⌂</span> REPORT HOME</button>
+        <div class="report-location" aria-live="polite">
+          <small id="reportKicker">MOUNTAIN REPORT</small>
+          <strong id="reportLocation">OVERVIEW</strong>
+        </div>
+        <button class="toolbar-button back" type="button" data-report-back hidden><span aria-hidden="true">←</span> BACK</button>
       </nav>
 
-      <section data-view-panel="pursuit">
-        <div class="section-heading">
+      <section class="report-screen home-screen" data-report-screen="home">
+        <div class="section-heading home-heading">
           <div>
-            <p class="eyebrow">THE PURSUIT</p>
-            <h2>Recorded descents</h2>
+            <p class="eyebrow">THE MOUNTAIN NOW</p>
+            <h2>Choose your report</h2>
           </div>
-          <p>Completed normal runs with anonymous gameplay data enabled.<span class="coverage-line" id="pursuitBuildCoverage"></span></p>
+          <p>Start with the essentials. Open a mode for the full story.</p>
         </div>
 
-        <div class="metric-grid metric-grid-primary">
-          <article class="metric-card feature">
-            <p>RECORDED RUNS</p>
-            <strong id="runsRecorded">—</strong>
-            <small id="playersRecorded">— anonymous players</small>
-          </article>
-          <article class="metric-card">
-            <p>MEDIAN DESCENT</p>
-            <strong><span id="medianDistance">—</span><em>m</em></strong>
-            <small id="p90Distance">— at the 90th percentile</small>
-          </article>
-          <article class="metric-card">
-            <p>TOTAL POWDER</p>
-            <strong><span id="totalDistance">—</span><em>m</em></strong>
-            <small id="longestDistance">— longest recorded run</small>
-          </article>
-          <article class="metric-card gold">
-            <p>FLAG ACCURACY</p>
-            <strong><span id="flagAccuracy">—</span><em>%</em></strong>
-            <small id="flagCount">— clean passes</small>
-          </article>
+        <div class="mode-card-grid">
+          <button class="mode-entry pursuit" type="button" data-open-view="pursuit">
+            <span class="mode-entry-top"><small>PURSUIT</small><em id="homePursuitStatus">CHECKING</em></span>
+            <strong>Outrun the Yeti</strong>
+            <span class="mode-entry-copy">Survival, flags, and the hunt.</span>
+            <span class="mode-entry-stats">
+              <span><small>LIVE RUNS</small><b id="homePursuitRuns">—</b></span>
+              <span><small>MEDIAN</small><b id="homePursuitMedian">—</b></span>
+              <span><small>FLAG RATE</small><b id="homePursuitFlags">—</b></span>
+            </span>
+            <span class="mode-entry-action">VIEW PURSUIT <b aria-hidden="true">→</b></span>
+          </button>
+
+          <button class="mode-entry open-ski" type="button" data-open-view="open-ski">
+            <span class="mode-entry-top"><small>OPEN SKI</small><em id="homeOpenStatus">CHECKING</em></span>
+            <strong>Ski your own line</strong>
+            <span class="mode-entry-copy">Speed, technique, and mountain hot spots.</span>
+            <span class="mode-entry-stats">
+              <span><small>LIVE RUNS</small><b id="homeOpenRuns">—</b></span>
+              <span><small>MEDIAN</small><b id="homeOpenMedian">—</b></span>
+              <span><small>FLAG RATE</small><b id="homeOpenFlags">—</b></span>
+            </span>
+            <span class="mode-entry-action">VIEW OPEN SKI <b aria-hidden="true">→</b></span>
+          </button>
         </div>
 
-        <article class="report-card cohort-card" id="cohortCard">
-          <header>
-            <div><p class="eyebrow">DATA COHORTS</p><h3>Current release vs. mountain history</h3></div>
-            <span class="card-note">NEVER MIXED IN COMPARISON</span>
-          </header>
-          <div class="cohort-grid">
-            <section class="cohort-panel current" id="currentCohort">
-              <div class="cohort-panel-heading">
-                <span>CURRENT PRODUCTION</span>
-                <strong id="currentCohortStatus">—</strong>
-              </div>
-              <div class="cohort-run-count"><strong id="currentCohortCount">—</strong><span>recorded runs</span></div>
-              <p id="currentCohortVersion">v12c.1 · telemetry engine v2.8</p>
-              <small id="currentCohortWindow">—</small>
-            </section>
-            <section class="cohort-panel historical" id="historicalCohort">
-              <div class="cohort-panel-heading">
-                <span>HISTORICAL</span>
-                <strong id="historicalCohortStatus">—</strong>
-              </div>
-              <div class="cohort-run-count"><strong id="historicalCohortCount">—</strong><span>recorded runs</span></div>
-              <p id="historicalCohortVersion">—</p>
-              <small id="historicalCohortWindow">—</small>
-            </section>
-          </div>
-          <div class="cohort-comparison" role="table" aria-label="Current and historical telemetry comparison">
-            <div class="cohort-comparison-row heading" role="row">
-              <span role="columnheader">METRIC</span><strong role="columnheader">CURRENT</strong><strong role="columnheader">HISTORICAL</strong>
-            </div>
-            <div class="cohort-comparison-row" role="row">
-              <span role="rowheader">Median descent</span><strong id="currentCohortMedian">—</strong><strong id="historicalCohortMedian">—</strong>
-            </div>
-            <div class="cohort-comparison-row" role="row">
-              <span role="rowheader">Flag accuracy</span><strong id="currentCohortFlags">—</strong><strong id="historicalCohortFlags">—</strong>
-            </div>
-            <div class="cohort-comparison-row" role="row">
-              <span role="rowheader">Lunge dodge rate</span><strong id="currentCohortLunges">—</strong><strong id="historicalCohortLunges">—</strong>
-            </div>
-            <div class="cohort-comparison-row" role="row">
-              <span role="rowheader">Average FPS</span><strong id="currentCohortFps">—</strong><strong id="historicalCohortFps">—</strong>
-            </div>
-          </div>
-          <p class="availability-note" id="cohortAvailabilityNote"></p>
+        <article class="home-note">
+          <span class="home-note-icon" aria-hidden="true">◇</span>
+          <div><strong>Simple first. Detailed when you want it.</strong><p>Each report opens into focused modules. Historical and technical information stays available without crowding the main view.</p></div>
         </article>
-
-        <article class="report-card live-feed-card" id="liveFeedCard">
-          <header>
-            <div><p class="eyebrow">LIVE SINCE A4.3</p><h3>Fresh runs from Firebase</h3></div>
-            <span class="card-note live-status" id="liveFeedStatus">CONNECTING</span>
-          </header>
-          <p class="availability-note live-feed-copy" id="liveFeedCopy">Checking the identifier-free public feed.</p>
-          <div class="live-summary-grid">
-            <div><small>LIVE PURSUIT RUNS</small><strong id="liveRunCount">—</strong><span id="liveMonths">—</span></div>
-            <div><small>MEDIAN DESCENT</small><strong><span id="liveMedianDistance">—</span><em>m</em></strong><span>live-feed runs only</span></div>
-            <div><small>FLAG ACCURACY</small><strong><span id="liveFlagAccuracy">—</span><em>%</em></strong><span id="liveFlagCount">—</span></div>
-            <div><small>AVERAGE FPS</small><strong id="liveAverageFps">—</strong><span id="liveFpsCoverage">—</span></div>
-          </div>
-          <div class="live-yeti-grid">
-            <section>
-              <p class="eyebrow">LIVE YETI ACTIVITY</p>
-              <div class="live-attack-stats">
-                <div><small>LUNGES</small><strong id="liveLunges">—</strong><span id="liveLungeDodges">—</span></div>
-                <div><small>CHARGES</small><strong id="liveCharges">—</strong><span id="liveChargeDodges">—</span></div>
-                <div><small>BOULDER THROWS</small><strong id="liveBoulders">—</strong><span id="liveBoulderReleases">—</span></div>
-              </div>
-            </section>
-            <section>
-              <p class="eyebrow">ATTACK MIX</p>
-              <div class="live-mix" id="liveAttackMix"></div>
-            </section>
-          </div>
-          <p class="availability-note" id="liveFeedPrivacy">No player identifiers or exact run times are downloaded in the Pursuit live feed.</p>
-        </article>
-
-        <div class="report-grid two-one">
-          <article class="report-card survival-card">
-            <header>
-              <div><p class="eyebrow">SURVIVAL</p><h3>How deep players go</h3></div>
-              <span class="card-note">SHARE OF RUNS</span>
-            </header>
-            <div class="bar-stack" id="survivalBars"></div>
-          </article>
-
-          <article class="report-card distance-card">
-            <header><div><p class="eyebrow">DISTANCE</p><h3>The middle of the mountain</h3></div></header>
-            <div class="quartile-mark">
-              <span style="--x:25%"><i>P25</i></span>
-              <span class="median" style="--x:50%"><i>MEDIAN</i></span>
-              <span style="--x:75%"><i>P75</i></span>
-              <span class="peak" style="--x:100%"><i>MAX</i></span>
-            </div>
-            <div class="stat-pair">
-              <div><small>AVERAGE</small><strong id="averageDistance">—</strong><em>m</em></div>
-              <div><small>90TH PERCENTILE</small><strong id="distanceP90">—</strong><em>m</em></div>
-            </div>
-          </article>
-        </div>
-
-        <div class="report-grid equal">
-          <article class="report-card flag-card">
-            <header><div><p class="eyebrow">FLAGS</p><h3>Clean lines build speed</h3></div></header>
-            <div class="gauge-row">
-              <div class="ring-gauge" id="flagGauge" role="img" aria-label="Flag accuracy">
-                <div><strong id="flagGaugeValue">—</strong><span>%</span></div>
-              </div>
-              <div class="gauge-copy">
-                <p><strong id="cleanFlags">—</strong> clean</p>
-                <p><strong id="attemptedFlags">—</strong> attempted</p>
-                <p><strong id="bestCombo">—</strong> best combo</p>
-              </div>
-            </div>
-          </article>
-
-          <article class="report-card death-card">
-            <header><div><p class="eyebrow">LAST MOMENTS</p><h3>What ends a run</h3></div></header>
-            <div class="death-layout">
-              <div class="death-donut" id="deathDonut" role="img" aria-label="Death cause distribution"><span></span></div>
-              <div class="death-legend" id="deathLegend"></div>
-            </div>
-          </article>
-        </div>
-
-        <article class="report-card yeti-card">
-          <header>
-            <div><p class="eyebrow">THE YETI</p><h3>Pressure and counterplay</h3></div>
-            <span class="card-note" id="attackCoverage">LUNGE TELEMETRY</span>
-          </header>
-          <div class="yeti-grid">
-            <div class="yeti-stat"><small>COMMITTED LUNGES</small><strong id="committedLunges">—</strong><span id="lungesPerRun">— per run</span></div>
-            <div class="yeti-stat accent"><small>LUNGE DODGE RATE</small><strong><span id="lungeDodgeRate">—</span>%</strong><span id="lungeOutcomes">— resolved attacks</span></div>
-            <div class="yeti-stat"><small>PASSIVE CATCHES</small><strong id="passiveCatches">—</strong><span id="passiveWhiffs">— passive whiffs</span></div>
-            <div class="yeti-stat"><small>FOLLOW-UP LUNGES</small><strong id="followUpLunges">—</strong><span id="telegraphCount">— telegraphs</span></div>
-          </div>
-          <div class="threat-band" id="threatBand" aria-label="Time in each Yeti threat state"></div>
-          <p class="availability-note" id="attackAvailabilityNote"></p>
-        </article>
-
-        <article class="report-card trend-card">
-          <header>
-            <div><p class="eyebrow">OVER TIME</p><h3>Median descent by month</h3></div>
-            <span class="card-note">MINIMUM GROUP APPLIED</span>
-          </header>
-          <canvas id="trendChart" width="960" height="300" role="img" aria-label="Median descent by month"></canvas>
-          <div class="trend-legend" id="trendLegend"></div>
-          <p class="empty-chart" id="trendEmpty" hidden>Not enough months meet the privacy threshold yet.</p>
-        </article>
-
-        <div class="report-grid equal">
-          <article class="report-card performance-card">
-            <header><div><p class="eyebrow">PERFORMANCE</p><h3>How the mountain runs</h3></div></header>
-            <div class="stat-pair triple">
-              <div><small>AVERAGE FPS</small><strong id="averageFps">—</strong></div>
-              <div><small>MEDIAN LOW</small><strong id="minimumFps">—</strong></div>
-              <div><small>RUNS BELOW 30</small><strong id="lowFpsRate">—</strong><em>%</em></div>
-            </div>
-          </article>
-
-          <article class="report-card device-card">
-            <header><div><p class="eyebrow">PLAY STYLE</p><h3>Broad device mix</h3></div></header>
-            <div class="mini-bars" id="deviceBreakdown"></div>
-            <p class="availability-note">Small categories are combined into “other.”</p>
-          </article>
-        </div>
       </section>
 
-      <section data-view-panel="open-ski" hidden>
-        <div class="section-heading open-heading">
-          <div>
-            <p class="eyebrow">OPEN SKI</p>
-            <h2>No Yeti. Same mountain.</h2>
+      <section class="report-screen" data-report-screen="pursuit" hidden>
+        <div data-mode-overview="pursuit">
+          <div class="section-heading mode-heading">
+            <div><p class="eyebrow">PURSUIT</p><h2>The chase at a glance</h2></div>
+            <p id="pursuitOverviewCopy">Live runs show what the Yeti is doing now.</p>
           </div>
-          <p>Automatic, anonymous run analytics—separate from the voluntary leaderboard.</p>
+
+          <div class="snapshot-grid pursuit-snapshot">
+            <article class="snapshot-card feature"><small>LIVE RUNS</small><strong id="pursuitSnapshotRuns">—</strong><span id="pursuitSnapshotMonths">—</span></article>
+            <article class="snapshot-card"><small>MEDIAN DESCENT</small><strong><span id="pursuitSnapshotMedian">—</span><em>m</em></strong><span>current live cohort</span></article>
+            <article class="snapshot-card"><small>FLAG ACCURACY</small><strong><span id="pursuitSnapshotFlags">—</span><em>%</em></strong><span id="pursuitSnapshotFlagCount">—</span></article>
+            <article class="snapshot-card danger"><small>YETI ATTACKS</small><strong id="pursuitSnapshotAttacks">—</strong><span id="pursuitSnapshotAttackMix">—</span></article>
+          </div>
+
+          <div class="module-heading"><p class="eyebrow">EXPLORE PURSUIT</p><h3>Pick a part of the run</h3></div>
+          <div class="module-grid">
+            <button class="module-entry yeti" type="button" data-open-module="pursuit:yeti"><span class="module-icon" aria-hidden="true">▲</span><span><small>THE YETI</small><strong>Pressure & attacks</strong><em>Lunges, charges, boulders, and threat.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry" type="button" data-open-module="pursuit:survival"><span class="module-icon" aria-hidden="true">↘</span><span><small>THE RUN</small><strong>Survival & endings</strong><em>Distance, depth, and what stops players.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry flags" type="button" data-open-module="pursuit:flags"><span class="module-icon" aria-hidden="true">⚑</span><span><small>TECHNIQUE</small><strong>Flags & speed</strong><em>Clean lines, combos, and current accuracy.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry archive" type="button" data-open-module="pursuit:history"><span class="module-icon" aria-hidden="true">◫</span><span><small>DEEP DATA</small><strong>History & performance</strong><em>Cohorts, trends, devices, and FPS.</em></span><b aria-hidden="true">→</b></button>
+          </div>
         </div>
 
-        <article class="report-card open-live-card" id="openLiveCard">
-          <header>
-            <div><p class="eyebrow">LIVE OPEN SKI</p><h3>Every consenting finished run</h3></div>
-            <span class="card-note live-status" id="openLiveStatus">CONNECTING</span>
-          </header>
-          <p class="availability-note" id="openLiveCopy">Checking the automatic, identifier-free Open Ski feed.</p>
-          <div class="open-live-summary">
+        <section class="module-screen" data-module-panel="pursuit:yeti" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow">PURSUIT · THE YETI</p><h2>Pressure & attacks</h2><p>How the hunt changes shape across current runs.</p></div></header>
+
+          <article class="report-card live-feed-card" id="liveFeedCard">
+            <header><div><p class="eyebrow">CURRENT RUNS</p><h3>Yeti activity</h3></div><span class="card-note live-status" id="liveFeedStatus">CONNECTING</span></header>
+            <p class="availability-note live-feed-copy" id="liveFeedCopy">Checking the live Pursuit feed.</p>
+            <div class="live-summary-grid">
+              <div><small>LIVE PURSUIT RUNS</small><strong id="liveRunCount">—</strong><span id="liveMonths">—</span></div>
+              <div><small>MEDIAN DESCENT</small><strong><span id="liveMedianDistance">—</span><em>m</em></strong><span>live runs only</span></div>
+              <div><small>FLAG ACCURACY</small><strong><span id="liveFlagAccuracy">—</span><em>%</em></strong><span id="liveFlagCount">—</span></div>
+              <div><small>AVERAGE FPS</small><strong id="liveAverageFps">—</strong><span id="liveFpsCoverage">—</span></div>
+            </div>
+            <div class="live-yeti-grid">
+              <section><p class="eyebrow">ATTACKS</p><div class="live-attack-stats">
+                <div><small>LUNGES</small><strong id="liveLunges">—</strong><span id="liveLungeDodges">—</span></div>
+                <div><small>CHARGES</small><strong id="liveCharges">—</strong><span id="liveChargeDodges">—</span></div>
+                <div><small>BOULDERS</small><strong id="liveBoulders">—</strong><span id="liveBoulderReleases">—</span></div>
+              </div></section>
+              <section><p class="eyebrow">ATTACK MIX</p><div class="live-mix" id="liveAttackMix"></div></section>
+            </div>
+            <details class="inline-details"><summary>DATA COVERAGE</summary><p id="liveFeedPrivacy">No player identifiers or exact run times are downloaded.</p></details>
+          </article>
+
+          <article class="report-card yeti-card">
+            <header><div><p class="eyebrow">MOUNTAIN ARCHIVE</p><h3>Pressure and counterplay</h3></div><span class="card-note" id="attackCoverage">LUNGE TELEMETRY</span></header>
+            <div class="yeti-grid">
+              <div class="yeti-stat"><small>COMMITTED LUNGES</small><strong id="committedLunges">—</strong><span id="lungesPerRun">— per run</span></div>
+              <div class="yeti-stat accent"><small>LUNGE DODGE RATE</small><strong><span id="lungeDodgeRate">—</span>%</strong><span id="lungeOutcomes">— outcomes</span></div>
+              <div class="yeti-stat"><small>PASSIVE CATCHES</small><strong id="passiveCatches">—</strong><span id="passiveWhiffs">— passive whiffs</span></div>
+              <div class="yeti-stat"><small>FOLLOW-UP LUNGES</small><strong id="followUpLunges">—</strong><span id="telegraphCount">— telegraphs</span></div>
+            </div>
+            <div class="threat-band" id="threatBand" aria-label="Time in each Yeti threat state"></div>
+            <p class="availability-note" id="attackAvailabilityNote"></p>
+          </article>
+        </section>
+
+        <section class="module-screen" data-module-panel="pursuit:survival" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow">PURSUIT · THE RUN</p><h2>Survival & endings</h2><p>How far the community gets and what ends the descent.</p></div></header>
+          <div class="report-grid two-one first-grid">
+            <article class="report-card survival-card"><header><div><p class="eyebrow">SURVIVAL</p><h3>How deep players go</h3></div><span class="card-note">SHARE OF RUNS</span></header><div class="bar-stack" id="survivalBars"></div></article>
+            <article class="report-card distance-card"><header><div><p class="eyebrow">DISTANCE</p><h3>The middle of the mountain</h3></div></header><div class="quartile-mark"><span style="--x:25%"><i>P25</i></span><span class="median" style="--x:50%"><i>MEDIAN</i></span><span style="--x:75%"><i>P75</i></span><span class="peak" style="--x:100%"><i>MAX</i></span></div><div class="stat-pair"><div><small>AVERAGE</small><strong id="averageDistance">—</strong><em>m</em></div><div><small>90TH PERCENTILE</small><strong id="distanceP90">—</strong><em>m</em></div></div></article>
+          </div>
+          <article class="report-card death-card standalone-card"><header><div><p class="eyebrow">LAST MOMENTS</p><h3>What ends a run</h3></div></header><div class="death-layout"><div class="death-donut" id="deathDonut" role="img" aria-label="Death cause distribution"><span></span></div><div class="death-legend" id="deathLegend"></div></div></article>
+        </section>
+
+        <section class="module-screen" data-module-panel="pursuit:flags" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow">PURSUIT · TECHNIQUE</p><h2>Flags & speed</h2><p>The clean-line signal that keeps the descent moving.</p></div></header>
+          <article class="report-card focus-stat-card">
+            <div><small>CURRENT FLAG ACCURACY</small><strong><span id="pursuitFlagModuleLiveAccuracy">—</span><em>%</em></strong><p id="pursuitFlagModuleLiveCount">—</p></div>
+            <div><small>CURRENT MEDIAN DESCENT</small><strong><span id="pursuitFlagModuleLiveMedian">—</span><em>m</em></strong><p>Live Pursuit runs</p></div>
+          </article>
+          <article class="report-card flag-card standalone-card"><header><div><p class="eyebrow">MOUNTAIN ARCHIVE</p><h3>Clean lines build speed</h3></div></header><div class="gauge-row"><div class="ring-gauge" id="flagGauge" role="img" aria-label="Flag accuracy"><div><strong id="flagGaugeValue">—</strong><span>%</span></div></div><div class="gauge-copy"><p><strong id="cleanFlags">—</strong> clean</p><p><strong id="attemptedFlags">—</strong> attempted</p><p><strong id="bestCombo">—</strong> best combo</p></div></div></article>
+        </section>
+
+        <section class="module-screen" data-module-panel="pursuit:history" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow">PURSUIT · DEEP DATA</p><h2>History & performance</h2><p>Archive statistics, release cohorts, trends, and technical health.</p><span class="coverage-line" id="pursuitBuildCoverage"></span></div></header>
+          <div class="metric-grid metric-grid-primary">
+            <article class="metric-card feature"><p>RECORDED RUNS</p><strong id="runsRecorded">—</strong><small id="playersRecorded">— anonymous players</small></article>
+            <article class="metric-card"><p>MEDIAN DESCENT</p><strong><span id="medianDistance">—</span><em>m</em></strong><small id="p90Distance">— at the 90th percentile</small></article>
+            <article class="metric-card"><p>TOTAL POWDER</p><strong><span id="totalDistance">—</span><em>m</em></strong><small id="longestDistance">— longest run</small></article>
+            <article class="metric-card gold"><p>FLAG ACCURACY</p><strong><span id="flagAccuracy">—</span><em>%</em></strong><small id="flagCount">— clean passes</small></article>
+          </div>
+          <article class="report-card cohort-card" id="cohortCard"><header><div><p class="eyebrow">DATA COHORTS</p><h3>Current release vs. mountain history</h3></div><span class="card-note">SEPARATE COHORTS</span></header><div class="cohort-grid">
+            <section class="cohort-panel current" id="currentCohort"><div class="cohort-panel-heading"><span>CURRENT PRODUCTION</span><strong id="currentCohortStatus">—</strong></div><div class="cohort-run-count"><strong id="currentCohortCount">—</strong><span>recorded runs</span></div><p id="currentCohortVersion">v12c.1 · engine v2.8</p><small id="currentCohortWindow">—</small></section>
+            <section class="cohort-panel historical" id="historicalCohort"><div class="cohort-panel-heading"><span>HISTORICAL</span><strong id="historicalCohortStatus">—</strong></div><div class="cohort-run-count"><strong id="historicalCohortCount">—</strong><span>recorded runs</span></div><p id="historicalCohortVersion">—</p><small id="historicalCohortWindow">—</small></section>
+          </div><div class="cohort-comparison" role="table" aria-label="Current and historical comparison">
+            <div class="cohort-comparison-row heading" role="row"><span role="columnheader">METRIC</span><strong role="columnheader">CURRENT</strong><strong role="columnheader">HISTORY</strong></div>
+            <div class="cohort-comparison-row" role="row"><span role="rowheader">Median descent</span><strong id="currentCohortMedian">—</strong><strong id="historicalCohortMedian">—</strong></div>
+            <div class="cohort-comparison-row" role="row"><span role="rowheader">Flag accuracy</span><strong id="currentCohortFlags">—</strong><strong id="historicalCohortFlags">—</strong></div>
+            <div class="cohort-comparison-row" role="row"><span role="rowheader">Lunge dodge rate</span><strong id="currentCohortLunges">—</strong><strong id="historicalCohortLunges">—</strong></div>
+            <div class="cohort-comparison-row" role="row"><span role="rowheader">Average FPS</span><strong id="currentCohortFps">—</strong><strong id="historicalCohortFps">—</strong></div>
+          </div><p class="availability-note" id="cohortAvailabilityNote"></p></article>
+          <article class="report-card trend-card"><header><div><p class="eyebrow">OVER TIME</p><h3>Median descent by month</h3></div><span class="card-note">PRIVACY THRESHOLD</span></header><canvas id="trendChart" width="960" height="300" role="img" aria-label="Median descent by month"></canvas><div class="trend-legend" id="trendLegend"></div><p class="empty-chart" id="trendEmpty" hidden>Not enough months meet the privacy threshold yet.</p></article>
+          <div class="report-grid equal"><article class="report-card performance-card"><header><div><p class="eyebrow">PERFORMANCE</p><h3>How the mountain runs</h3></div></header><div class="stat-pair triple"><div><small>AVERAGE FPS</small><strong id="averageFps">—</strong></div><div><small>MEDIAN LOW</small><strong id="minimumFps">—</strong></div><div><small>RUNS BELOW 30</small><strong id="lowFpsRate">—</strong><em>%</em></div></div></article><article class="report-card device-card"><header><div><p class="eyebrow">PLAY STYLE</p><h3>Broad device mix</h3></div></header><div class="mini-bars" id="deviceBreakdown"></div><p class="availability-note">Small groups are combined into “other.”</p></article></div>
+        </section>
+      </section>
+
+      <section class="report-screen" data-report-screen="open-ski" hidden>
+        <div data-mode-overview="open-ski">
+          <div class="section-heading mode-heading"><div><p class="eyebrow open-eyebrow">OPEN SKI</p><h2>No Yeti. Same mountain.</h2></div><p>Automatic run analytics, separate from voluntary leaderboard submissions.</p></div>
+          <article class="report-card open-live-card" id="openLiveCard"><header><div><p class="eyebrow">CURRENT RUNS</p><h3>Open Ski snapshot</h3></div><span class="card-note live-status" id="openLiveStatus">CONNECTING</span></header><p class="availability-note" id="openLiveCopy">Checking the automatic Open Ski feed.</p><div class="open-live-summary">
             <div class="feature"><small>RECORDED RUNS</small><strong id="openRecordedRuns">—</strong><span id="openLiveMonths">—</span></div>
             <div><small>MEDIAN DESCENT</small><strong><span id="openRecordedMedian">—</span><em>m</em></strong><span id="openRecordedLongest">—</span></div>
             <div><small>FLAG ACCURACY</small><strong><span id="openRecordedFlags">—</span><em>%</em></strong><span id="openRecordedFlagCount">—</span></div>
             <div><small>AVERAGE SPEED</small><strong><span id="openAverageSpeed">—</span><em>m/s</em></strong><span id="openPeakSpeed">—</span></div>
+          </div></article>
+
+          <div class="module-heading"><p class="eyebrow open-eyebrow">EXPLORE OPEN SKI</p><h3>Pick a part of the run</h3></div>
+          <div class="module-grid">
+            <button class="module-entry course" type="button" data-open-module="open-ski:course"><span class="module-icon" aria-hidden="true">⌁</span><span><small>THE MOUNTAIN</small><strong>Hot spots</strong><em>Run endings, collisions, and course zones.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry flags" type="button" data-open-module="open-ski:flags"><span class="module-icon" aria-hidden="true">⚑</span><span><small>TECHNIQUE</small><strong>Flags by depth</strong><em>Where clean lines hold up.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry" type="button" data-open-module="open-ski:technique"><span class="module-icon" aria-hidden="true">↔</span><span><small>SKIING STYLE</small><strong>Movement & performance</strong><em>Steering, collisions, speed, and FPS.</em></span><b aria-hidden="true">→</b></button>
+            <button class="module-entry leaderboard" type="button" data-open-module="open-ski:leaderboard"><span class="module-icon" aria-hidden="true">★</span><span><small>COMPETITION</small><strong>Leaderboard</strong><em>Voluntary submissions and top scores.</em></span><b aria-hidden="true">→</b></button>
           </div>
-        </article>
-
-        <div class="report-grid equal">
-          <article class="report-card open-depth-card">
-            <header><div><p class="eyebrow">FLAGS BY DEPTH</p><h3>Where clean lines hold up</h3></div><span class="card-note">CLEAN / ATTEMPTED</span></header>
-            <div class="bar-stack" id="openFlagDepthBars"></div>
-            <p class="availability-note">Accuracy is shown only where at least one flag was attempted.</p>
-          </article>
-
-          <article class="report-card death-card">
-            <header><div><p class="eyebrow">ENVIRONMENT</p><h3>How Open Ski runs end</h3></div></header>
-            <div class="death-layout">
-              <div class="death-donut" id="openDeathDonut" role="img" aria-label="Open Ski death cause distribution"><span></span></div>
-              <div class="death-legend" id="openDeathLegend"></div>
-            </div>
-          </article>
+          <article class="telemetry-boundary compact-boundary"><div class="boundary-icon" aria-hidden="true">○</div><div><strong>Open Ski stays separate.</strong><p>No Yeti data or exact player locations enter this report.</p></div></article>
         </div>
 
-        <article class="report-card heatmap-card">
-          <header>
-            <div><p class="eyebrow">MOUNTAIN HOT SPOTS</p><h3>Where runs end and collisions happen</h3></div>
-            <span class="card-note">COARSE ANONYMOUS ZONES</span>
-          </header>
-          <div class="heatmap-pair">
-            <section>
-              <div class="heatmap-title"><strong>RUN ENDINGS</strong><span id="openDeathHeatTotal">— recorded</span></div>
-              <div class="mountain-heatmap" id="openDeathHeatmap" role="img" aria-label="Open Ski run-ending heat map"></div>
-            </section>
-            <section>
-              <div class="heatmap-title"><strong>COLLISIONS</strong><span id="openCollisionHeatTotal">— recorded</span></div>
-              <div class="mountain-heatmap" id="openCollisionHeatmap" role="img" aria-label="Open Ski collision heat map"></div>
-            </section>
-          </div>
-          <div class="heatmap-key"><span>QUIET</span><i></i><i></i><i></i><i></i><i></i><span>BUSY</span></div>
-          <p class="availability-note">Rows are distance bands and columns run from far left to far right. Exact coordinates are never downloaded.</p>
-        </article>
+        <section class="module-screen" data-module-panel="open-ski:course" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow open-eyebrow">OPEN SKI · THE MOUNTAIN</p><h2>Hot spots</h2><p>Coarse zones show where the mountain applies pressure without exposing exact lines.</p></div></header>
+          <article class="report-card heatmap-card"><header><div><p class="eyebrow">MOUNTAIN MAP</p><h3>Where runs end and collisions happen</h3></div><span class="card-note">COARSE ZONES</span></header><div class="heatmap-pair">
+            <section><div class="heatmap-title"><strong>RUN ENDINGS</strong><span id="openDeathHeatTotal">— recorded</span></div><div class="mountain-heatmap" id="openDeathHeatmap" role="img" aria-label="Open Ski run-ending heat map"></div></section>
+            <section><div class="heatmap-title"><strong>COLLISIONS</strong><span id="openCollisionHeatTotal">— recorded</span></div><div class="mountain-heatmap" id="openCollisionHeatmap" role="img" aria-label="Open Ski collision heat map"></div></section>
+          </div><div class="heatmap-key"><span>QUIET</span><i></i><i></i><i></i><i></i><i></i><span>BUSY</span></div><p class="availability-note">Rows are distance bands; columns run from far left to far right.</p></article>
+          <article class="report-card death-card standalone-card"><header><div><p class="eyebrow">ENVIRONMENT</p><h3>How Open Ski runs end</h3></div></header><div class="death-layout"><div class="death-donut" id="openDeathDonut" role="img" aria-label="Open Ski death cause distribution"><span></span></div><div class="death-legend" id="openDeathLegend"></div></div></article>
+        </section>
 
-        <div class="report-grid equal">
-          <article class="report-card open-technique-card">
-            <header><div><p class="eyebrow">SKIING STYLE</p><h3>Movement without pursuit pressure</h3></div></header>
-            <div class="stat-pair triple">
-              <div><small>COLLISIONS / RUN</small><strong id="openCollisionsPerRun">—</strong></div>
-              <div><small>REVERSALS / RUN</small><strong id="openReversalsPerRun">—</strong></div>
-              <div><small>AVERAGE STEER</small><strong id="openAverageSteer">—</strong></div>
-            </div>
-          </article>
-          <article class="report-card performance-card">
-            <header><div><p class="eyebrow">PERFORMANCE</p><h3>How Open Ski runs</h3></div></header>
-            <div class="stat-pair triple">
-              <div><small>AVERAGE FPS</small><strong id="openAverageFps">—</strong></div>
-              <div><small>MEDIAN LOW</small><strong id="openMinimumFps">—</strong></div>
-              <div><small>LOW-FPS FRAMES</small><strong id="openLowFpsFrames">—</strong></div>
-            </div>
-          </article>
-        </div>
+        <section class="module-screen" data-module-panel="open-ski:flags" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow open-eyebrow">OPEN SKI · TECHNIQUE</p><h2>Flags by depth</h2><p>Where the community holds a clean line as the run gets deeper.</p></div></header>
+          <article class="report-card open-depth-card"><header><div><p class="eyebrow">CLEAN LINES</p><h3>Accuracy down the mountain</h3></div><span class="card-note">CLEAN / ATTEMPTED</span></header><div class="bar-stack" id="openFlagDepthBars"></div><p class="availability-note">Accuracy appears only where at least one flag was attempted.</p></article>
+        </section>
 
-        <article class="report-card open-leaderboard-card">
-          <header>
-            <div><p class="eyebrow">VOLUNTARY LEADERBOARD</p><h3>Submitted Open Ski runs</h3></div>
-            <span class="card-note" id="openLeaderboardStatus">CHECKING</span>
-          </header>
-          <div class="open-leaderboard-summary">
+        <section class="module-screen" data-module-panel="open-ski:technique" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow open-eyebrow">OPEN SKI · SKIING STYLE</p><h2>Movement & performance</h2><p>How players steer and how smoothly the mountain runs.</p></div></header>
+          <div class="report-grid equal first-grid"><article class="report-card open-technique-card"><header><div><p class="eyebrow">MOVEMENT</p><h3>Without pursuit pressure</h3></div></header><div class="stat-pair triple"><div><small>COLLISIONS / RUN</small><strong id="openCollisionsPerRun">—</strong></div><div><small>REVERSALS / RUN</small><strong id="openReversalsPerRun">—</strong></div><div><small>AVERAGE STEER</small><strong id="openAverageSteer">—</strong></div></div></article><article class="report-card performance-card"><header><div><p class="eyebrow">PERFORMANCE</p><h3>How Open Ski runs</h3></div></header><div class="stat-pair triple"><div><small>AVERAGE FPS</small><strong id="openAverageFps">—</strong></div><div><small>MEDIAN LOW</small><strong id="openMinimumFps">—</strong></div><div><small>LOW-FPS FRAMES</small><strong id="openLowFpsFrames">—</strong></div></div></article></div>
+        </section>
+
+        <section class="module-screen" data-module-panel="open-ski:leaderboard" hidden>
+          <header class="module-screen-heading"><div><p class="eyebrow open-eyebrow">OPEN SKI · COMPETITION</p><h2>Leaderboard</h2><p>A separate view of the runs players chose to submit.</p></div></header>
+          <article class="report-card open-leaderboard-card"><header><div><p class="eyebrow">VOLUNTARY SUBMISSIONS</p><h3>Open Ski board</h3></div><span class="card-note" id="openLeaderboardStatus">CHECKING</span></header><div class="open-leaderboard-summary">
             <div><small>SUBMISSIONS</small><strong id="openSubmittedRuns">—</strong><span id="openSubmitters">—</span></div>
             <div><small>LONGEST DESCENT</small><strong><span id="openLongest">—</span><em>m</em></strong><span id="openMedian">—</span></div>
             <div><small>TOP SCORE</small><strong id="openTopScore">—</strong><span id="openFlagAccuracy">—</span></div>
-          </div>
-          <p class="availability-note">This board includes only runs players chose to submit. It is not used to estimate total Open Ski activity.</p>
-        </article>
-
-        <article class="report-card telemetry-boundary">
-          <div class="boundary-icon" aria-hidden="true">○</div>
-          <div>
-            <p class="eyebrow">DATA BOUNDARY</p>
-            <h3>Open Ski stays out of Pursuit telemetry</h3>
-            <p>Its automatic feed contains only run, flag, steering, performance, and coarse mountain-zone aggregates. It contains no Yeti data, player identity, exact time, exact position, trace, or raw event stream.</p>
-          </div>
-        </article>
+          </div><p class="availability-note">This self-selected board is not used to estimate total Open Ski activity.</p></article>
+        </section>
       </section>
 
       <section class="methodology">
         <details>
           <summary>ABOUT THIS DATA</summary>
-          <div>
-            <p id="coverageCopy"></p>
-            <ul id="privacyNotes"></ul>
-            <p>Raw Firebase records are processed outside this page. The public dashboard receives aggregates only.</p>
-          </div>
+          <div><p id="coverageCopy"></p><p class="source-window" id="sourceWindow">—</p><ul id="privacyNotes"></ul><p>The public dashboard receives privacy-filtered aggregates only.</p></div>
         </details>
       </section>
     </div>
   </main>
 
-  <footer>
-    <span>ENDLESS POWDER</span>
-    <span>THE MOUNTAIN REMEMBERS</span>
-  </footer>
-
+  <footer><span>ENDLESS POWDER</span><span>THE MOUNTAIN REMEMBERS</span></footer>
   <script src="./live-data.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
