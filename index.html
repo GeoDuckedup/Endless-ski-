@@ -881,7 +881,7 @@ function removeSwapAt(list,index){
    submissions, and initials_bests remains the all-time mountain source.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_phase6d1_open_ski_live.html","normalizedArtifactSha256":"3a29fea689861c0aeb72cfa1661341f485e198cc856d44608f0dec3f005bd37a","sourceSha256":"c21a96312f3114c19ae3d51f0e47ec206c94c1b591abeed531b743316fe2ffc3","profileSha256":"013ca406cbe7969edbc80f2e88bc986d1bf0aa198a3faba71f333426331dcb23","tuningSha256":"59bee367382f3f0fca758ba040d0a3d72d1c2048aa5aceb0d6a8d15df4a869d8","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
+  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_analytics_a5_2b_live.html","normalizedArtifactSha256":"7363b756c50f37dd378ea71ebf4bf30f5ed21ed781dc5eed340684b3c3e0241c","sourceSha256":"c50731daec07dc560441b6baee635bda9cc247609e70776cf8e684cfd63f9b7b","profileSha256":"c358771b107c54bf52c0fda8fbbb8f949141f43e23dbe099683405db61bfef49","tuningSha256":"252b560bc14f4fb247700e6a12b7944184317aa715ffca6412b346bac417da8a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
   experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 6C PRODUCTION CANDIDATE'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   course:Object.freeze({
@@ -895,7 +895,7 @@ const APP_CONFIG=Object.freeze({
     projectId:'endless-powder',
     databaseUrl:'https://endless-powder-default-rtdb.firebaseio.com',
     apiKey:'AIzaSyBr_Qv9ubkP7A05VcojGo-mU5-FwV-ZfAI',
-    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',openSkiLeaderboardRuns:'/endless_powder/modes/open_ski/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',publicAnalyticsRuns:'/endless_powder/public_analytics_runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
+    paths:Object.freeze({leaderboardRuns:'/endless_powder/leaderboard_runs',season2LeaderboardRuns:'/endless_powder/seasons/season_2/leaderboard_runs',openSkiLeaderboardRuns:'/endless_powder/modes/open_ski/leaderboard_runs',initialsBests:'/endless_powder/initials_bests',telemetryRuns:'/endless_powder/telemetry/runs',publicAnalyticsRuns:'/endless_powder/public_analytics_runs',openSkiAnalyticsRuns:'/endless_powder/telemetry/open_ski_runs',publicOpenSkiAnalyticsRuns:'/endless_powder/public_open_ski_analytics_runs',feedback:'/endless_powder/telemetry/feedback',playtests:'/endless_powder/telemetry/playtests'}),
     auth:Object.freeze({
       signUpEndpoint:'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
       refreshEndpoint:'https://securetoken.googleapis.com/v1/token',
@@ -939,6 +939,8 @@ const APP_CONFIG=Object.freeze({
     }),
     telemetrySummary:Object.freeze({version:'public-run-v2',reportIdPattern:'^tr_[a-f0-9]{24}$',sessionIdPattern:'^ts_[a-f0-9]{20}$',clientIdPattern:'^tc_[a-f0-9]{20}$'}),
     telemetryQueue:Object.freeze({version:'phase12a3c2-local-pending-v1',maxPending:5}),
+    openSkiAnalytics:Object.freeze({version:'open-ski-run-v1',publicVersion:'public-open-ski-run-v1',analyticsVersion:'open-ski-analytics-v1',reportIdPattern:'^os_[a-f0-9]{24}$',maxBytes:16384}),
+    openSkiAnalyticsQueue:Object.freeze({version:'open-ski-analytics-pending-v1',maxPending:16}),
     publicFeedback:Object.freeze({version:'public-feedback-v1',feedbackIdPattern:'^pf_[a-f0-9]{24}$',maxComment:500,maxBytes:40960,maxTraceSamples:75,maxErrors:5,
       categories:Object.freeze(['general','bug','controls','yeti','difficulty','visuals','performance','leaderboard','other'])}),
     feedbackQueue:Object.freeze({version:'public-feedback-pending-v1',maxPending:3}),
@@ -949,7 +951,7 @@ const APP_CONFIG=Object.freeze({
     sound:'ep_snd',localDeaths:'ep_local_deaths_v5a',authSession:'ep_firebase_auth_v5b',installId:'ep_install_id_v5b',courseDeck:'ep_course_deck_flags_v2',
     apiKeyOverride:'ep_firebase_api_key',authVerify:'ep_auth_verify_v5c0',
     arcadeQueue:'ep_arcade_submit_queue_s2_v2',openSkiQueue:'ep_open_ski_submit_queue_v1',arcadeInitials:'ep_arcade_initials_v7b',arcadeBoard:'ep_arcade_leaderboard_s1_archive_v1',season2PreviewBoard:'ep_arcade_leaderboard_s2_v1',openSkiBoard:'ep_open_ski_leaderboard_v1',seasonView:'ep_arcade_season_view_v1',initialsMountain:'ep_initials_mountain_v7e',bestDistance:'ep_best',bestScore:'ep_best_score_v2',
-    telemetryConsent:'ep_telemetry_consent_v1',telemetryClient:'ep_telemetry_client_v1',telemetryQueue:'ep_phase12c1_public_queue_v1',yetiBatch:'ep_hot_charge_batch_v12c1',publicFeedbackQueue:'ep_public_feedback_queue_v1',playtestQueue:'ep_playtest_upload_queue_v1',
+    telemetryConsent:'ep_telemetry_consent_v1',telemetryClient:'ep_telemetry_client_v1',telemetryQueue:'ep_phase12c1_public_queue_v1',openSkiAnalyticsQueue:'ep_open_ski_analytics_queue_v1',yetiBatch:'ep_hot_charge_batch_v12c1',publicFeedbackQueue:'ep_public_feedback_queue_v1',playtestQueue:'ep_playtest_upload_queue_v1',
     retiredKeys:Object.freeze(['ep_markers','ep_lb_v3a','ep_best_run_submit_v5c2','ep_best_run_board_v5c3','ep_best_diag','ep_memorial_diag','ep_reconcile_diag','ep_performance_diag','ep_shared_diag','ep_unique_diag_v6f','ep_bestcheck_reload_v5c4','ep_bestcheck_queue_probe_v5c4','ep_memorialcheck_cache_probe_v5d4','ep_reconcilecheck_probe_v5e4','ep_arcade_diag_v7e']),
     diagnostics:Object.freeze({auth:'ep_auth_diag',arcade:'ep_arcade_diag_v8e',feedbackReports:'ep_feedback_reports_v9a'})
   }),
@@ -1097,6 +1099,8 @@ const SEASON_VIEW_KEY=APP_CONFIG.storage.seasonView;
 const INITIALS_BEST_PATH=APP_CONFIG.firebase.paths.initialsBests;
 const TELEMETRY_RUN_PATH=APP_CONFIG.firebase.paths.telemetryRuns;
 const PUBLIC_ANALYTICS_RUN_PATH=APP_CONFIG.firebase.paths.publicAnalyticsRuns;
+const OPEN_SKI_ANALYTICS_RUN_PATH=APP_CONFIG.firebase.paths.openSkiAnalyticsRuns;
+const PUBLIC_OPEN_SKI_ANALYTICS_RUN_PATH=APP_CONFIG.firebase.paths.publicOpenSkiAnalyticsRuns;
 const PUBLIC_FEEDBACK_PATH=APP_CONFIG.firebase.paths.feedback;
 const PLAYTEST_REPORT_PATH=APP_CONFIG.firebase.paths.playtests;
 const RUN_RECORD_SCHEMA_VERSION=APP_CONFIG.schemas.runRecord.version;
@@ -1130,6 +1134,11 @@ const TELEMETRY_SESSION_ID_RE=new RegExp(APP_CONFIG.schemas.telemetrySummary.ses
 const TELEMETRY_CLIENT_ID_RE=new RegExp(APP_CONFIG.schemas.telemetrySummary.clientIdPattern);
 const TELEMETRY_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.telemetryQueue.version;
 const TELEMETRY_QUEUE_KEY=APP_CONFIG.storage.telemetryQueue;
+const OPEN_SKI_ANALYTICS_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiAnalytics.version;
+const PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiAnalytics.publicVersion;
+const OPEN_SKI_ANALYTICS_REPORT_ID_RE=new RegExp(APP_CONFIG.schemas.openSkiAnalytics.reportIdPattern);
+const OPEN_SKI_ANALYTICS_QUEUE_SCHEMA_VERSION=APP_CONFIG.schemas.openSkiAnalyticsQueue.version;
+const OPEN_SKI_ANALYTICS_QUEUE_KEY=APP_CONFIG.storage.openSkiAnalyticsQueue;
 const TELEMETRY_CONSENT_KEY=APP_CONFIG.storage.telemetryConsent;
 const TELEMETRY_CLIENT_KEY=APP_CONFIG.storage.telemetryClient;
 const PUBLIC_FEEDBACK_SCHEMA_VERSION=APP_CONFIG.schemas.publicFeedback.version;
@@ -1155,7 +1164,7 @@ const Configuration=Object.freeze({
   values:APP_CONFIG,
   audit:()=>Object.freeze({
     buildVersion:BUILD_VERSION,buildProfile:BUILD_PROFILE,testOnly:APP_CONFIG.build.testOnly===true,sourceBaseline:APP_CONFIG.build.sourceBaseline,worldVersion:WORLD_VERSION,databaseUrl:FIREBASE_DB_URL,
-    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,openSkiRunPath:OPEN_SKI_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicAnalyticsRunPath:PUBLIC_ANALYTICS_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
+    configuredDatabaseUrl:APP_CONFIG.firebase.databaseUrl,arcadeRunPath:ARCADE_RUN_PATH,season2RunPath:SEASON2_RUN_PATH,openSkiRunPath:OPEN_SKI_RUN_PATH,initialsBestPath:INITIALS_BEST_PATH,telemetryRunPath:TELEMETRY_RUN_PATH,publicAnalyticsRunPath:PUBLIC_ANALYTICS_RUN_PATH,openSkiAnalyticsRunPath:OPEN_SKI_ANALYTICS_RUN_PATH,publicOpenSkiAnalyticsRunPath:PUBLIC_OPEN_SKI_ANALYTICS_RUN_PATH,publicFeedbackPath:PUBLIC_FEEDBACK_PATH,playtestReportPath:PLAYTEST_REPORT_PATH,
     runRecordSchemaVersion:RUN_RECORD_SCHEMA_VERSION,arcadeRunSchemaVersion:ARCADE_RUN_SCHEMA_VERSION,arcadeQueueSchemaVersion:ARCADE_QUEUE_SCHEMA_VERSION,
     localDeathSchemaVersion:LOCAL_DEATH_SCHEMA_VERSION,
     localDeathKey:LOCAL_DEATH_KEY,localDeathRenderVisible:LOCAL_DEATHS_VISIBLE,telemetrySummarySchema:TELEMETRY_SUMMARY_SCHEMA_VERSION,telemetryQueueSchema:TELEMETRY_QUEUE_SCHEMA_VERSION,
@@ -1166,7 +1175,7 @@ const Configuration=Object.freeze({
     groupX:MEMORIAL_GROUP_X,groupDepth:MEMORIAL_GROUP_D,requestTimeoutMs:APP_CONFIG.network.requestTimeoutMs,
     maxAutomaticRetries:APP_CONFIG.network.maxAutomaticRetries,performanceSampleEvery:PERFORMANCE_CONFIG.sampleEveryFrames,
     memorialCacheEntries:PERFORMANCE_CONFIG.memorialCacheEntries,transientCaps:Object.assign({},PERFORMANCE_CONFIG.transientCaps),
-    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,openSkiLeaderboardRuns,playtests,publicAnalyticsRuns,season2LeaderboardRuns,telemetryRuns',
+    activePathsOnly:Object.keys(APP_CONFIG.firebase.paths).sort().join(',')==='feedback,initialsBests,leaderboardRuns,openSkiAnalyticsRuns,openSkiLeaderboardRuns,playtests,publicAnalyticsRuns,publicOpenSkiAnalyticsRuns,season2LeaderboardRuns,telemetryRuns',
     frozen:Object.isFrozen(APP_CONFIG),launchMode:RunContext.status().launchMode,developerTools:RunContext.status().launchDevtools
   })
 });
@@ -1204,6 +1213,7 @@ const RunContext=(()=>{
       allowLocalRunHistory:!playtest&&!openSki&&!localOnly,
       allowProgression:!playtest&&!openSki&&!localOnly,
       allowTelemetryUploads:!playtest&&!openSki&&(!localOnly||telemetryOnlyValidation)&&allows('telemetryUpload'),
+      allowOpenSkiAnalyticsUploads:openSki&&(!localOnly||telemetryOnlyValidation)&&allows('telemetryUpload'),
       allowPublicFeedback:!playtest&&!localOnly&&allows('publicFeedbackCapture'),
       allowPublicFeedbackUploads:!playtest&&!localOnly&&allows('publicFeedbackUpload'),
       allowDiagnosticReports:playtest,
@@ -1241,16 +1251,17 @@ const RunContext=(()=>{
       normal.allowDeathMarkers===(!localOnly&&caps.mountainRead===true)&&
       normal.allowMountainWrites===(!localOnly&&caps.arcadeWrite===true)&&
       normal.allowLocalRunHistory===!localOnly&&normal.allowProgression===!localOnly&&
-      normal.allowTelemetryUploads===(!localOnly&&caps.telemetryUpload===true)&&
+      normal.allowTelemetryUploads===((!localOnly||telemetryOnlyValidation)&&caps.telemetryUpload===true)&&!normal.allowOpenSkiAnalyticsUploads&&
       normal.allowPublicFeedback===(!localOnly&&caps.publicFeedbackCapture===true)&&
       normal.allowPublicFeedbackUploads===(!localOnly&&caps.publicFeedbackUpload===true)&&
       normal.allowYeti&&!normal.allowDiagnosticReports&&!normal.allowPlaytestUploads;
-    const openSkiIsolated=openSki.allowLeaderboard===(!localOnly&&caps.leaderboardRead===true)&&openSki.allowDeathMarkers===(!localOnly&&caps.mountainRead===true)&&!openSki.allowYeti&&!openSki.allowPersonalRecords&&!openSki.allowMountainWrites&&!openSki.allowLocalRunHistory&&!openSki.allowProgression&&!openSki.allowTelemetryUploads&&!openSki.allowDiagnosticReports;
-    const isolated=!playtest.allowLeaderboard&&!playtest.allowPersonalRecords&&!playtest.allowDeathMarkers&&!playtest.allowMountainWrites&&!playtest.allowLocalRunHistory&&!playtest.allowProgression&&!playtest.allowTelemetryUploads&&!playtest.allowPublicFeedback&&!playtest.allowPublicFeedbackUploads&&playtest.allowDiagnosticReports&&playtest.allowPlaytestUploads===(!localOnly&&caps.playtestUpload===true);
+    const openSkiIsolated=openSki.allowLeaderboard===(!localOnly&&caps.leaderboardRead===true)&&openSki.allowDeathMarkers===(!localOnly&&caps.mountainRead===true)&&!openSki.allowYeti&&!openSki.allowPersonalRecords&&!openSki.allowMountainWrites&&!openSki.allowLocalRunHistory&&!openSki.allowProgression&&!openSki.allowTelemetryUploads&&openSki.allowOpenSkiAnalyticsUploads===((!localOnly||telemetryOnlyValidation)&&caps.telemetryUpload===true)&&!openSki.allowDiagnosticReports;
+    const isolated=!playtest.allowLeaderboard&&!playtest.allowPersonalRecords&&!playtest.allowDeathMarkers&&!playtest.allowMountainWrites&&!playtest.allowLocalRunHistory&&!playtest.allowProgression&&!playtest.allowTelemetryUploads&&!playtest.allowOpenSkiAnalyticsUploads&&!playtest.allowPublicFeedback&&!playtest.allowPublicFeedbackUploads&&playtest.allowDiagnosticReports&&playtest.allowPlaytestUploads===(!localOnly&&caps.playtestUpload===true);
     return Object.freeze({passed:normalExpected&&openSkiIsolated&&isolated&&dev.developerTools&&!playtest.developerTools,normal,openSki,playtest,devtools:dev,localOnly,telemetryOnlyValidation});
   }
   function status(){return Object.freeze({launchMode,launchDevtools,localOnly,telemetryOnlyValidation,active:current(),serial});}
-  return Object.freeze({modes:RUN_MODE,begin,end,current,permits,isPlaytest,isOpenSki,syncModeClass,applyPresentation,selfTest,status});
+  function allowsOpenSkiAnalyticsUpload(){return policy(RUN_MODE.OPEN_SKI,false,0).allowOpenSkiAnalyticsUploads;}
+  return Object.freeze({modes:RUN_MODE,begin,end,current,permits,isPlaytest,isOpenSki,allowsOpenSkiAnalyticsUpload,syncModeClass,applyPresentation,selfTest,status});
 })();
 const C={
   thetaMax:62*D2R, turnRate:240*D2R, returnRate:170*D2R,
@@ -4801,7 +4812,7 @@ const InitialsMountain=(()=>{
 initialsMountainAccepted=payload=>InitialsMountain.ingestAccepted(payload);
 initialsMountainBoardChanged=()=>InitialsMountain.syncTopTen();
 
-identityOwnerChanged=(nextUid,previousUid)=>{ArcadeSubmission.identityChanged(nextUid,previousUid);OpenSkiSubmission.identityChanged(nextUid,previousUid);TelemetryTransport.identityChanged(nextUid,previousUid);if(RunContext.permits('allowPlaytestUploads'))PlaytestUpload.drain('identity-changed');};
+identityOwnerChanged=(nextUid,previousUid)=>{ArcadeSubmission.identityChanged(nextUid,previousUid);OpenSkiSubmission.identityChanged(nextUid,previousUid);TelemetryTransport.identityChanged(nextUid,previousUid);OpenSkiAnalyticsTransport.identityChanged(nextUid,previousUid);if(RunContext.permits('allowPlaytestUploads'))PlaytestUpload.drain('identity-changed');};
 function lbStatus(msg){const e=$('lbStatus');if(e)e.textContent=msg||'';}
 function renderBoard(){
   const list=$('lbList'),overlay=$('ovLeaderboard');if(!list||!overlay)return;
@@ -5417,7 +5428,7 @@ const CompactTelemetry=(()=>{
   function clearQueue(){queue.clear();return 0;}
   function setConsent(value){
     const enabled=!!value;try{store.setItem(TELEMETRY_CONSENT_KEY,enabled?'1':'0');}catch(e){}
-    if(!enabled){active=null;clearQueue();lastResult={status:'disabled',pending:0};}
+    if(!enabled){active=null;clearQueue();try{if(typeof OpenSkiAnalytics!=='undefined')OpenSkiAnalytics.clearQueue();}catch(e){}lastResult={status:'disabled',pending:0};}
     syncUI();return enabled;
   }
   function defaultInput(){try{return matchMedia('(pointer:coarse)').matches?'touch':'mouse';}catch(e){return'unknown';}}
@@ -5770,6 +5781,118 @@ const PublicAnalyticsProjection=(()=>{
     return Object.freeze({passed:!!value&&shape&&value.attacks.extended.attackMix.STRUGGLING.SHORT.lunges===1&&value.attacks.extended.attackMix.HOT.LONG.boulders===2&&PROHIBITED.every(key=>!keys.includes(key))&&!PROHIBITED.some(key=>json.includes('"'+key+'"')),schema:SCHEMA,shape,topLevelKeys:keys});
   }
   return Object.freeze({schema:SCHEMA,project,normalizeAttackMix,selfTest,prohibitedFields:PROHIBITED});
+})();
+/* ==================== ANALYTICS A5.2B: AUTOMATIC OPEN SKI ANALYTICS ====================
+   Consent-gated, aggregate-only instrumentation for Open Ski. It deliberately owns a
+   separate permission, schema, queue, and transport so Pursuit/Yeti telemetry remains
+   disabled in this mode. Exact movement, device identity, initials, and leaderboard IDs
+   never enter either Open Ski analytics payload. */
+const OpenSkiAnalyticsProjection=(()=>{
+  const MIRRORED=Object.freeze(['build','course','run','steering','flags','spatial','performance']);
+  const clone=value=>{try{return JSON.parse(JSON.stringify(value));}catch(e){return null;}};
+  function project(source){
+    if(!source||source.schema!==OPEN_SKI_ANALYTICS_SCHEMA_VERSION)return null;
+    const out={schema:PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION};
+    for(const key of MIRRORED){if(!source[key]||typeof source[key]!=='object')return null;out[key]=clone(source[key]);}
+    return out;
+  }
+  function selfTest(){
+    const source={schema:OPEN_SKI_ANALYTICS_SCHEMA_VERSION,reportId:'os_000000000000000000000000',timestamp:Date.now(),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,analyticsVersion:APP_CONFIG.schemas.openSkiAnalytics.analyticsVersion},course:{version:APP_CONFIG.course.version,seedId:1},run:{distance:1,score:2,durationSec:1,averageSpeed:1,maximumSpeed:2,collisions:0,deathCause:'tree'},steering:{averageAbsoluteSteer:0,hardCarveSec:0,directionReversals:0},flags:{clean:0,attempted:0,bestCombo:0,cleanByDepthBand:{},missByDepthBand:{}},spatial:{death:{depthBand:'D0_249',laneBand:'CENTER'},collisionsByZone:{}},performance:{averageFps:60,minimumFps:60,lowFpsFrames:0}};
+    const value=project(source),json=JSON.stringify(value||{});
+    return Object.freeze({passed:!!value&&value.schema===PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION&&!/(reportId|timestamp|uid|initials|deathX|deathDepth|courseSeed|client|session)/.test(json),schema:PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION});
+  }
+  return Object.freeze({project,selfTest,schema:PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION});
+})();
+
+const OpenSkiAnalytics=(()=>{
+  const CFG=APP_CONFIG.schemas.openSkiAnalytics,QCFG=APP_CONFIG.schemas.openSkiAnalyticsQueue;
+  const DEPTH_BANDS=Object.freeze(['D0_249','D250_499','D500_999','D1000_1999','D2000_3999','D4000_PLUS']);
+  const LANE_BANDS=Object.freeze(['FAR_LEFT','LEFT','CENTER','RIGHT','FAR_RIGHT']);
+  const HARD_CARVE=APP_CONFIG.telemetry.hardCarveThreshold,LOW_FPS=APP_CONFIG.telemetry.lowFpsThreshold;
+  const queue=QueueStore.create({key:OPEN_SKI_ANALYTICS_QUEUE_KEY,version:OPEN_SKI_ANALYTICS_QUEUE_SCHEMA_VERSION,maxPending:QCFG.maxPending,idField:'reportId',domain:'open-ski-analytics-queue',validate:item=>!!item&&OPEN_SKI_ANALYTICS_REPORT_ID_RE.test(String(item.reportId||''))&&!!item.payload});
+  let active=null,lastSummary=null,lastResult=null;
+  const clone=value=>{try{return JSON.parse(JSON.stringify(value));}catch(e){return null;}};
+  const round=(value,digits=3)=>{const p=Math.pow(10,digits);return Number.isFinite(+value)?Math.round(+value*p)/p:0;};
+  const mean=(sum,count,digits=3)=>count>0?round(sum/count,digits):0;
+  function makeId(){
+    const bytes=new Uint8Array(12);try{crypto.getRandomValues(bytes);}catch(e){for(let i=0;i<bytes.length;i++)bytes[i]=(Date.now()+i*73)&255;}
+    return'os_'+Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
+  }
+  function blankDepth(){return Object.fromEntries(DEPTH_BANDS.map(key=>[key,0]));}
+  function blankZones(){return Object.fromEntries(DEPTH_BANDS.map(depth=>[depth,Object.fromEntries(LANE_BANDS.map(lane=>[lane,0]))]));}
+  function depthBand(depth){depth=Math.max(0,+depth||0);return depth<250?'D0_249':depth<500?'D250_499':depth<1000?'D500_999':depth<2000?'D1000_1999':depth<4000?'D2000_3999':'D4000_PLUS';}
+  function laneBand(x){const k=clamp(((+x||EDGE)-EDGE)/Math.max(1,LW-2*EDGE),0,1);return k<0.2?'FAR_LEFT':k<0.4?'LEFT':k<0.6?'CENTER':k<0.8?'RIGHT':'FAR_RIGHT';}
+  function fitDepth(source,target,fallback){
+    const out=blankDepth();let total=0;for(const key of DEPTH_BANDS){out[key]=Math.max(0,Math.floor(+(source&&source[key])||0));total+=out[key];}
+    let excess=Math.max(0,total-target);for(let i=DEPTH_BANDS.length-1;i>=0&&excess;i--){const key=DEPTH_BANDS[i],take=Math.min(excess,out[key]);out[key]-=take;excess-=take;}
+    total=Object.values(out).reduce((sum,value)=>sum+value,0);if(total<target)out[fallback]+=target-total;return out;
+  }
+  function fitZones(source,target,fallbackDepth,fallbackLane){
+    const out=blankZones();let total=0;
+    for(const depth of DEPTH_BANDS)for(const lane of LANE_BANDS){const value=Math.max(0,Math.floor(+(source&&source[depth]&&source[depth][lane])||0));out[depth][lane]=value;total+=value;}
+    let excess=Math.max(0,total-target);for(let d=DEPTH_BANDS.length-1;d>=0&&excess;d--)for(let l=LANE_BANDS.length-1;l>=0&&excess;l--){const value=out[DEPTH_BANDS[d]][LANE_BANDS[l]],take=Math.min(excess,value);out[DEPTH_BANDS[d]][LANE_BANDS[l]]-=take;excess-=take;}
+    total=DEPTH_BANDS.reduce((sum,depth)=>sum+LANE_BANDS.reduce((laneSum,lane)=>laneSum+out[depth][lane],0),0);if(total<target)out[fallbackDepth][fallbackLane]+=target-total;return out;
+  }
+  function begin(context){
+    if(!APP_CONFIG.telemetry.enabled||!CompactTelemetry.consent()||!RunContext.isOpenSki(context)||!RunContext.permits('allowOpenSkiAnalyticsUploads',context)){active=null;return null;}
+    active={reportId:makeId(),context,elapsed:0,speedArea:0,maxSpeed:0,steerArea:0,hardCarveSec:0,directionReversals:0,lastSteerSign:0,fpsArea:0,minFps:null,lowFpsFrames:0,cleanByDepthBand:blankDepth(),missByDepthBand:blankDepth(),collisionsByZone:blankZones()};return active.reportId;
+  }
+  function tick(dt){
+    if(!active||!CompactTelemetry.consent()||!S||S.run.mode!=='play')return false;dt=clamp(+dt||0,0,MAX_DT);if(!dt)return false;
+    active.elapsed+=dt;active.speedArea+=Math.max(0,S.player.speed)*dt;active.maxSpeed=Math.max(active.maxSpeed,Math.max(0,S.player.speed));
+    const raw=Number.isFinite(S.player.steerSm)?S.player.steerSm:S.player.steer||0,steer=Math.abs(raw);active.steerArea+=steer*dt;if(steer>=HARD_CARVE)active.hardCarveSec+=dt;
+    const sign=steer>=0.30?Math.sign(raw):0;if(sign&&active.lastSteerSign&&sign!==active.lastSteerSign)active.directionReversals++;if(sign)active.lastSteerSign=sign;
+    const measured=Number.isFinite(fps)?clamp(fps,0,1000):0;active.fpsArea+=measured*dt;if(active.minFps===null||measured<active.minFps)active.minFps=measured;if(measured<LOW_FPS)active.lowFpsFrames++;return true;
+  }
+  function noteFlag(kind,depth){if(!active)return false;const band=depthBand(depth);if(kind==='clean')active.cleanByDepthBand[band]++;else active.missByDepthBand[band]++;return true;}
+  function noteCollision(depth,x){if(!active)return false;active.collisionsByZone[depthBand(depth)][laneBand(x)]++;return true;}
+  function build(run){
+    const duration=Math.max(0,active.elapsed),clean=Math.max(0,Math.floor(+run.cleanFlags||0)),attempted=Math.max(clean,Math.floor(+run.attemptedFlags||0)),collisions=Math.max(0,Math.floor(+run.collisions||0));
+    const deathDepth=clamp(Number.isFinite(+run.deathDepth)?+run.deathDepth:+run.distance||0,0,999999.9),deathX=clamp(Number.isFinite(+run.deathX)?+run.deathX:LW/2,EDGE,LW-EDGE),dBand=depthBand(deathDepth),lBand=laneBand(deathX);
+    return{schema:OPEN_SKI_ANALYTICS_SCHEMA_VERSION,reportId:active.reportId,timestamp:Date.now(),
+      build:{version:String(BUILD_VERSION),worldVersion:String(WORLD_VERSION),analyticsVersion:String(CFG.analyticsVersion)},course:{version:String(run.courseVersion||APP_CONFIG.course.version),seedId:clamp(Math.floor(+run.courseSeedId||1),1,32)},
+      run:{distance:clamp(Math.floor(+run.distance||0),0,999999),score:clamp(Math.floor(+run.score||0),0,9999999),durationSec:round(duration,2),averageSpeed:clamp(mean(active.speedArea,duration,2),0,200),maximumSpeed:clamp(round(active.maxSpeed,2),0,200),collisions:clamp(collisions,0,9999),deathCause:/^(edge|tree|boulder)$/.test(String(run.deathCause||''))?String(run.deathCause):'tree'},
+      steering:{averageAbsoluteSteer:clamp(mean(active.steerArea,duration,3),0,1),hardCarveSec:clamp(round(active.hardCarveSec,2),0,86400),directionReversals:clamp(active.directionReversals,0,999999)},
+      flags:{clean:clamp(clean,0,99999),attempted:clamp(attempted,0,99999),bestCombo:clamp(Math.min(clean,Math.floor(+run.bestCombo||0)),0,9999),cleanByDepthBand:fitDepth(active.cleanByDepthBand,clean,dBand),missByDepthBand:fitDepth(active.missByDepthBand,attempted-clean,dBand)},
+      spatial:{death:{depthBand:dBand,laneBand:lBand},collisionsByZone:fitZones(active.collisionsByZone,collisions,dBand,lBand)},
+      performance:{averageFps:clamp(mean(active.fpsArea,duration,1),0,1000),minimumFps:clamp(active.minFps===null?0:round(active.minFps,1),0,1000),lowFpsFrames:clamp(Math.floor(active.lowFpsFrames),0,99999999)}};
+  }
+  function enqueue(payload){const bytes=CompactTelemetry.byteSize(payload);if(bytes>CFG.maxBytes){lastResult={status:'oversize',reportId:payload.reportId,bytes,maxBytes:CFG.maxBytes};return lastResult;}queue.upsert({reportId:payload.reportId,createdAt:Date.now(),attempts:0,bytes,payload});lastResult={status:'queued-local',reportId:payload.reportId,bytes,pending:queue.all().length};return lastResult;}
+  function finish(run){
+    if(!active)return null;if(!CompactTelemetry.consent()){active=null;return null;}const context=active.context;if(!RunContext.isOpenSki(context)||!RunContext.permits('allowOpenSkiAnalyticsUploads',context)){active=null;return null;}
+    const payload=build(run||{}),result=enqueue(payload);lastSummary=payload;active=null;if(result.status==='queued-local')setTimeout(()=>OpenSkiAnalyticsTransport.drain('run-finished'),0);return Object.freeze({payload:clone(payload),publicPayload:OpenSkiAnalyticsProjection.project(payload),result:Object.assign({},result)});
+  }
+  function pending(){return clone(queue.all())||[];}function nextPending(){return clone(queue.first());}function removePending(id){return queue.remove(id)?1:0;}function markAttempt(id,error){queue.markAttempt(id,error);return pending();}function clearQueue(){active=null;queue.clear();return 0;}
+  function status(){return Object.freeze({active:!!active,activeReportId:active&&active.reportId||'',consent:CompactTelemetry.consent(),pending:queue.all().length,lastResult:lastResult&&Object.assign({},lastResult),schema:OPEN_SKI_ANALYTICS_SCHEMA_VERSION,publicSchema:PUBLIC_OPEN_SKI_ANALYTICS_SCHEMA_VERSION,maxPending:QCFG.maxPending,maxBytes:CFG.maxBytes});}
+  function selfTest(){
+    const depth=blankDepth(),zones=blankZones();depth.D250_499=2;zones.D250_499.CENTER=3;const fitted=fitDepth(depth,3,'D500_999'),fittedZones=fitZones(zones,2,'D500_999','RIGHT');
+    return Object.freeze({passed:OPEN_SKI_ANALYTICS_REPORT_ID_RE.test(makeId())&&depthBand(249.9)==='D0_249'&&depthBand(4000)==='D4000_PLUS'&&laneBand(EDGE)==='FAR_LEFT'&&laneBand(LW/2)==='CENTER'&&laneBand(LW-EDGE)==='FAR_RIGHT'&&Object.values(fitted).reduce((a,b)=>a+b,0)===3&&DEPTH_BANDS.reduce((sum,d)=>sum+LANE_BANDS.reduce((s,l)=>s+fittedZones[d][l],0),0)===2&&OpenSkiAnalyticsProjection.selfTest().passed,depthBands:DEPTH_BANDS.slice(),laneBands:LANE_BANDS.slice(),queue:queue.status()});
+  }
+  return Object.freeze({begin,tick,noteFlag,noteCollision,finish,pending,nextPending,removePending,markAttempt,clearQueue,status,selfTest,lastSummary:()=>clone(lastSummary),depthBand,laneBand});
+})();
+
+const OpenSkiAnalyticsTransport=(()=>{
+  let drainPromise=null,last={status:'idle',trigger:'',reportId:'',sourceStatus:0,publicStatus:0,publicResult:'',sent:0,error:'',checkedAt:0};
+  const online=()=>typeof navigator==='undefined'||navigator.onLine!==false;
+  const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+  const samePayload=(a,b)=>{try{return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));}catch(e){return false;}};
+  const monthKey=timestamp=>{const date=new Date(+timestamp||0);return Number.isFinite(date.getTime())?date.toISOString().slice(0,7):'';};
+  function validItem(item){const payload=item&&item.payload,month=monthKey(payload&&payload.timestamp);return !!item&&item.reportId===payload?.reportId&&OPEN_SKI_ANALYTICS_REPORT_ID_RE.test(String(item.reportId||''))&&payload.schema===OPEN_SKI_ANALYTICS_SCHEMA_VERSION&&/^\d{4}-(0[1-9]|1[0-2])$/.test(month)&&CompactTelemetry.byteSize(payload)<=APP_CONFIG.schemas.openSkiAnalytics.maxBytes;}
+  function recordPath(item,uid){return validItem(item)&&ARCADE_UID_RE.test(String(uid||''))?OPEN_SKI_ANALYTICS_RUN_PATH+'/'+monthKey(item.payload.timestamp)+'/'+uid+'/'+item.reportId:'';}
+  function publicRecordPath(item){return validItem(item)?PUBLIC_OPEN_SKI_ANALYTICS_RUN_PATH+'/'+monthKey(item.payload.timestamp)+'/'+item.reportId:'';}
+  async function fetchTimed(url,options){return ServiceNetwork.fetchTimed(url,options,'telemetryUpload');}
+  async function authFetch(raw,options){let url=await Identity.url(raw),response=await fetchTimed(url,options);if(response.status!==401)return response;await Identity.forceRefresh();url=await Identity.url(raw);return fetchTimed(url,options);}
+  async function authenticatedUid(){if(!online())return'';await Identity.ensure(false);const auth=Identity.status();return auth.authenticated&&auth.tokenReady&&ARCADE_UID_RE.test(String(auth.uid||''))?String(auth.uid):'';}
+  async function reconcilePublic(raw,payload){let response;try{response=await fetchTimed(raw,{method:'GET',headers:{Accept:'application/json'}});}catch(e){return{ok:false,result:'public-reconcile-network',status:0,error:String((e&&e.message)||e)};}if(!response.ok)return{ok:false,result:'public-reconcile-rejected',status:response.status};let existing=null;try{existing=await response.json();}catch(e){}return samePayload(existing,payload)?{ok:true,result:'public-reconciled',status:response.status}:{ok:false,result:'public-conflict',status:response.status};}
+  async function uploadPublic(item){const path=publicRecordPath(item),payload=OpenSkiAnalyticsProjection.project(item&&item.payload);if(!path||!payload)return{ok:false,result:'invalid-public-projection',status:0};const raw=FIREBASE_DB_URL+path+'.json';let response;try{response=await authFetch(raw,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(e){return{ok:false,result:'public-network',status:0,error:String((e&&e.message)||e)};}if(response.ok)return{ok:true,result:'public-created',status:response.status,path};if(response.status===401||response.status===403)return Object.assign({path},await reconcilePublic(raw,payload));return{ok:false,result:response.status===400?'invalid-public-payload':'public-server-rejected',status:response.status,path};}
+  async function upload(item){if(!validItem(item))return{ok:false,result:'invalid-local-item',status:0};const uid=await authenticatedUid();if(!uid)return{ok:false,result:'authentication-offline',status:0};const path=recordPath(item,uid),raw=FIREBASE_DB_URL+path+'.json';let response;try{response=await authFetch(raw,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(item.payload)});}catch(e){return{ok:false,result:'network',status:0,error:String((e&&e.message)||e)};}const sourceCreated=response.ok,sourceMayExist=response.status===403;if(!sourceCreated&&!sourceMayExist)return{ok:false,result:response.status===400?'invalid-server-payload':response.status===401?'rules-auth-rejected':'server-rejected',status:response.status,uid,path};const publicResult=await uploadPublic(item);if(publicResult.ok)return{ok:true,result:sourceCreated?'created':'reconciled',status:publicResult.status,sourceStatus:response.status,publicStatus:publicResult.status,uid,path,publicPath:publicResult.path,publicResult:publicResult.result};return{ok:false,result:publicResult.result,status:publicResult.status,sourceStatus:response.status,publicStatus:publicResult.status,uid,path,publicPath:publicResult.path,error:publicResult.error||''};}
+  function setLast(next){last=Object.assign({status:'idle',trigger:'',reportId:'',sourceStatus:0,publicStatus:0,publicResult:'',sent:0,error:'',checkedAt:Date.now()},next||{});return status();}
+  function drain(trigger){trigger=String(trigger||'manual').slice(0,32);if(!APP_CONFIG.telemetry.uploadEnabled)return Promise.resolve(setLast({status:'disabled',trigger}));if(!CompactTelemetry.consent())return Promise.resolve(setLast({status:'consent-off',trigger}));if(!RunContext.allowsOpenSkiAnalyticsUpload())return Promise.resolve(setLast({status:'blocked-by-run-context',trigger}));if(drainPromise)return drainPromise;if(!OpenSkiAnalytics.nextPending())return Promise.resolve(last.status==='idle'?setLast({status:'empty',trigger}):status());if(!online())return Promise.resolve(setLast({status:'offline',trigger,error:'offline'}));drainPromise=(async()=>{let sent=0;while(true){const item=OpenSkiAnalytics.nextPending();if(!item)break;const result=await upload(item);if(result.ok){OpenSkiAnalytics.removePending(item.reportId);sent++;setLast({status:result.result,trigger,reportId:item.reportId,sourceStatus:result.sourceStatus||0,publicStatus:result.publicStatus||0,publicResult:result.publicResult||'',sent});continue;}OpenSkiAnalytics.markAttempt(item.reportId,result.result+(result.status?' '+result.status:''));setLast({status:result.result,trigger,reportId:item.reportId,sourceStatus:result.sourceStatus||0,publicStatus:result.publicStatus||0,publicResult:result.publicResult||'',error:result.error||'',sent});break;}return status();})().catch(error=>setLast({status:'transport-error',trigger,error:String((error&&error.message)||error)})).finally(()=>{drainPromise=null;});return drainPromise;}
+  function identityChanged(){if(OpenSkiAnalytics.pending().length&&RunContext.allowsOpenSkiAnalyticsUpload())setTimeout(()=>drain('identity-changed'),0);return true;}function onOnline(){if(OpenSkiAnalytics.pending().length&&RunContext.allowsOpenSkiAnalyticsUpload())Identity.retry().finally(()=>drain('online'));}
+  function status(){return Object.freeze(Object.assign({},last,{busy:!!drainPromise,pending:OpenSkiAnalytics.pending().length,online:online(),path:OPEN_SKI_ANALYTICS_RUN_PATH,publicPath:PUBLIC_OPEN_SKI_ANALYTICS_RUN_PATH,pairedUpload:true,uploadEnabled:!!APP_CONFIG.telemetry.uploadEnabled}));}
+  function selfTest(){const item={reportId:'os_000000000000000000000000',payload:{schema:OPEN_SKI_ANALYTICS_SCHEMA_VERSION,reportId:'os_000000000000000000000000',timestamp:Date.UTC(2026,7,1),build:{version:BUILD_VERSION,worldVersion:WORLD_VERSION,analyticsVersion:APP_CONFIG.schemas.openSkiAnalytics.analyticsVersion},course:{version:APP_CONFIG.course.version,seedId:1},run:{},steering:{},flags:{},spatial:{},performance:{}}},path=recordPath(item,'test_uid'),publicPath=publicRecordPath(item),contexts=RunContext.selfTest();return Object.freeze({passed:validItem(item)&&path===OPEN_SKI_ANALYTICS_RUN_PATH+'/2026-08/test_uid/'+item.reportId&&publicPath===PUBLIC_OPEN_SKI_ANALYTICS_RUN_PATH+'/2026-08/'+item.reportId&&!contexts.normal.allowOpenSkiAnalyticsUploads&&contexts.openSki.allowOpenSkiAnalyticsUploads===ServiceCapabilities.allows('telemetryUpload')&&!contexts.openSki.allowTelemetryUploads&&!contexts.playtest.allowOpenSkiAnalyticsUploads&&OpenSkiAnalytics.selfTest().passed,path,publicPath,pairedUpload:true});}
+  if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('online',onOnline);
+  return Object.freeze({drain,status,selfTest,identityChanged,recordPath,publicRecordPath,publicPayload:payload=>OpenSkiAnalyticsProjection.project(payload)});
 })();
 /* ==================== PHASE 9B.0c.4: PUBLIC FEEDBACK + BUG REPORTING ====================
    Text-first voluntary feedback. Diagnostics are attached only when the player checks
@@ -6358,7 +6481,7 @@ function fmtNum(n){return String(Math.max(0,Math.floor(+n||0))).replace(/\B(?=(\
 function distancePoints(){return Math.max(0,Math.floor(S.player.depth))*2;}
 function totalScore(){return Math.max(0,distancePoints()+S.score.scoreFlag+S.score.scoreCombo-S.score.scorePenalty);}
 function recordFlagAttempt(clean){S.score.flagsAttempted++;if(clean)S.score.cleanFlags++;}
-function recordCollision(penalty){S.score.collisions++;S.score.scorePenalty+=Math.max(0,penalty||0);}
+function recordCollision(penalty){S.score.collisions++;S.score.scorePenalty+=Math.max(0,penalty||0);OpenSkiAnalytics.noteCollision(S.player.depth,S.player.x);}
 const FlagTutorial=(()=>{
   const CFG=APP_CONFIG.flagTutorial;
   function instructionActive(){
@@ -6834,7 +6957,7 @@ function cleanFlag(g,px){
   const hotAttackAccelerated=YetiAttackArbiter.onCleanFlag({tight,milestone,protectedDuration,dodgeRecovery});
   YetiDiagnosticBatch.note('CLEAN_FLAG',{combo:S.player.combo,milestone,tight,protectedDuration,hotAttackAccelerated,attackGrace:Math.max(0,S.yeti.attackGraceT||0),intent:String(S.yeti.attackIntent||'NONE'),hotRangedDueIn:S.yeti.hotRangedDueAt>0?Math.max(0,S.yeti.hotRangedDueAt-S.run.time):null,throwNextIn:Math.max(0,(S.yeti.throwNext||0)-S.run.time),nextIn:Math.max(0,(S.yeti.attackNext||0)-S.run.time),passNextIn:Math.max(0,(S.yeti.attackNext||0)-S.run.time)});
   const telemetryEffect={tight,relief,calm,push,milestone,lullStarted,combo:S.player.combo,momentumRecovered,resolvedMistakes:resolved,unresolvedAfter:S.pressure.unresolvedMistakes||0,cleanRecoveryStreak:S.pressure.cleanRecoveryStreak||0,protectedDuration,protectedFloor,dodgeRecovery,hotAttackAccelerated};
-  FeedbackBaseline.noteFlag('clean',feedbackBefore,telemetryEffect);CompactTelemetry.noteFlag('clean',feedbackBefore,telemetryEffect);
+  FeedbackBaseline.noteFlag('clean',feedbackBefore,telemetryEffect);CompactTelemetry.noteFlag('clean',feedbackBefore,telemetryEffect);OpenSkiAnalytics.noteFlag('clean',g.d);
 }
 function softMiss(g){ // reached the side but did not truly commit around the flag
   const feedbackBefore=FeedbackBaseline.capture();
@@ -6843,7 +6966,7 @@ function softMiss(g){ // reached the side but did not truly commit around the fl
   if(S.player.combo>=4)burstAt(S.player.x,S.player.depth,'#cfd8e0',8,62);
   S.player.combo=0;
   const feedbackPressure=registerFlagMiss(0.10,1.0,0.14,1.0,'soft-miss');
-  FeedbackBaseline.noteFlag('soft-miss',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('soft-miss',feedbackBefore,feedbackPressure);
+  FeedbackBaseline.noteFlag('soft-miss',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('soft-miss',feedbackBefore,feedbackPressure);OpenSkiAnalytics.noteFlag('miss',g.d);
   ringAt(g.x,g.d,'rgba(185,195,205,.75)',14);
   tone(210,155,0.11,'sine',0.13);
 }
@@ -6854,7 +6977,7 @@ function wrongSide(g){ // no speed punishment; the cost is broken rhythm and ris
   if(S.player.combo>=4)burstAt(S.player.x,S.player.depth,'#cfd8e0',10,70);
   S.player.combo=0;
   const feedbackPressure=registerFlagMiss(0.16,1.25,0.32,1.25,'wrong-side');
-  FeedbackBaseline.noteFlag('wrong-side',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('wrong-side',feedbackBefore,feedbackPressure);
+  FeedbackBaseline.noteFlag('wrong-side',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('wrong-side',feedbackBefore,feedbackPressure);OpenSkiAnalytics.noteFlag('miss',g.d);
   ringAt(g.x,g.d,'rgba(160,170,185,.9)',22);
   burstAt(g.x,g.d,'#9aa5b5',8,60);
   tone(240,140,0.14,'sine',0.2);tone(120,80,0.18,'square',0.12);
@@ -6869,7 +6992,7 @@ function faultFlag(g){
   // fails the flag, breaks the combo, and raises Yeti pressure, but preserves speed.
   S.player.combo=0;S.camera.flash=Math.max(S.camera.flash,0.25);
   const feedbackPressure=registerFlagMiss(C.furyFault+0.03,1.75,0.48,1.6,'pole-fault');
-  FeedbackBaseline.noteFlag('pole-fault',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('pole-fault',feedbackBefore,feedbackPressure);
+  FeedbackBaseline.noteFlag('pole-fault',feedbackBefore,feedbackPressure);CompactTelemetry.noteFlag('pole-fault',feedbackBefore,feedbackPressure);OpenSkiAnalytics.noteFlag('miss',g.d);
   ringAt(g.x,g.d,'rgba(255,140,70,.9)',0); sfx.miss(); vib(20);
 }
 function crash(){
@@ -7149,6 +7272,7 @@ function finalizePlayerDeath(){
   lastFinishedRun=run;lastFinishedRunContext=runContext;
   YetiAttackArbiter.finishQueuedFollowUp('CANCELLED','run-end',{deathCause:run.deathCause});
   const compactOutcome=CompactTelemetry.finish(run);
+  const openSkiAnalyticsOutcome=OpenSkiAnalytics.finish(run);
   const batchOutcome=YetiDiagnosticBatch.finish(run,compactOutcome);
   PublicFeedback.finish(run,compactOutcome);
   if(RunContext.permits('allowDiagnosticReports',runContext))FeedbackBaseline.finish(run,compactOutcome,batchOutcome);
@@ -9714,7 +9838,7 @@ function beginRun(source='api',modeOverride=null){
   if(RunContext.isPlaytest()&&!FeedbackBaseline.testerReady())return FeedbackBaseline.promptTester();
   Audio.ac();if(fromIntro)introAudioRequested=true;
   const requestedMode=source==='intro-open-ski'||modeOverride===RunContext.modes.OPEN_SKI?RunContext.modes.OPEN_SKI:fromLeaderboard&&lastFinishedRunContext?lastFinishedRunContext.mode:null;
-  CourseDeck.next();Generation.fresh();S.runContext=RunContext.begin(requestedMode);const traceIdentity=RunTraceIdentity.begin(S.runContext);if(lastDeathReal)S.player.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext,traceIdentity);YetiDiagnosticBatch.begin(S.runContext,traceIdentity);PublicFeedback.beginRun(S.runContext,traceIdentity);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun(traceIdentity);YetiAttackTelemetry.begin();
+  CourseDeck.next();Generation.fresh();S.runContext=RunContext.begin(requestedMode);const traceIdentity=RunTraceIdentity.begin(S.runContext);if(lastDeathReal)S.player.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext,traceIdentity);OpenSkiAnalytics.begin(S.runContext);YetiDiagnosticBatch.begin(S.runContext,traceIdentity);PublicFeedback.beginRun(S.runContext,traceIdentity);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun(traceIdentity);YetiAttackTelemetry.begin();
   $('btnRow').style.display='flex';el.tune.classList.remove('show');$('bTune').classList.remove('active');
   setOverlayVisible(el.results,false);setOverlayVisible(el.leaderboard,false);
   if(fromIntro){
@@ -10036,6 +10160,7 @@ const ServiceBoot=(()=>{
       if(!diagnosticRequested()&&mark('arcade-submit-drain',RunContext.permits('allowLeaderboard')&&RunContext.permits('allowMountainWrites')))ArcadeSubmission.drain();
       if(!diagnosticRequested()&&mark('open-ski-submit-drain',ServiceCapabilities.allows('arcadeWrite')&&OpenSkiSubmission.status().pending>0))OpenSkiSubmission.drain();
       if(!diagnosticRequested()&&mark('telemetry-drain',RunContext.permits('allowTelemetryUploads')))TelemetryTransport.drain('auth-ready');
+      if(!diagnosticRequested()&&mark('open-ski-analytics-drain',RunContext.allowsOpenSkiAnalyticsUpload()&&OpenSkiAnalytics.status().pending>0))OpenSkiAnalyticsTransport.drain('auth-ready');
       if(!diagnosticRequested()&&mark('feedback-drain',RunContext.permits('allowPublicFeedbackUploads')))FeedbackTransport.drain('auth-ready');
       if(!diagnosticRequested()&&mark('playtest-drain',RunContext.permits('allowPlaytestUploads')&&PlaytestUpload.pending().length>0))PlaytestUpload.drain('auth-ready');
       return status();
@@ -10180,7 +10305,7 @@ const Modules=Object.freeze({
   arcadeLeaderboard:ArcadeLeaderboard,initialsMountain:InitialsMountain,arcadeFoundationCheck:ArcadeFoundationCheck,
   mountainPopulation:MountainPopulation,leaderboardMountainIntegration:LeaderboardMountainIntegration,
   performanceStability:PerformanceStability,sharedMemorials:SharedMemorials,
-  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
+  audio:Audio,leaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,difficulty:Difficulty,fullMomentum:FullMomentum,yetiBoulderThrow:YetiBoulderThrow,yetiDiagnosticBatch:YetiDiagnosticBatch,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,openSkiAnalyticsProjection:OpenSkiAnalyticsProjection,openSkiAnalytics:OpenSkiAnalytics,openSkiAnalyticsTransport:OpenSkiAnalyticsTransport,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,playtestUpload:PlaytestUpload,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,generation:Generation,
   effects:Effects,simulation:Simulation,rendering:Rendering,input:Input,performance:PerfBudget
 });
 function frame(now){
@@ -10190,7 +10315,7 @@ function frame(now){
   if(dt>0)fps=lerp(fps,1/dt,0.05);
   if(paused)return;
   const workStart=performance.now();
-  try{Modules.simulation.update(dt);CompactTelemetry.tick(dt);YetiDiagnosticBatch.tick(dt);PublicFeedback.tick(dt);FeedbackBaseline.tick(dt);Modules.rendering.render();}
+  try{Modules.simulation.update(dt);CompactTelemetry.tick(dt);OpenSkiAnalytics.tick(dt);YetiDiagnosticBatch.tick(dt);PublicFeedback.tick(dt);FeedbackBaseline.tick(dt);Modules.rendering.render();}
   catch(err){reportErr((err&&err.message)+' | '+(((err&&err.stack)||'').split('\n')[1]||'').trim());}
   const workMs=performance.now()-workStart;Modules.performance.noteFrame({rafMs,workMs,nowMs:now,hidden:false});PerformanceStability.noteFrame(workMs,rafMs);
 }
@@ -10213,7 +10338,7 @@ window.__EP={
   arcadeFoundation:ArcadeFoundation,arcadeSubmission:ArcadeSubmission,openSkiSubmission:OpenSkiSubmission,arcadeLeaderboard:ArcadeLeaderboard,seasonalLeaderboard:SeasonalLeaderboard,season2PreviewBoard:Season2PreviewBoard,openSkiBoard:OpenSkiBoard,courseDeck:CourseDeck,courseDirector:CourseDirector,
   initialsMountain:InitialsMountain,arcadeReleaseValidation:ArcadeReleaseValidation,localHistoryValidation:LocalHistoryValidation,arcadeFoundationCheck:ArcadeFoundationCheck,mountainPopulation:MountainPopulation,
   leaderboardMountainIntegration:LeaderboardMountainIntegration,performanceStability:PerformanceStability,playtestReport:PlaytestReport,playtestUpload:PlaytestUpload,
-  sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,yetiDiagnosticBatch:YetiDiagnosticBatch,yetiAttackArbiter:YetiAttackArbiter,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,telemetryEventPriority:TelemetryEventPriority,phase6aCorrectness2a:Object.freeze({playerDownhillVelocity,passiveCatchStatus:YetiAttackArbiter.passiveCatchStatus}),phase6aCorrectness2b:Object.freeze({telemetryEventPriority:TelemetryEventPriority,queuedFollowUpStatus:YetiAttackArbiter.queuedFollowUpStatus,queueFollowUp:YetiAttackArbiter.queueFollowUp,finishQueuedFollowUp:YetiAttackArbiter.finishQueuedFollowUp}),phase6aTutorial2c:Object.freeze({FlagTutorial,config:APP_CONFIG.flagTutorial,status:FlagTutorial.status,selfTest:FlagTutorial.selfTest}),phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,softMiss,wrongSide,faultFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),phase12a2:Object.freeze({YetiBoulderThrow,spawnYetiThrownBoulder,spawnYetiThrownBoulders,drawYetiBoulderThrow,config:APP_CONFIG.yetiBoulderThrow}),phase12a2a:Object.freeze({YetiPresence,updateYetiVisual,drawYetiLayer,config:APP_CONFIG.yetiPresence}),phase12a2b:Object.freeze({YetiPhysicality,lungeTelegraphDuration,applyYetiSlamImpact,drawCommittedYetiAim,config:APP_CONFIG.yetiPhysicality}),phase12a2c:Object.freeze({YetiBoulderThrow,visibleForThrow:YetiBoulderThrow.visibleForThrow,silhouetteSnapshot:YetiBoulderThrow.silhouetteSnapshot,config:APP_CONFIG.yetiBoulderThrow}),phase12a2e:Object.freeze({hiddenOpening:true,YetiPresence,config:APP_CONFIG.yetiPresence}),phase12a2h:Object.freeze({hotStreakScore:YetiBoulderThrow.hotStreakScore,deferLunge:YetiBoulderThrow.deferLunge,accelerateHotStreakAttack:YetiBoulderThrow.accelerateHotStreakAttack,slamIndicator:false,config:APP_CONFIG.yetiBoulderThrow,physicality:APP_CONFIG.yetiPhysicality}),phase12a3c2:Object.freeze({YetiAttackArbiter,YetiBoulderThrow,config:APP_CONFIG.yetiAttackArbiter,status:YetiAttackArbiter.status,selfTest:YetiAttackArbiter.selfTest}),phase12c0:Object.freeze({YetiBoulderThrow,depthWindupMultiplier:YetiBoulderThrow.depthWindupMultiplier,config:APP_CONFIG.yetiBoulderThrow}),phase12c1:Object.freeze({YetiCharge,drawYetiChargeTell,config:APP_CONFIG.yetiCharge,status:YetiCharge.status,selfTest:YetiCharge.selfTest,relativeSweptDistance,collisionSelfTest:chargeCollisionSelfTest}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
+  sharedMemorials:SharedMemorials,fullMomentum:FullMomentum,yetiDiagnosticBatch:YetiDiagnosticBatch,yetiAttackArbiter:YetiAttackArbiter,overlayIsolation:OverlayIsolation,runContext:RunContext,compactTelemetry:CompactTelemetry,publicAnalyticsProjection:PublicAnalyticsProjection,openSkiAnalyticsProjection:OpenSkiAnalyticsProjection,openSkiAnalytics:OpenSkiAnalytics,openSkiAnalyticsTransport:OpenSkiAnalyticsTransport,yetiAttackTelemetry:YetiAttackTelemetry,telemetryTransport:TelemetryTransport,publicFeedback:PublicFeedback,feedbackTransport:FeedbackTransport,feedbackBaseline:FeedbackBaseline,devTuning:DevTuning,telemetryEventPriority:TelemetryEventPriority,phase6aCorrectness2a:Object.freeze({playerDownhillVelocity,passiveCatchStatus:YetiAttackArbiter.passiveCatchStatus}),phase6aCorrectness2b:Object.freeze({telemetryEventPriority:TelemetryEventPriority,queuedFollowUpStatus:YetiAttackArbiter.queuedFollowUpStatus,queueFollowUp:YetiAttackArbiter.queueFollowUp,finishQueuedFollowUp:YetiAttackArbiter.finishQueuedFollowUp}),phase6aTutorial2c:Object.freeze({FlagTutorial,config:APP_CONFIG.flagTutorial,status:FlagTutorial.status,selfTest:FlagTutorial.selfTest}),phase11a1:Object.freeze({debtLevel,unresolvedMistakeLevel,registerUnresolvedMistake,addCleanDebt,registerFlagMiss,updateCleanSkiingPressure,cleanFlag,softMiss,wrongSide,faultFlag,cancelCleanProtection,cleanProtectionActive,protectedYetiCorrection,protectedYetiAdvance}),phase11a2:Object.freeze({threatAttackProfile,currentThreatAttackProfile,attackCooldownRange,schedulePersistentAttack,queueConditionalFollowUp}),phase11b0:Object.freeze({predictiveAimProfile,playerReversalSnapshot,predictYetiAimFromMotion,predictiveYetiAim}),phase11b1:Object.freeze({counterplayDodgeFeedback,drawCommittedYetiAim}),phase11c0:Object.freeze({deepYetiProfile}),phase12a2:Object.freeze({YetiBoulderThrow,spawnYetiThrownBoulder,spawnYetiThrownBoulders,drawYetiBoulderThrow,config:APP_CONFIG.yetiBoulderThrow}),phase12a2a:Object.freeze({YetiPresence,updateYetiVisual,drawYetiLayer,config:APP_CONFIG.yetiPresence}),phase12a2b:Object.freeze({YetiPhysicality,lungeTelegraphDuration,applyYetiSlamImpact,drawCommittedYetiAim,config:APP_CONFIG.yetiPhysicality}),phase12a2c:Object.freeze({YetiBoulderThrow,visibleForThrow:YetiBoulderThrow.visibleForThrow,silhouetteSnapshot:YetiBoulderThrow.silhouetteSnapshot,config:APP_CONFIG.yetiBoulderThrow}),phase12a2e:Object.freeze({hiddenOpening:true,YetiPresence,config:APP_CONFIG.yetiPresence}),phase12a2h:Object.freeze({hotStreakScore:YetiBoulderThrow.hotStreakScore,deferLunge:YetiBoulderThrow.deferLunge,accelerateHotStreakAttack:YetiBoulderThrow.accelerateHotStreakAttack,slamIndicator:false,config:APP_CONFIG.yetiBoulderThrow,physicality:APP_CONFIG.yetiPhysicality}),phase12a3c2:Object.freeze({YetiAttackArbiter,YetiBoulderThrow,config:APP_CONFIG.yetiAttackArbiter,status:YetiAttackArbiter.status,selfTest:YetiAttackArbiter.selfTest}),phase12c0:Object.freeze({YetiBoulderThrow,depthWindupMultiplier:YetiBoulderThrow.depthWindupMultiplier,config:APP_CONFIG.yetiBoulderThrow}),phase12c1:Object.freeze({YetiCharge,drawYetiChargeTell,config:APP_CONFIG.yetiCharge,status:YetiCharge.status,selfTest:YetiCharge.selfTest,relativeSweptDistance,collisionSelfTest:chargeCollisionSelfTest}),introSplash:IntroSplash,introMenu:IntroMenu,introLifecycle:IntroLifecycle,introReleaseValidation:IntroReleaseValidation,lastRun:()=>lastFinishedRun,def:DEF,
   difficulty:d=>Difficulty.profile(d),quality:()=>({level:PerfBudget.level,profile:PerfBudget.profile(),avgMs:PerfBudget.avg,pacing:PerfBudget.snapshot()}),
   setQuality:n=>PerfBudget.setLevel(n),setSteer:v=>{S.player.active=v!==0;S.player.steer=clamp(v,-1,1);},resetDevTuning
 };
