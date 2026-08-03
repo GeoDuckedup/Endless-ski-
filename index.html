@@ -309,6 +309,9 @@
     border-radius:calc(10*var(--u));border:1px solid rgba(143,216,255,.52);background:rgba(7,18,29,.82);color:#dff3ff;
     font-size:max(14px,calc(18*var(--u)));font-weight:900;letter-spacing:.10em;touch-action:none;cursor:pointer;pointer-events:auto;
     -webkit-appearance:none;appearance:none;-webkit-user-select:none;user-select:none}
+  .resultActionSplit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:max(10px,calc(12*var(--u)));min-width:0}
+  .resultAction.compact{min-width:0;padding:0 calc(10*var(--u));font-size:max(11px,calc(15*var(--u)));letter-spacing:.07em;white-space:nowrap}
+  #rPublicFeedback[hidden] + #rMenu{grid-column:1 / -1}
   .resultAction:active,.resultAction.is-pressed{transform:scale(.985);filter:brightness(.92)}
   .resultAction:focus-visible{outline:3px solid #8fd8ff;outline-offset:3px}
   .ov .go{margin-top:calc(40*var(--u));font-size:calc(26*var(--u));font-weight:800;letter-spacing:.18em;
@@ -716,8 +719,12 @@
       <div class="resultRow"><span>Accuracy</span><b id="rAccuracyPct">0%</b></div>
     </div>
     <div id="resultActions">
-      <button class="resultAction" id="rContinue" type="button">LEADERBOARD / RETRY</button>
-      <button class="resultAction" id="rPublicFeedback" type="button">PROVIDE FEEDBACK</button>
+      <button class="resultAction" id="rRetry" type="button">RETRY</button>
+      <button class="resultAction" id="rLeaderboard" type="button">LEADERBOARD</button>
+      <div class="resultActionSplit">
+        <button class="resultAction compact" id="rPublicFeedback" type="button">SEND FEEDBACK</button>
+        <button class="resultAction compact" id="rMenu" type="button">MENU</button>
+      </div>
       <button class="resultAction" id="yetiBatchOpenResults" type="button">CHARGE TELEMETRY</button>
     </div>
     <button id="rFeedbackReport" type="button">VIEW FEEDBACK REPORT</button>
@@ -882,7 +889,7 @@ function removeSwapAt(list,index){
    submissions, and initials_bests remains the all-time mountain source.
    Runtime modules derive their constants from this one immutable block. */
 const APP_CONFIG=Object.freeze({
-  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_analytics_a5_2b_live.html","normalizedArtifactSha256":"b0b3305a2de90278b793ddf069d27920bd2e557fb933b4c7b93426b9ffe05ccb","sourceSha256":"375979649d57486af365d6c132f87dff8d4abd026f67690b8aed4c1f500a4900","profileSha256":"c358771b107c54bf52c0fda8fbbb8f949141f43e23dbe099683405db61bfef49","tuningSha256":"252b560bc14f4fb247700e6a12b7944184317aa715ffca6412b346bac417da8a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
+  build:Object.freeze({"version":"v12c.1","channel":"production-live","profile":"phase6c-production-live","testOnly":false,"releaseState":"live","playerFacing":true,"publishable":true,"networkWrites":true,"serviceEnvironment":"production","sourceBaseline":"phase6c0-production-foundation","artifactFile":"endless_powder_v12c1_analytics_a5_2b_live.html","normalizedArtifactSha256":"e68e5060eae09c846beffaece7a91158078c63279658778fb86ad02a41a21285","sourceSha256":"b2a83b3a49789a4e85691b0a2717efcbe616ed8041a82871d3c369d3d0f0ef45","profileSha256":"c358771b107c54bf52c0fda8fbbb8f949141f43e23dbe099683405db61bfef49","tuningSha256":"252b560bc14f4fb247700e6a12b7944184317aa715ffca6412b346bac417da8a","forcedTests":{"boulder":false,"charge":false},"capabilities":{"identity":true,"leaderboardRead":true,"mountainRead":true,"arcadeWrite":true,"telemetryUpload":true,"publicFeedbackCapture":true,"publicFeedbackUpload":true,"playtestUpload":false}}),
   experiment:Object.freeze({localOnly:false,telemetryOnlyValidation:false,label:'PHASE 6C PRODUCTION CANDIDATE'}),
   world:Object.freeze({version:'mountain-v4-course-1'}),
   course:Object.freeze({
@@ -9833,12 +9840,13 @@ function beginRun(source='api',modeOverride=null){
   source=String(source||'api');
   const fromIntro=(source==='intro'||source==='intro-open-ski')&&introStartAllowed();
   const fromLeaderboard=source==='leaderboard'&&S.run.mode==='dead'&&overlayVisible(el.leaderboard);
+  const fromResults=source==='results'&&S.run.mode==='dead'&&overlayVisible(el.results);
   const fromApi=source==='api'&&((S.run.mode==='intro'&&overlayVisible(el.intro))||S.run.mode==='dead');
-  if(!(fromIntro||fromLeaderboard||fromApi))return false;
+  if(!(fromIntro||fromLeaderboard||fromResults||fromApi))return false;
   if(S.run.mode==='play'||S.run.mode==='dying'||S.run.mode==='starting')return false;
   if(RunContext.isPlaytest()&&!FeedbackBaseline.testerReady())return FeedbackBaseline.promptTester();
   Audio.ac();if(fromIntro)introAudioRequested=true;
-  const requestedMode=source==='intro-open-ski'||modeOverride===RunContext.modes.OPEN_SKI?RunContext.modes.OPEN_SKI:fromLeaderboard&&lastFinishedRunContext?lastFinishedRunContext.mode:null;
+  const requestedMode=source==='intro-open-ski'||modeOverride===RunContext.modes.OPEN_SKI?RunContext.modes.OPEN_SKI:(fromLeaderboard||fromResults)&&lastFinishedRunContext?lastFinishedRunContext.mode:null;
   CourseDeck.next();Generation.fresh();S.runContext=RunContext.begin(requestedMode);const traceIdentity=RunTraceIdentity.begin(S.runContext);if(lastDeathReal)S.player.speed=DevTuning.retrySpeed;CompactTelemetry.begin(S.runContext,traceIdentity);OpenSkiAnalytics.begin(S.runContext);YetiDiagnosticBatch.begin(S.runContext,traceIdentity);PublicFeedback.beginRun(S.runContext,traceIdentity);if(RunContext.permits('allowDiagnosticReports',S.runContext))FeedbackBaseline.beginRun(traceIdentity);YetiAttackTelemetry.begin();
   $('btnRow').style.display='flex';el.tune.classList.remove('show');$('bTune').classList.remove('active');
   setOverlayVisible(el.results,false);setOverlayVisible(el.leaderboard,false);
@@ -9861,7 +9869,7 @@ function showResults(){
   setOverlayVisible(el.leaderboard,false);setOverlayVisible(el.results,true);return true;
 }
 function returnToMainMenu(){
-  if(S.run.mode!=='dead'||!overlayVisible(el.leaderboard))return false;
+  if(S.run.mode!=='dead'||(!overlayVisible(el.results)&&!overlayVisible(el.leaderboard)))return false;
   resetInput();
   if(introStartTimer){clearTimeout(introStartTimer);introStartTimer=0;}
   introStartPending=false;setIntroStartDisabled(false);showIntroMenu();
@@ -9875,7 +9883,7 @@ function returnToMainMenu(){
    Route pointerdown geometrically at the results-overlay capture phase so no child,
    text node, legacy overlay, or delayed synthesized click can create partial dead zones. */
 const ResultActionRouter=(()=>{
-  const ACTION_IDS=Object.freeze(['rContinue','rPublicFeedback']);
+  const ACTION_IDS=Object.freeze(['rRetry','rLeaderboard','rPublicFeedback','rMenu']);
   let bound=false,lastActivationAt=-Infinity,lastAction='';
   function visible(){return S.run.mode==='dead'&&overlayVisible(el.results);}
   function hitAt(x,y){
@@ -9891,8 +9899,10 @@ const ResultActionRouter=(()=>{
     if(!visible())return false;
     lastActivationAt=performance.now();lastAction=id;
     const node=$(id);if(node){node.classList.add('is-pressed');setTimeout(()=>node.classList.remove('is-pressed'),120);}
-    if(id==='rContinue')showLeaderboard();
+    if(id==='rRetry')beginRun('results');
+    else if(id==='rLeaderboard')showLeaderboard();
     else if(id==='rPublicFeedback')PublicFeedback.open('death');
+    else if(id==='rMenu')returnToMainMenu();
     return true;
   }
   function pointerDown(e){
@@ -9902,7 +9912,7 @@ const ResultActionRouter=(()=>{
     activate(node.id);
   }
   function click(e){
-    const node=e.target&&e.target.closest?e.target.closest('#rContinue,#rPublicFeedback'):null;
+    const node=e.target&&e.target.closest?e.target.closest('#rRetry,#rLeaderboard,#rPublicFeedback,#rMenu'):null;
     if(!node||!visible())return;
     e.preventDefault();e.stopPropagation();
     if(performance.now()-lastActivationAt<650&&lastAction===node.id)return;
@@ -9968,7 +9978,7 @@ function bindInput(){
   $('bSound').addEventListener('click',function(e){e.stopPropagation();this.style.opacity=Audio.toggle()?'1':'0.4';});
   return true;
 }
-const Input=Object.freeze({bind:bindInput,beginRun,returnToMainMenu,pdown,pmove,pup,kb,reset:resetInput,steeringStatus:()=>Object.freeze({surface:'stage',wholeViewport:true,gameplayClass:stage.classList.contains('gameplay-input'),active:S.player.active,steer:S.player.steer,pressedKeys:Object.keys(keys).filter(key=>keys[key]).sort()}),introStatus:()=>Object.freeze({mode:S.run.mode,pending:introStartPending,startAllowed:introStartAllowed(),focusSerial:introViewSerial,focusTimerActive:!!introFocusTimer,audioRequested:introAudioRequested}),overlayStatus:()=>Object.freeze({mode:S.run.mode,intro:overlayVisible(el.intro),results:overlayVisible(el.results),leaderboard:overlayVisible(el.leaderboard),hiddenSubtreesInert:[el.intro,el.results,el.leaderboard].filter(n=>!overlayVisible(n)).every(n=>n.hasAttribute('inert'))})});
+const Input=Object.freeze({bind:bindInput,beginRun,returnToMainMenu,pdown,pmove,pup,kb,reset:resetInput,resultActionStatus:ResultActionRouter.selfTest,steeringStatus:()=>Object.freeze({surface:'stage',wholeViewport:true,gameplayClass:stage.classList.contains('gameplay-input'),active:S.player.active,steer:S.player.steer,pressedKeys:Object.keys(keys).filter(key=>keys[key]).sort()}),introStatus:()=>Object.freeze({mode:S.run.mode,pending:introStartPending,startAllowed:introStartAllowed(),focusSerial:introViewSerial,focusTimerActive:!!introFocusTimer,audioRequested:introAudioRequested}),overlayStatus:()=>Object.freeze({mode:S.run.mode,intro:overlayVisible(el.intro),results:overlayVisible(el.results),leaderboard:overlayVisible(el.leaderboard),hiddenSubtreesInert:[el.intro,el.results,el.leaderboard].filter(n=>!overlayVisible(n)).every(n=>n.hasAttribute('inert'))})});
 function feedbackCheckRequested(){
   const key=APP_CONFIG.diagnostics.query.feedback;
   try{
